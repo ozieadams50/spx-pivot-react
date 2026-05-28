@@ -11,6 +11,8 @@ import ManageUsers from './pages/ManageUsers';
 import AddUser from './pages/AddUser';
 import ManageApps from './pages/ManageApps';
 import RegisterApp from './pages/RegisterApp';
+import OpenMonitor from './pages/OpenMonitor';
+import LogViewer from './pages/LogViewer';
 
 export default function App() {
   return (
@@ -39,7 +41,8 @@ export default function App() {
           <Route path="admin/apps/register" element={<RegisterApp />} />
 
           {/* System Monitor */}
-          <Route path="system" element={<Placeholder title="System Monitor" description="Server health, cron jobs, and data pipeline status." />} />
+          <Route path="system" element={<OpenMonitor />} />
+          <Route path="system/logs" element={<LogViewer />} />
 
           {/* Profile */}
           <Route path="profile/contact" element={<Placeholder title="Contact Info" />} />

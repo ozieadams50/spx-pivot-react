@@ -44,7 +44,13 @@ const NAV = [
       },
     ],
   },
-  { title: 'System Monitor', path: '/system' },
+  {
+    title: 'System Monitor',
+    children: [
+      { title: 'Open Monitor', path: '/system' },
+      { title: 'Log Viewer',   path: '/system/logs' },
+    ],
+  },
 ];
 
 function LeafItem({ title, path }) {
@@ -145,9 +151,13 @@ export default function Sidebar({ collapsed, onToggle }) {
                   {item.title}
                 </div>
                 <div className="ml-1">
-                  {item.children.map((sub) => (
-                    <GroupItem key={sub.title} group={sub} />
-                  ))}
+                  {item.children.map((sub) =>
+                    sub.path ? (
+                      <LeafItem key={sub.title} title={sub.title} path={sub.path} />
+                    ) : (
+                      <GroupItem key={sub.title} group={sub} />
+                    )
+                  )}
                 </div>
               </div>
             );
