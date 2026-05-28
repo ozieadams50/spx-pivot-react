@@ -1,10 +1,10 @@
 const KEY = 'user_profile';
 
 const DEFAULTS = {
-  firstName:    '',
-  lastName:     '',
+  firstName:    'Ozie',
+  lastName:     'Adams',
   suffix:       '',
-  email:        '',
+  email:        'ozie.adams@gmail.com',
   phone:        '',
   notifEmail:   false,
   notifNtfy:    false,

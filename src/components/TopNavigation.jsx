@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import {
   loadNotifications, markRead, clearOne, clearAll, unreadCount,
 } from '../data/notifications';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { loadProfile } from '../data/profile';
 
 const PROFILE_MENU = [
   { label: 'Contact Info',          path: '/profile/contact'       },
@@ -28,7 +31,17 @@ function TypeBadge({ type }) {
   );
 }
 
+const ROLE_LABELS = { subscriber: 'Subscriber', admin: 'Admin', superuser: 'Super User' };
+const ROLE_BADGE  = {
+  subscriber: 'bg-amber-500/15 text-amber-300',
+  admin:      'bg-cyan-500/15 text-cyan-300',
+  superuser:  'bg-violet-500/15 text-violet-300',
+};
+
 export default function TopNavigation({ title, subtitle }) {
+  const { role, setRole, logout }        = useAuth();
+  const navigate                         = useNavigate();
+  const profile                         = loadProfile();
   const [profileOpen, setProfileOpen]   = useState(false);
   const [bellOpen,    setBellOpen]      = useState(false);
   const [notifs,      setNotifs]        = useState([]);
@@ -181,9 +194,30 @@ export default function TopNavigation({ title, subtitle }) {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
                 <div className="absolute right-0 z-50 mt-3 w-64 rounded-3xl border border-white/10 bg-[#0d1726] p-3 shadow-2xl">
-                  <div className="mb-2 border-b border-white/10 px-4 pb-3 pt-1">
-                    <p className="text-sm font-semibold text-white">My Account</p>
-                    <p className="text-xs text-slate-500">ozie.adams@gmail.com</p>
+                  <div className="mb-3 border-b border-white/10 px-4 pb-3 pt-1">
+                    <p className="text-sm font-semibold text-white">
+                      {[profile.firstName, profile.lastName].filter(Boolean).join(' ') || 'My Account'}
+                    </p>
+                    <p className="text-xs text-slate-500">{profile.email || 'ozie.adams@gmail.com'}</p>
+                    <span className={`mt-1.5 inline-block rounded-lg px-2 py-0.5 text-xs font-semibold ${ROLE_BADGE[role]}`}>
+                      {ROLE_LABELS[role]}
+                    </span>
+                    {/* Role switcher — for demo/testing */}
+                    <div className="mt-2 flex gap-1">
+                      {Object.entries(ROLE_LABELS).map(([key, label]) => (
+                        <button
+                          key={key}
+                          onClick={() => setRole(key)}
+                          className={`flex-1 rounded-lg py-1 text-[10px] font-semibold transition ${
+                            role === key
+                              ? ROLE_BADGE[key]
+                              : 'bg-white/5 text-slate-500 hover:bg-white/10'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   {PROFILE_MENU.map((item) => (
                     <Link
@@ -196,7 +230,10 @@ export default function TopNavigation({ title, subtitle }) {
                     </Link>
                   ))}
                   <div className="mt-2 border-t border-white/10 pt-2">
-                    <button className="flex w-full items-center rounded-2xl px-4 py-3 text-sm text-rose-400 transition-colors hover:bg-rose-500/10">
+                    <button
+                      onClick={() => { setProfileOpen(false); logout(); navigate('/login', { replace: true }); }}
+                      className="flex w-full items-center rounded-2xl px-4 py-3 text-sm text-rose-400 transition-colors hover:bg-rose-500/10"
+                    >
                       Sign Out
                     </button>
                   </div>

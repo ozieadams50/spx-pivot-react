@@ -1,44 +1,13 @@
 import { useState, useEffect } from 'react';
-
-const SEED_USERS = [
-  {
-    id: 1,
-    firstName: 'Jane', lastName: 'Smith', suffix: '',
-    email: 'jane@example.com', phone: '+15551234567',
-    tradingStyle: 'Moderate', index: 'SPX', deltaTrigger: 0.35,
-    pivotPeriods: ['Weekly'],
-    notifEmail: true, notifNtfy: false,
-    subscriptionLevel: 'Monthly',
-    isActive: true, updatedAt: '2026-05-15T10:00:00',
-  },
-  {
-    id: 2,
-    firstName: 'John', lastName: 'Doe', suffix: 'Jr.',
-    email: 'john@example.com', phone: '',
-    tradingStyle: 'Aggressive', index: 'XSP', deltaTrigger: 0.25,
-    pivotPeriods: ['Daily', 'Weekly'],
-    notifEmail: false, notifNtfy: true,
-    subscriptionLevel: 'Annual',
-    isActive: true, updatedAt: '2026-05-20T14:30:00',
-  },
-];
-
-function loadUsers() {
-  try {
-    const stored = JSON.parse(localStorage.getItem('manage_users'));
-    return stored?.length ? stored : SEED_USERS;
-  } catch { return SEED_USERS; }
-}
-
-function saveUsers(users) {
-  localStorage.setItem('manage_users', JSON.stringify(users));
-}
+import { useAuth } from '../context/AuthContext';
+import { loadUsers, saveUsers } from '../data/users';
 
 function fullName(u) {
   return [u.firstName, u.lastName, u.suffix].filter(Boolean).join(' ');
 }
 
 const SUB_LEVELS   = ['No Access', 'Trial', 'Monthly', 'Annual'];
+const ROLES        = ['Subscriber', 'Admin', 'Super User'];
 const PIVOT_OPTS   = ['Daily', 'Weekly', 'Monthly'];
 const STYLE_OPTS   = ['Aggressive', 'Moderate', 'Conservative'];
 const INDEX_OPTS   = ['SPX', 'XSP'];
@@ -141,6 +110,14 @@ function SubBadge({ level }) {
   return <span className={`rounded-lg px-2 py-0.5 text-xs font-medium ${cls}`}>{level}</span>;
 }
 
+function RoleBadge({ role }) {
+  const cls =
+    role === 'Super User' ? 'bg-violet-500/15 text-violet-300' :
+    role === 'Admin'      ? 'bg-cyan-500/15 text-cyan-300'     :
+                            'bg-amber-500/15 text-amber-300';
+  return <span className={`rounded-lg px-2 py-0.5 text-xs font-medium ${cls}`}>{role ?? 'Subscriber'}</span>;
+}
+
 function ActiveBadge({ active }) {
   return (
     <span className={`rounded-lg px-2 py-0.5 text-xs font-medium ${
@@ -151,7 +128,7 @@ function ActiveBadge({ active }) {
   );
 }
 
-function EditModal({ user, onClose, onSave, onDelete, onToggleActive }) {
+function EditModal({ user, onClose, onSave, onDelete, onToggleActive, currentRole }) {
   const [form, setForm]           = useState({ ...user });
   const [confirmDel, setConfirmDel] = useState(false);
 
@@ -187,8 +164,10 @@ function EditModal({ user, onClose, onSave, onDelete, onToggleActive }) {
           </button>
         </div>
 
-        <div className="space-y-5 p-6">
-          {/* Name */}
+        <div className="p-6">
+
+          {/* ── Identity ─────────────────────────────────────────── */}
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Identity</p>
           <div className="grid grid-cols-3 gap-3">
             <Field label="First Name">
               <TextInput value={form.firstName} onChange={set('firstName')} placeholder="Jane" />
@@ -201,55 +180,77 @@ function EditModal({ user, onClose, onSave, onDelete, onToggleActive }) {
             </Field>
           </div>
 
-          {/* Contact */}
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Email">
-              <TextInput value={form.email} onChange={set('email')} placeholder="jane@example.com" />
-            </Field>
-            <Field label="Phone">
-              <TextInput value={form.phone} onChange={set('phone')} placeholder="+15551234567" />
-            </Field>
+          {/* ── Contact ──────────────────────────────────────────── */}
+          <div className="mt-6 border-t border-white/10 pt-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Contact</p>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Email">
+                <TextInput value={form.email} onChange={set('email')} placeholder="jane@example.com" />
+              </Field>
+              <Field label="Phone">
+                <TextInput value={form.phone} onChange={set('phone')} placeholder="+15551234567" />
+              </Field>
+            </div>
           </div>
 
-          {/* Trading preferences */}
-          <div className="grid grid-cols-3 gap-3">
-            <Field label="Trading Style">
-              <Segment options={STYLE_OPTS} value={form.tradingStyle} onChange={set('tradingStyle')} />
-            </Field>
-            <Field label="Index">
-              <Segment options={INDEX_OPTS} value={form.index} onChange={set('index')} />
-            </Field>
-            <Field label="Delta Trigger">
-              <input
-                type="number"
-                min={0.05} max={0.99} step={0.05}
-                value={form.deltaTrigger}
-                onChange={(e) => set('deltaTrigger')(parseFloat(e.target.value))}
-                className="w-full rounded-xl border border-white/10 bg-[#061018] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-              />
-            </Field>
+          {/* ── Trading Preferences ──────────────────────────────── */}
+          <div className="mt-6 border-t border-white/10 pt-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Trading Preferences</p>
+            <div className="grid grid-cols-3 gap-3">
+              <Field label="Trading Style">
+                <Segment options={STYLE_OPTS} value={form.tradingStyle} onChange={set('tradingStyle')} />
+              </Field>
+              <Field label="Index">
+                <Segment options={INDEX_OPTS} value={form.index} onChange={set('index')} />
+              </Field>
+              <Field label="Delta Trigger">
+                <input
+                  type="number"
+                  min={0.05} max={0.99} step={0.05}
+                  value={form.deltaTrigger}
+                  onChange={(e) => set('deltaTrigger')(parseFloat(e.target.value))}
+                  className="w-full rounded-xl border border-white/10 bg-[#061018] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                />
+              </Field>
+            </div>
+            <div className="mt-4">
+              <Field label="Pivot Periods">
+                <MultiToggle options={PIVOT_OPTS} value={form.pivotPeriods} onChange={set('pivotPeriods')} />
+              </Field>
+            </div>
           </div>
 
-          {/* Pivot Periods */}
-          <Field label="Pivot Periods">
-            <MultiToggle options={PIVOT_OPTS} value={form.pivotPeriods} onChange={set('pivotPeriods')} />
-          </Field>
-
-          {/* Notifications */}
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-300">Notifications</label>
+          {/* ── Alerts ───────────────────────────────────────────── */}
+          <div className="mt-6 border-t border-white/10 pt-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Alerts</p>
             <div className="flex gap-3">
               <Toggle label="Email Alerts" checked={form.notifEmail} onChange={set('notifEmail')} />
               <Toggle label="ntfy Push"    checked={form.notifNtfy}  onChange={set('notifNtfy')} />
             </div>
           </div>
 
-          {/* Subscription Level */}
-          <Field label="Subscription Level">
-            <Segment options={SUB_LEVELS} value={form.subscriptionLevel} onChange={set('subscriptionLevel')} />
-          </Field>
+          {/* ── Access ───────────────────────────────────────────── */}
+          <div className="mt-6 border-t border-white/10 pt-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Access</p>
+            <div className="space-y-4">
+              <Field label="Subscription Level">
+                <Segment options={SUB_LEVELS} value={form.subscriptionLevel} onChange={set('subscriptionLevel')} />
+              </Field>
+              <Field label="Role">
+                <Segment
+                  options={currentRole === 'superuser' ? ROLES : ['Subscriber']}
+                  value={form.role ?? 'Subscriber'}
+                  onChange={set('role')}
+                />
+                {currentRole !== 'superuser' && (
+                  <p className="mt-1.5 text-xs text-slate-500">Only Super Users can assign Admin or Super User roles.</p>
+                )}
+              </Field>
+            </div>
+          </div>
 
-          {/* Save / Cancel */}
+          {/* ── Actions ──────────────────────────────────────────── */}
+          <div className="mt-6 border-t border-white/10 pt-5">
           <div className="flex gap-3">
             <button
               onClick={handleSave}
@@ -264,8 +265,10 @@ function EditModal({ user, onClose, onSave, onDelete, onToggleActive }) {
               Cancel
             </button>
           </div>
+          </div>
 
-          {/* Danger zone */}
+          {/* ── Danger Zone ──────────────────────────────────────── */}
+          <div className="mt-4">
           <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4">
             <p className="mb-3 text-xs font-medium uppercase tracking-wide text-slate-500">Danger Zone</p>
             <div className="flex gap-3">
@@ -301,6 +304,8 @@ function EditModal({ user, onClose, onSave, onDelete, onToggleActive }) {
               )}
             </div>
           </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -308,6 +313,7 @@ function EditModal({ user, onClose, onSave, onDelete, onToggleActive }) {
 }
 
 export default function ManageUsers() {
+  const { role: currentRole }         = useAuth();
   const [users, setUsers]             = useState(loadUsers);
   const [editingUser, setEditingUser] = useState(null);
   const [query, setQuery]             = useState('');
@@ -386,6 +392,7 @@ export default function ManageUsers() {
                 <th className="px-4 py-3 text-left">Style</th>
                 <th className="px-4 py-3 text-left">Index</th>
                 <th className="px-4 py-3 text-left">Subscription</th>
+                <th className="px-4 py-3 text-left">Role</th>
                 <th className="px-4 py-3 text-left">Active</th>
                 <th className="px-4 py-3 text-left">Updated</th>
               </tr>
@@ -410,6 +417,7 @@ export default function ManageUsers() {
                   <td className="px-4 py-3 text-slate-400">{u.tradingStyle}</td>
                   <td className="px-4 py-3 text-slate-400">{u.index}</td>
                   <td className="px-4 py-3"><SubBadge level={u.subscriptionLevel} /></td>
+                  <td className="px-4 py-3"><RoleBadge role={u.role} /></td>
                   <td className="px-4 py-3"><ActiveBadge active={u.isActive} /></td>
                   <td className="px-4 py-3 text-slate-500">{u.updatedAt?.slice(0, 10) ?? '—'}</td>
                 </tr>
@@ -426,6 +434,7 @@ export default function ManageUsers() {
           onSave={handleSave}
           onDelete={handleDelete}
           onToggleActive={handleToggleActive}
+          currentRole={currentRole}
         />
       )}
     </div>

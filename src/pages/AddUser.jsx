@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { loadUsers, saveUsers } from '../data/users';
 
 const SUB_LEVELS = ['No Access', 'Trial', 'Monthly', 'Annual'];
+const ROLES      = ['Subscriber', 'Admin', 'Super User'];
 const PIVOT_OPTS = ['Daily', 'Weekly', 'Monthly'];
 const STYLE_OPTS = ['Aggressive', 'Moderate', 'Conservative'];
 const INDEX_OPTS = ['SPX', 'XSP'];
@@ -13,17 +16,9 @@ const DEFAULTS = {
   pivotPeriods: ['Weekly'],
   notifEmail: false, notifNtfy: false,
   subscriptionLevel: 'No Access',
+  role: 'Subscriber',
+  password: '',
 };
-
-function loadUsers() {
-  try {
-    return JSON.parse(localStorage.getItem('manage_users')) || [];
-  } catch { return []; }
-}
-
-function saveUsers(users) {
-  localStorage.setItem('manage_users', JSON.stringify(users));
-}
 
 function Field({ label, children }) {
   return (
@@ -116,6 +111,7 @@ function Toggle({ label, checked, onChange }) {
 
 export default function AddUser() {
   const navigate = useNavigate();
+  const { role: currentRole } = useAuth();
   const [form, setForm] = useState({ ...DEFAULTS });
   const [error, setError]   = useState('');
   const [saving, setSaving] = useState(false);
@@ -132,6 +128,10 @@ export default function AddUser() {
     }
     if (!form.email.trim()) {
       setError('Email is required.');
+      return;
+    }
+    if (!form.password) {
+      setError('Password is required.');
       return;
     }
 
@@ -222,6 +222,23 @@ export default function AddUser() {
           {/* Subscription Level */}
           <Field label="Subscription Level">
             <Segment options={SUB_LEVELS} value={form.subscriptionLevel} onChange={set('subscriptionLevel')} />
+          </Field>
+
+          {/* Role — Super User can assign any role; Admin can only assign Subscriber */}
+          <Field label="Role">
+            <Segment
+              options={currentRole === 'superuser' ? ROLES : ['Subscriber']}
+              value={form.role}
+              onChange={set('role')}
+            />
+            {currentRole !== 'superuser' && (
+              <p className="mt-1.5 text-xs text-slate-500">Only Super Users can assign Admin or Super User roles.</p>
+            )}
+          </Field>
+
+          {/* Password */}
+          <Field label="Password">
+            <TextInput type="password" value={form.password} onChange={set('password')} placeholder="••••••••" />
           </Field>
 
           {error && (
