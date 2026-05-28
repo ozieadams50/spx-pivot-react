@@ -94,9 +94,7 @@ export default function SPXPivots() {
   const [tradeMode, setTradeMode] = useState('Monthly Trade');
   const [selectedStrategy, setSelectedStrategy] = useState('Moderate');
   const [showModal, setShowModal] = useState(false);
-  const [asOfDate, setAsOfDate] = useState('2026-05-27');
-
-  const data = PIVOT_DATA[tradeMode];
+const data = PIVOT_DATA[tradeMode];
   const activeExec = data.execCards[selectedStrategy];
   const sentimentClass = SENTIMENT_STYLES[data.sentiment] || 'text-slate-300';
 
@@ -111,14 +109,9 @@ export default function SPXPivots() {
           <h1 className="text-3xl font-bold text-white sm:text-4xl">SPX Option Trader</h1>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-black/30 p-5">
-          <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-500">As Of Date</p>
-          <input
-            type="date"
-            value={asOfDate}
-            onChange={(e) => setAsOfDate(e.target.value)}
-            className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white focus:border-cyan-500/50 focus:outline-none"
-          />
+        <div className="rounded-3xl border border-white/10 bg-black/30 px-8 py-5 text-right">
+          <p className="mb-1 text-xs uppercase tracking-[0.2em] text-slate-500">Market Sentiment</p>
+          <p className={`text-3xl font-bold sm:text-4xl ${sentimentClass}`}>{data.sentiment}</p>
         </div>
       </div>
 
@@ -150,9 +143,6 @@ export default function SPXPivots() {
                 {data.caption === 'today'
                   ? `Today — ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
                   : data.caption}
-              </p>
-              <p className={`mt-1 text-sm font-medium ${sentimentClass}`}>
-                Market Sentiment: {data.sentiment}
               </p>
             </div>
 
