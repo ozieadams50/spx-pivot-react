@@ -6,15 +6,13 @@ const TRADE_MODES = ['Monthly Trade', 'Weekly Trade', 'Daily Trade'];
 const PIVOT_DATA = {
   'Monthly Trade': {
     title: 'SPX Monthly Pivot',
-    period: 'Monthly',
-    month: '2026-05-01',
+    caption: 'Month as of May 1, 2026',
     primaryPivot: '7,234.54',
     sentiment: 'Bullish',
     expiry: 'May 29, 2026',
     pivots: [
-      { label: 'R2 Resistance', value: '$7,639.87', tone: 'text-rose-400', key: 'r2' },
-      { label: 'R1 Resistance', value: '$7,481.28', tone: 'text-orange-400', key: 'r1' },
-      { label: 'Period Open', value: '$7,234.54', tone: 'text-cyan-400', key: 'open' },
+      { label: 'R2 Resistance', value: '$7,639.87', tone: 'text-emerald-400', key: 'r2' },
+      { label: 'R1 Resistance', value: '$7,481.28', tone: 'text-green-400', key: 'r1' },
       { label: 'S1 Support', value: '$7,044.86', tone: 'text-emerald-400', key: 's1' },
       { label: 'S2 Support', value: '$6,818.65', tone: 'text-green-400', key: 's2' },
     ],
@@ -31,15 +29,13 @@ const PIVOT_DATA = {
   },
   'Weekly Trade': {
     title: 'SPX Weekly Pivot',
-    period: 'Weekly',
-    month: '2026-05-26',
+    caption: 'Week of May 26, 2026',
     primaryPivot: '5,802.13',
     sentiment: 'Neutral to Bullish',
     expiry: 'May 29, 2026',
     pivots: [
-      { label: 'R2 Resistance', value: '$5,919.40', tone: 'text-rose-400', key: 'r2' },
-      { label: 'R1 Resistance', value: '$5,860.77', tone: 'text-orange-400', key: 'r1' },
-      { label: 'Period Open', value: '$5,802.13', tone: 'text-cyan-400', key: 'open' },
+      { label: 'R2 Resistance', value: '$5,919.40', tone: 'text-emerald-400', key: 'r2' },
+      { label: 'R1 Resistance', value: '$5,860.77', tone: 'text-green-400', key: 'r1' },
       { label: 'S1 Support', value: '$5,743.49', tone: 'text-emerald-400', key: 's1' },
       { label: 'S2 Support', value: '$5,684.86', tone: 'text-green-400', key: 's2' },
     ],
@@ -56,15 +52,13 @@ const PIVOT_DATA = {
   },
   'Daily Trade': {
     title: 'SPX Daily Pivot',
-    period: 'Daily',
-    month: '2026-05-27',
+    caption: 'today',
     primaryPivot: '5,774.22',
     sentiment: 'Bullish (default)',
     expiry: 'May 27, 2026',
     pivots: [
-      { label: 'R2 Resistance', value: '$5,831.45', tone: 'text-rose-400', key: 'r2' },
-      { label: 'R1 Resistance', value: '$5,802.84', tone: 'text-orange-400', key: 'r1' },
-      { label: 'Period Open', value: '$5,774.22', tone: 'text-cyan-400', key: 'open' },
+      { label: 'R2 Resistance', value: '$5,831.45', tone: 'text-emerald-400', key: 'r2' },
+      { label: 'R1 Resistance', value: '$5,802.84', tone: 'text-green-400', key: 'r1' },
       { label: 'S1 Support', value: '$5,745.61', tone: 'text-emerald-400', key: 's1' },
       { label: 'S2 Support', value: '$5,716.99', tone: 'text-green-400', key: 's2' },
     ],
@@ -126,15 +120,6 @@ export default function SPXPivots() {
               onChange={(e) => setAsOfDate(e.target.value)}
               className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white focus:border-cyan-500/50 focus:outline-none"
             />
-            <div className="flex gap-3">
-              <button className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors">
-                Preview
-              </button>
-              <button className="rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-400 transition-colors">
-                Update
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -163,26 +148,24 @@ export default function SPXPivots() {
             <div>
               <h2 className="text-2xl font-bold text-white">{data.title}</h2>
               <p className="mt-2 text-sm text-slate-400">
-                {data.period} Levels — period of {data.month}
+                {data.caption === 'today'
+                  ? `Today — ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+                  : data.caption}
               </p>
               <p className={`mt-1 text-sm font-medium ${sentimentClass}`}>
                 Market Sentiment: {data.sentiment}
               </p>
             </div>
 
-            <div className="rounded-3xl border border-cyan-500/20 bg-cyan-500/10 px-6 py-4 text-right">
-              <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">Primary Pivot</p>
-              <p className="mt-1 text-4xl font-bold text-white">{data.primaryPivot}</p>
-            </div>
           </div>
         </div>
 
         {/* Pivot levels grid */}
-        <div className="grid grid-cols-1 border-b border-white/10 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid grid-cols-1 border-b border-white/10 sm:grid-cols-2 xl:grid-cols-4">
           {data.pivots.map((item) => (
             <div
               key={item.key}
-              className="border-b border-white/5 p-5 xl:border-b-0 xl:border-r xl:border-white/5 last:border-r-0"
+              className="border-b border-white/5 p-5 text-center xl:border-b-0 xl:border-r xl:border-white/5 last:border-r-0"
             >
               <p className="text-xs uppercase tracking-wide text-slate-500">{item.label}</p>
               <p className={`mt-3 text-2xl font-bold lg:text-3xl ${item.tone}`}>{item.value}</p>
