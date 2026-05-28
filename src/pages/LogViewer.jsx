@@ -1,19 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 
 const CRON_JOBS = [
-  { name: 'NightlyUpdate',    label: 'Nightly OHLC',          icon: '🌙' },
-  { name: 'SentimentDaily',   label: 'Sentiment Daily',       icon: '📊' },
-  { name: 'SentimentWeekly',  label: 'Sentiment Weekly',      icon: '📅' },
   { name: 'FadeSetup',        label: 'Fade Daily Setup',      icon: '📋' },
-  { name: 'SPX_WebSocket',    label: 'SPX WebSocket',         icon: '📡' },
-  { name: 'FadeIntraday',     label: 'Fade Intraday Monitor', icon: '🔍' },
-  { name: 'PivotFallback',    label: 'SPX Pivot Fallback',    icon: '🛡️' },
-  { name: 'MorningPivots',    label: 'Morning Pivots',        icon: '📐' },
-  { name: 'EveningSignal',    label: 'SPX Evening Signal',    icon: '🌆' },
   { name: 'FadeEOD',          label: 'Fade EOD Recorder',     icon: '📝' },
-  { name: 'SignalRecorder',   label: 'SPX Signal Recorder',   icon: '🗂️' },
+  { name: 'FadeIntraday',     label: 'Fade Intraday Monitor', icon: '🔍' },
   { name: 'GEX_DailyRun',     label: 'GEX Daily Run',         icon: '⚡' },
+  { name: 'MorningPivots',    label: 'Morning Pivots',        icon: '📐', app: 'spx_pivots' },
+  { name: 'NightlyUpdate',    label: 'Nightly OHLC',          icon: '🌙', app: 'spx_pivots' },
+  { name: 'SentimentDaily',   label: 'Sentiment Daily',       icon: '📊' },
   { name: 'SentimentMonthly', label: 'Sentiment Monthly',     icon: '📈' },
+  { name: 'SentimentWeekly',  label: 'Sentiment Weekly',      icon: '📅' },
+  { name: 'EveningSignal',    label: 'SPX Evening Signal',    icon: '🌆', app: 'spx_pivots' },
+  { name: 'PivotFallback',    label: 'SPX Pivot Fallback',    icon: '🛡️', app: 'spx_pivots' },
+  { name: 'SignalRecorder',   label: 'SPX Signal Recorder',   icon: '🗂️', app: 'spx_pivots' },
+  { name: 'SPX_WebSocket',    label: 'SPX WebSocket',         icon: '📡', app: 'spx_pivots' },
 ];
 
 const MOCK_JOBS = {
@@ -114,7 +114,10 @@ export default function LogViewer() {
                   }`}
                 >
                   <span className="text-base leading-none">{dot}</span>
-                  <span className="flex-1 truncate">{j.icon} {j.label}</span>
+                  <span className="flex-1 truncate">{j.label}</span>
+                  {j.app === 'spx_pivots' && (
+                    <span className="rounded bg-cyan-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-400">SPX</span>
+                  )}
                 </button>
               );
             })}
@@ -129,7 +132,7 @@ export default function LogViewer() {
             <>
               <div className="mb-4 flex items-center gap-3">
                 <p className="text-base font-semibold text-white">
-                  {jobDef?.icon} {jobDef?.label}
+                  {jobDef?.label}
                 </p>
                 <span className={`rounded-lg px-2 py-0.5 text-xs font-medium ${LIGHT_BADGE[jobStatus.light] ?? LIGHT_BADGE.grey}`}>
                   {jobStatus.status_text}
@@ -141,6 +144,21 @@ export default function LogViewer() {
             </>
           )}
         </div>
+      </div>
+
+      {/* Legend */}
+      <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-white/10 pt-4">
+        {[
+          { dot: '🟢', label: 'Ran successfully' },
+          { dot: '🟡', label: 'Warning / no log' },
+          { dot: '🔴', label: 'Failed' },
+          { dot: '⚫', label: 'Not scheduled today' },
+        ].map(({ dot, label }) => (
+          <div key={dot} className="flex items-center gap-1.5">
+            <span className="text-sm leading-none">{dot}</span>
+            <span className="text-xs text-slate-400">{label}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

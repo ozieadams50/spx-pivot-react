@@ -1,19 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 
 const CRON_JOBS = [
-  { name: 'NightlyUpdate',    label: 'Nightly OHLC',          icon: '🌙', schedule: '12:30 AM'     },
-  { name: 'SentimentDaily',   label: 'Sentiment Daily',       icon: '📊', schedule: '8:00 AM'      },
-  { name: 'SentimentWeekly',  label: 'Sentiment Weekly',      icon: '📅', schedule: '8:00 AM Mon'  },
   { name: 'FadeSetup',        label: 'Fade Daily Setup',      icon: '📋', schedule: '9:00 AM'      },
-  { name: 'SPX_WebSocket',    label: 'SPX WebSocket',         icon: '📡', schedule: '9:30–4:00 PM' },
-  { name: 'FadeIntraday',     label: 'Fade Intraday Monitor', icon: '🔍', schedule: '9:30–4:00 PM' },
-  { name: 'PivotFallback',    label: 'SPX Pivot Fallback',    icon: '🛡️', schedule: '9:45 AM'     },
-  { name: 'MorningPivots',    label: 'Morning Pivots',        icon: '📐', schedule: '9:46 AM'      },
-  { name: 'EveningSignal',    label: 'SPX Evening Signal',    icon: '🌆', schedule: '3:45 PM'      },
   { name: 'FadeEOD',          label: 'Fade EOD Recorder',     icon: '📝', schedule: '4:15 PM'      },
-  { name: 'SignalRecorder',   label: 'SPX Signal Recorder',   icon: '🗂️', schedule: '4:15 PM'     },
+  { name: 'FadeIntraday',     label: 'Fade Intraday Monitor', icon: '🔍', schedule: '9:30–4:00 PM' },
   { name: 'GEX_DailyRun',     label: 'GEX Daily Run',         icon: '⚡', schedule: '4:35 PM'      },
+  { name: 'MorningPivots',    label: 'Morning Pivots',        icon: '📐', schedule: '9:46 AM',      app: 'spx_pivots' },
+  { name: 'NightlyUpdate',    label: 'Nightly OHLC',          icon: '🌙', schedule: '12:30 AM',     app: 'spx_pivots' },
+  { name: 'SentimentDaily',   label: 'Sentiment Daily',       icon: '📊', schedule: '8:00 AM'      },
   { name: 'SentimentMonthly', label: 'Sentiment Monthly',     icon: '📈', schedule: '5:00 PM'      },
+  { name: 'SentimentWeekly',  label: 'Sentiment Weekly',      icon: '📅', schedule: '8:00 AM Mon'  },
+  { name: 'EveningSignal',    label: 'SPX Evening Signal',    icon: '🌆', schedule: '3:45 PM',      app: 'spx_pivots' },
+  { name: 'PivotFallback',    label: 'SPX Pivot Fallback',    icon: '🛡️', schedule: '9:45 AM',     app: 'spx_pivots' },
+  { name: 'SignalRecorder',   label: 'SPX Signal Recorder',   icon: '🗂️', schedule: '4:15 PM',     app: 'spx_pivots' },
+  { name: 'SPX_WebSocket',    label: 'SPX WebSocket',         icon: '📡', schedule: '9:30–4:00 PM', app: 'spx_pivots' },
 ];
 
 const MOCK = {
@@ -73,7 +73,12 @@ function JobCard({ job, status }) {
   const s = LIGHT[status.light] ?? LIGHT.grey;
   return (
     <div className={`rounded-2xl border p-4 ${s.border} ${s.bg}`}>
-      <div className="text-xl">{status.light === 'red' ? '🔴' : status.light === 'yellow' ? '🟡' : status.light === 'green' ? '🟢' : '⚫'} {job.icon}</div>
+      <div className="flex items-start justify-between">
+        <div className="text-xl">{status.light === 'red' ? '🔴' : status.light === 'yellow' ? '🟡' : status.light === 'green' ? '🟢' : '⚫'} {job.icon}</div>
+        {job.app === 'spx_pivots' && (
+          <span className="rounded bg-cyan-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-400">SPX</span>
+        )}
+      </div>
       <p className="mt-2 text-sm font-bold text-white">{job.label}</p>
       <p className={`mt-0.5 text-xs font-medium ${s.text}`}>Scheduled: {job.schedule}</p>
       <p className={`mt-2 text-xs ${status.light === 'red' ? 'font-semibold text-rose-300' : s.text}`}>
