@@ -9,6 +9,8 @@ import SetMarketSentiment from './pages/SetMarketSentiment';
 import SentimentHistory from './pages/SentimentHistory';
 import ManageUsers from './pages/ManageUsers';
 import AddUser from './pages/AddUser';
+import ManageApps from './pages/ManageApps';
+import RegisterApp from './pages/RegisterApp';
 
 export default function App() {
   return (
@@ -33,9 +35,8 @@ export default function App() {
           <Route path="admin/users/add" element={<AddUser />} />
 
           {/* Admin — App Mgmt */}
-          <Route path="admin/apps" element={<Placeholder title="Manage App" description="Application configuration and settings." />} />
-          <Route path="admin/apps/register" element={<Placeholder title="Register App" description="Register a new application in the platform." />} />
-          <Route path="admin/apps/disable" element={<Placeholder title="Disable App" description="Disable an active application." />} />
+          <Route path="admin/apps" element={<ManageApps />} />
+          <Route path="admin/apps/register" element={<RegisterApp />} />
 
           {/* System Monitor */}
           <Route path="system" element={<Placeholder title="System Monitor" description="Server health, cron jobs, and data pipeline status." />} />

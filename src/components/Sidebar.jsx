@@ -38,9 +38,8 @@ const NAV = [
       {
         title: 'App Mgmt',
         children: [
-          { title: 'Manage App', path: '/admin/apps' },
+          { title: 'Manage Apps', path: '/admin/apps' },
           { title: 'Register App', path: '/admin/apps/register' },
-          { title: 'Disable App', path: '/admin/apps/disable' },
         ],
       },
     ],

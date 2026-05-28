@@ -249,13 +249,21 @@ function EditModal({ user, onClose, onSave, onDelete, onToggleActive }) {
             <Segment options={SUB_LEVELS} value={form.subscriptionLevel} onChange={set('subscriptionLevel')} />
           </Field>
 
-          {/* Save */}
-          <button
-            onClick={handleSave}
-            className="w-full rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400"
-          >
-            Save Changes
-          </button>
+          {/* Save / Cancel */}
+          <div className="flex gap-3">
+            <button
+              onClick={handleSave}
+              className="flex-1 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400"
+            >
+              Save Changes
+            </button>
+            <button
+              onClick={onClose}
+              className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/10"
+            >
+              Cancel
+            </button>
+          </div>
 
           {/* Danger zone */}
           <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4">
