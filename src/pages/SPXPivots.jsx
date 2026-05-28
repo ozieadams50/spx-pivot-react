@@ -192,22 +192,19 @@ export default function SPXPivots() {
           <div className="rounded-[32px] border border-emerald-500/10 bg-gradient-to-br from-[#07101a] to-[#0a1726] shadow-2xl">
             <div className="flex flex-col gap-5 border-b border-white/10 px-4 py-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
               <div>
-                <h3 className="text-2xl font-bold text-white">Bull Put Spreads</h3>
+                <h3 className="text-2xl font-bold text-white">
+                  <span className="text-slate-400">Trade Recommendation:</span> Bull Put Spread
+                </h3>
                 <p className="mt-2 text-sm text-slate-400">
                   Structured SPX premium-selling opportunities.
                 </p>
               </div>
-              <div className="flex flex-col items-end gap-2 lg:flex-row lg:items-center lg:gap-4">
-                <span className="text-sm text-slate-400">
-                  Trade Recommendation: <span className="font-semibold text-white">Bull Put Spread</span>
-                </span>
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="self-start rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors lg:self-auto"
-                >
-                  ⓘ How to Trade
-                </button>
-              </div>
+              <button
+                onClick={() => setShowModal(true)}
+                className="self-start rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors lg:self-auto"
+              >
+                ⓘ How to Trade
+              </button>
             </div>
 
             <div className="overflow-x-auto p-4">
