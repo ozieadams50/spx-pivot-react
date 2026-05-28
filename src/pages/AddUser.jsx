@@ -162,8 +162,9 @@ export default function AddUser() {
       </div>
 
       <div className="max-w-2xl rounded-2xl border border-white/10 bg-[#0d1f2d] p-6 shadow-lg">
-        <div className="space-y-5">
-          {/* Name */}
+
+          {/* ── Identity ─────────────────────────────────────────── */}
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Identity</p>
           <div className="grid grid-cols-3 gap-3">
             <Field label="First Name">
               <TextInput value={form.firstName} onChange={set('firstName')} placeholder="Jane" />
@@ -176,77 +177,90 @@ export default function AddUser() {
             </Field>
           </div>
 
-          {/* Contact */}
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Email">
-              <TextInput value={form.email} onChange={set('email')} placeholder="jane@example.com" />
-            </Field>
-            <Field label="Phone">
-              <TextInput value={form.phone} onChange={set('phone')} placeholder="+15551234567" />
-            </Field>
+          {/* ── Contact ──────────────────────────────────────────── */}
+          <div className="mt-6 border-t border-white/10 pt-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Contact</p>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Email">
+                <TextInput value={form.email} onChange={set('email')} placeholder="jane@example.com" />
+              </Field>
+              <Field label="Phone">
+                <TextInput value={form.phone} onChange={set('phone')} placeholder="+15551234567" />
+              </Field>
+            </div>
           </div>
 
-          {/* Trading preferences */}
-          <div className="grid grid-cols-3 gap-3">
-            <Field label="Trading Style">
-              <Segment options={STYLE_OPTS} value={form.tradingStyle} onChange={set('tradingStyle')} />
-            </Field>
-            <Field label="Index">
-              <Segment options={INDEX_OPTS} value={form.index} onChange={set('index')} />
-            </Field>
-            <Field label="Delta Trigger">
-              <input
-                type="number"
-                min={0.05} max={0.99} step={0.05}
-                value={form.deltaTrigger}
-                onChange={(e) => set('deltaTrigger')(parseFloat(e.target.value))}
-                className="w-full rounded-xl border border-white/10 bg-[#061018] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-              />
-            </Field>
+          {/* ── Trading Preferences ──────────────────────────────── */}
+          <div className="mt-6 border-t border-white/10 pt-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Trading Preferences</p>
+            <div className="grid grid-cols-3 gap-3">
+              <Field label="Trading Style">
+                <Segment options={STYLE_OPTS} value={form.tradingStyle} onChange={set('tradingStyle')} />
+              </Field>
+              <Field label="Index">
+                <Segment options={INDEX_OPTS} value={form.index} onChange={set('index')} />
+              </Field>
+              <Field label="Delta Trigger">
+                <input
+                  type="number"
+                  min={0.05} max={0.99} step={0.05}
+                  value={form.deltaTrigger}
+                  onChange={(e) => set('deltaTrigger')(parseFloat(e.target.value))}
+                  className="w-full rounded-xl border border-white/10 bg-[#061018] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                />
+              </Field>
+            </div>
+            <div className="mt-4">
+              <Field label="Pivot Periods">
+                <MultiToggle options={PIVOT_OPTS} value={form.pivotPeriods} onChange={set('pivotPeriods')} />
+              </Field>
+            </div>
           </div>
 
-          {/* Pivot Periods */}
-          <Field label="Pivot Periods">
-            <MultiToggle options={PIVOT_OPTS} value={form.pivotPeriods} onChange={set('pivotPeriods')} />
-          </Field>
-
-          {/* Notifications */}
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-300">Notifications</label>
+          {/* ── Alerts ───────────────────────────────────────────── */}
+          <div className="mt-6 border-t border-white/10 pt-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Alerts</p>
             <div className="flex gap-3">
               <Toggle label="Email Alerts" checked={form.notifEmail} onChange={set('notifEmail')} />
               <Toggle label="ntfy Push"    checked={form.notifNtfy}  onChange={set('notifNtfy')} />
             </div>
           </div>
 
-          {/* Subscription Level */}
-          <Field label="Subscription Level">
-            <Segment options={SUB_LEVELS} value={form.subscriptionLevel} onChange={set('subscriptionLevel')} />
-          </Field>
+          {/* ── Access ───────────────────────────────────────────── */}
+          <div className="mt-6 border-t border-white/10 pt-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Access</p>
+            <div className="space-y-4">
+              <Field label="Subscription Level">
+                <Segment options={SUB_LEVELS} value={form.subscriptionLevel} onChange={set('subscriptionLevel')} />
+              </Field>
+              <Field label="Role">
+                <Segment
+                  options={currentRole === 'superuser' ? ROLES : ['Subscriber']}
+                  value={form.role}
+                  onChange={set('role')}
+                />
+                {currentRole !== 'superuser' && (
+                  <p className="mt-1.5 text-xs text-slate-500">Only Super Users can assign Admin or Super User roles.</p>
+                )}
+              </Field>
+            </div>
+          </div>
 
-          {/* Role — Super User can assign any role; Admin can only assign Subscriber */}
-          <Field label="Role">
-            <Segment
-              options={currentRole === 'superuser' ? ROLES : ['Subscriber']}
-              value={form.role}
-              onChange={set('role')}
-            />
-            {currentRole !== 'superuser' && (
-              <p className="mt-1.5 text-xs text-slate-500">Only Super Users can assign Admin or Super User roles.</p>
-            )}
-          </Field>
+          {/* ── Password ─────────────────────────────────────────── */}
+          <div className="mt-6 border-t border-white/10 pt-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Password</p>
+            <Field label="Password">
+              <TextInput type="password" value={form.password} onChange={set('password')} placeholder="••••••••" />
+            </Field>
+          </div>
 
-          {/* Password */}
-          <Field label="Password">
-            <TextInput type="password" value={form.password} onChange={set('password')} placeholder="••••••••" />
-          </Field>
-
+          {/* ── Actions ──────────────────────────────────────────── */}
+          <div className="mt-6 border-t border-white/10 pt-5">
           {error && (
-            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+            <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
               {error}
             </div>
           )}
-
           <div className="flex gap-3">
             <button
               onClick={handleSubmit}
@@ -262,7 +276,7 @@ export default function AddUser() {
               Cancel
             </button>
           </div>
-        </div>
+          </div>
       </div>
     </div>
   );
