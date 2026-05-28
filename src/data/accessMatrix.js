@@ -1,4 +1,5 @@
-const KEY = 'access_matrix';
+const KEY     = 'access_matrix';
+const VERSION = 2;
 
 // Flat list of every navigable item — used by both Sidebar and ManageAccess
 export const MENU_ITEMS = [
@@ -45,13 +46,13 @@ export const DEFAULT_MATRIX = {
   'admin/user-mgmt':                                { subscriber: false, admin: true,  superuser: true  },
   'admin/user-mgmt/manage-users':                   { subscriber: false, admin: true,  superuser: true  },
   'admin/user-mgmt/add-user':                       { subscriber: false, admin: true,  superuser: true  },
-  'admin/access-group':                             { subscriber: false, admin: true,  superuser: true  },
-  'admin/access-group/manage-roles':                { subscriber: false, admin: true,  superuser: true  },
-  'admin/access-group/add-role':                    { subscriber: false, admin: true,  superuser: true  },
-  'admin/access-group/manage-access':               { subscriber: false, admin: true,  superuser: true  },
-  'admin/app-mgmt':                                 { subscriber: false, admin: true,  superuser: true  },
-  'admin/app-mgmt/manage-apps':                     { subscriber: false, admin: true,  superuser: true  },
-  'admin/app-mgmt/register-app':                    { subscriber: false, admin: true,  superuser: true  },
+  'admin/access-group':                             { subscriber: false, admin: false, superuser: true  },
+  'admin/access-group/manage-roles':                { subscriber: false, admin: false, superuser: true  },
+  'admin/access-group/add-role':                    { subscriber: false, admin: false, superuser: true  },
+  'admin/access-group/manage-access':               { subscriber: false, admin: false, superuser: true  },
+  'admin/app-mgmt':                                 { subscriber: false, admin: false, superuser: true  },
+  'admin/app-mgmt/manage-apps':                     { subscriber: false, admin: false, superuser: true  },
+  'admin/app-mgmt/register-app':                    { subscriber: false, admin: false, superuser: true  },
   'system-monitor':                                 { subscriber: false, admin: false, superuser: true  },
   'system-monitor/open-monitor':                    { subscriber: false, admin: false, superuser: true  },
   'system-monitor/log-viewer':                      { subscriber: false, admin: false, superuser: true  },
@@ -60,14 +61,17 @@ export const DEFAULT_MATRIX = {
 export function loadMatrix() {
   try {
     const stored = JSON.parse(localStorage.getItem(KEY));
-    return stored ? { ...DEFAULT_MATRIX, ...stored } : { ...DEFAULT_MATRIX };
+    if (stored?.__version === VERSION) {
+      return { ...DEFAULT_MATRIX, ...stored };
+    }
+    return { ...DEFAULT_MATRIX };
   } catch {
     return { ...DEFAULT_MATRIX };
   }
 }
 
 export function saveMatrix(matrix) {
-  localStorage.setItem(KEY, JSON.stringify(matrix));
+  localStorage.setItem(KEY, JSON.stringify({ ...matrix, __version: VERSION }));
 }
 
 export function canAccess(matrix, role, itemKey) {

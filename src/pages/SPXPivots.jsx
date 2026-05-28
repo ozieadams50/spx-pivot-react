@@ -113,13 +113,12 @@ export default function SPXPivots() {
 
         <div className="rounded-3xl border border-white/10 bg-black/30 p-5">
           <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-500">As Of Date</p>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <input
-              type="date"
-              value={asOfDate}
-              onChange={(e) => setAsOfDate(e.target.value)}
-              className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white focus:border-cyan-500/50 focus:outline-none"
-            />
+          <input
+            type="date"
+            value={asOfDate}
+            onChange={(e) => setAsOfDate(e.target.value)}
+            className="rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-white focus:border-cyan-500/50 focus:outline-none"
+          />
         </div>
       </div>
 
