@@ -31,8 +31,6 @@ export default function App() {
           {/* Admin — User Mgmt */}
           <Route path="admin/users" element={<ManageUsers />} />
           <Route path="admin/users/add" element={<AddUser />} />
-          <Route path="admin/users/deactivate" element={<Placeholder title="Deactivate User" description="Suspend a subscriber's access." />} />
-          <Route path="admin/users/delete" element={<Placeholder title="Delete User" description="Permanently remove a subscriber." />} />
 
           {/* Admin — App Mgmt */}
           <Route path="admin/apps" element={<Placeholder title="Manage App" description="Application configuration and settings." />} />

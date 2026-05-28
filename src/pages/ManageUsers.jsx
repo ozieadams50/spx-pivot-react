@@ -300,8 +300,9 @@ function EditModal({ user, onClose, onSave, onDelete, onToggleActive }) {
 }
 
 export default function ManageUsers() {
-  const [users, setUsers]           = useState(loadUsers);
+  const [users, setUsers]             = useState(loadUsers);
   const [editingUser, setEditingUser] = useState(null);
+  const [query, setQuery]             = useState('');
 
   useEffect(() => { saveUsers(users); }, [users]);
 
@@ -321,6 +322,15 @@ export default function ManageUsers() {
     );
   }
 
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? users.filter(
+        (u) =>
+          fullName(u).toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q),
+      )
+    : users;
+
   return (
     <div className="p-6 md:p-8">
       <div className="mb-6">
@@ -330,9 +340,35 @@ export default function ManageUsers() {
         </p>
       </div>
 
+      {/* Search */}
+      <div className="mb-4 max-w-sm">
+        <div className="relative">
+          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-500">
+            &#9906;
+          </span>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name or email…"
+            className="w-full rounded-xl border border-white/10 bg-[#0d1f2d] py-2 pl-9 pr-4 text-sm text-white placeholder-slate-600 outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              className="absolute inset-y-0 right-3 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="overflow-x-auto rounded-2xl border border-white/10 bg-[#0d1f2d]">
         {users.length === 0 ? (
           <p className="p-6 text-sm text-slate-400">No users yet.</p>
+        ) : filtered.length === 0 ? (
+          <p className="p-6 text-sm text-slate-400">No users match "{query}".</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
@@ -347,11 +383,11 @@ export default function ManageUsers() {
               </tr>
             </thead>
             <tbody>
-              {users.map((u, i) => (
+              {filtered.map((u, i) => (
                 <tr
                   key={u.id}
                   className={`transition-colors hover:bg-white/5 ${
-                    i < users.length - 1 ? 'border-b border-white/5' : ''
+                    i < filtered.length - 1 ? 'border-b border-white/5' : ''
                   }`}
                 >
                   <td className="px-4 py-3">

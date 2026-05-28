@@ -33,8 +33,6 @@ const NAV = [
         children: [
           { title: 'Manage Users', path: '/admin/users' },
           { title: 'Add User', path: '/admin/users/add' },
-          { title: 'Deactivate User', path: '/admin/users/deactivate' },
-          { title: 'Delete User', path: '/admin/users/delete' },
         ],
       },
       {
