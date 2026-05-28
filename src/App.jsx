@@ -7,6 +7,7 @@ import SubscriberCommentary from './pages/SubscriberCommentary';
 import CommentaryHistory from './pages/CommentaryHistory';
 import SetMarketSentiment from './pages/SetMarketSentiment';
 import SentimentHistory from './pages/SentimentHistory';
+import ManageUsers from './pages/ManageUsers';
 
 export default function App() {
   return (
@@ -27,7 +28,7 @@ export default function App() {
           <Route path="admin/commentary-history" element={<CommentaryHistory />} />
 
           {/* Admin — User Mgmt */}
-          <Route path="admin/users" element={<Placeholder title="Manage Users" description="View and manage platform subscribers." />} />
+          <Route path="admin/users" element={<ManageUsers />} />
           <Route path="admin/users/add" element={<Placeholder title="Add User" description="Register a new platform subscriber." />} />
           <Route path="admin/users/deactivate" element={<Placeholder title="Deactivate User" description="Suspend a subscriber's access." />} />
           <Route path="admin/users/delete" element={<Placeholder title="Delete User" description="Permanently remove a subscriber." />} />
