@@ -13,6 +13,10 @@ import ManageApps from './pages/ManageApps';
 import RegisterApp from './pages/RegisterApp';
 import OpenMonitor from './pages/OpenMonitor';
 import LogViewer from './pages/LogViewer';
+import ContactInfo from './pages/ContactInfo';
+import NotificationChannels from './pages/NotificationChannels';
+import SPXTradeSettings from './pages/SPXTradeSettings';
+import ManagePassword from './pages/ManagePassword';
 
 export default function App() {
   return (
@@ -45,10 +49,10 @@ export default function App() {
           <Route path="system/logs" element={<LogViewer />} />
 
           {/* Profile */}
-          <Route path="profile/contact" element={<Placeholder title="Contact Info" />} />
-          <Route path="profile/notifications" element={<Placeholder title="Notification Channels" description="Configure your ntfy topics and email preferences." />} />
-          <Route path="profile/trade-settings" element={<Placeholder title="SPX Trade Settings" description="Set your trade style: Aggressive, Moderate, or Conservative." />} />
-          <Route path="profile/password" element={<Placeholder title="Manage Password" />} />
+          <Route path="profile/contact"       element={<ContactInfo />} />
+          <Route path="profile/notifications" element={<NotificationChannels />} />
+          <Route path="profile/trade-settings" element={<SPXTradeSettings />} />
+          <Route path="profile/password"      element={<ManagePassword />} />
         </Route>
       </Routes>
     </BrowserRouter>
