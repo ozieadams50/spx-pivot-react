@@ -197,12 +197,17 @@ export default function SPXPivots() {
                   Structured SPX premium-selling opportunities.
                 </p>
               </div>
-              <button
-                onClick={() => setShowModal(true)}
-                className="self-start rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors lg:self-auto"
-              >
-                ⓘ How to Trade
-              </button>
+              <div className="flex flex-col items-end gap-2 lg:flex-row lg:items-center lg:gap-4">
+                <span className="text-sm text-slate-400">
+                  Trade Recommendation: <span className="font-semibold text-white">Bull Put Spread</span>
+                </span>
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="self-start rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors lg:self-auto"
+                >
+                  ⓘ How to Trade
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto p-4">
