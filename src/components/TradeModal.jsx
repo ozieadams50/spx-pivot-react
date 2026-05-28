@@ -1,3 +1,5 @@
+import vspImage from '../assets/VSP.png';
+
 const TONE_MAP = {
   emerald: 'border-emerald-500/20 bg-emerald-500/5 text-emerald-300',
   cyan: 'border-cyan-500/20 bg-cyan-500/5 text-cyan-300',
@@ -8,6 +10,64 @@ function TradeLegCard({ title, contract, tone }) {
     <div className={`rounded-2xl border p-5 ${TONE_MAP[tone]}`}>
       <p className="mb-2 text-xs uppercase tracking-[0.2em] opacity-80">{title}</p>
       <p className="text-lg font-semibold text-white">{contract}</p>
+    </div>
+  );
+}
+
+function parseLeg(legStr) {
+  const [expiryPart, detailPart] = legStr.split('•').map((s) => s.trim());
+  const [strike] = (detailPart ?? '').split(' ');
+  return { expiry: expiryPart, strike: strike ?? '—' };
+}
+
+const GREEK_COLS = ['Bid', 'Ask', 'Delta', 'Theta', 'Gamma'];
+
+function TastyTradeTicket({ buy, sell, strategyImage }) {
+  const bto = parseLeg(buy);
+  const sto = parseLeg(sell);
+
+  const rows = [
+    { ...bto, action: 'B', label: 'Buy to Open',  border: 'border-l-emerald-500', bg: 'bg-emerald-500/[0.06]', badge: 'bg-emerald-500 text-white' },
+    { ...sto, action: 'S', label: 'Sell to Open', border: 'border-l-rose-500',    bg: 'bg-rose-500/[0.06]',    badge: 'bg-rose-600 text-white'    },
+  ];
+
+  return (
+    <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-black/50">
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">TastyTrade Order Entry</p>
+        {strategyImage && (
+          <img src={strategyImage} alt="Strategy type" className="h-7 object-contain" />
+        )}
+      </div>
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="border-b border-white/[0.06] text-[10px] uppercase tracking-widest text-slate-600">
+            <th className="px-4 py-2 text-left">Strike</th>
+            {GREEK_COLS.map((c) => (
+              <th key={c} className="px-3 py-2 text-right">{c}</th>
+            ))}
+            <th className="px-4 py-2 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.action} className={`border-l-4 ${row.border} ${row.bg}`}>
+              <td className="px-4 py-3">
+                <span className="text-sm font-bold text-white">{row.strike}</span>
+                <span className="ml-2 text-[10px] text-slate-500">Put · {row.expiry}</span>
+              </td>
+              {GREEK_COLS.map((c) => (
+                <td key={c} className="px-3 py-3 text-right font-mono text-slate-600">—</td>
+              ))}
+              <td className="px-4 py-3 text-right">
+                <span className={`inline-block rounded px-2.5 py-1 text-xs font-bold tracking-wide ${row.badge}`}>
+                  {row.action} 1
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -54,9 +114,11 @@ export default function TradeModal({ selectedStrategy, setSelectedStrategy, exec
             <p className="mt-1 text-sm text-slate-400">{activeStrategy.risk}</p>
 
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
-              <TradeLegCard title="Buy to Open (Long Leg)" contract={activeStrategy.buy} tone="emerald" />
+              <TradeLegCard title="Buy to Open (Long Leg)"   contract={activeStrategy.buy}  tone="emerald" />
               <TradeLegCard title="Sell to Open (Short Leg)" contract={activeStrategy.sell} tone="cyan" />
             </div>
+
+            <TastyTradeTicket buy={activeStrategy.buy} sell={activeStrategy.sell} strategyImage={vspImage} />
 
             <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Target Net Credit</p>
@@ -66,15 +128,6 @@ export default function TradeModal({ selectedStrategy, setSelectedStrategy, exec
               </p>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-slate-400">
-              <p className="font-semibold text-slate-300">Strategy Summary</p>
-              <ul className="mt-3 space-y-2">
-                <li>• <span className="text-white">Sell</span> the higher-strike put (short leg) to collect premium</li>
-                <li>• <span className="text-white">Buy</span> the lower-strike put (long leg) to define max risk</li>
-                <li>• Spread width = 5 points → Max risk = $500 per contract</li>
-                <li>• Profit if SPX closes above short put at expiry</li>
-              </ul>
-            </div>
           </div>
         </div>
       </div>

@@ -97,15 +97,15 @@ export default function ManageAccess() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-[#0d1f2d]">
-        <table className="w-full text-sm">
+      <div className="inline-block overflow-x-auto rounded-2xl border border-white/10 bg-[#0d1f2d]">
+        <table className="text-sm">
           <thead>
             <tr className="border-b border-white/10">
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-widest text-slate-500">
                 Menu / Section
               </th>
               {roles.map((r) => (
-                <th key={r.key} className="w-28 px-3 py-3 text-center text-xs font-semibold uppercase tracking-widest">
+                <th key={r.key} className="w-16 px-2 py-3 text-center text-xs font-semibold uppercase tracking-widest">
                   <span className={ROLE_BADGE[r.key] ?? 'text-slate-300'}>{r.name}</span>
                 </th>
               ))}
@@ -127,7 +127,7 @@ export default function ManageAccess() {
                   {roles.map((r) => {
                     const checked = matrix[item.key]?.[r.key] !== false;
                     return (
-                      <td key={r.key} className="px-3 py-2.5 text-center">
+                      <td key={r.key} className="px-2 py-2.5 text-center">
                         <Checkbox
                           checked={checked}
                           onChange={() => toggle(item.key, r.key)}
