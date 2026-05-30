@@ -96,9 +96,10 @@ const EVENT_BADGE = {
 
 const DEFAULTS = {
   ticker:     'SPX',
-  start_date: '2025-01-01',
+  start_date: '2015-01-01',
   end_date:   new Date().toISOString().slice(0, 10),
   period:     'daily',
+  sma_filter: 'none',
 };
 
 export default function HistoricalPerformance() {
@@ -118,6 +119,7 @@ export default function HistoricalPerformance() {
         start_date: form.start_date,
         end_date:   form.end_date,
         period:     form.period,
+        sma_filter: form.sma_filter,
       });
       const data = await apiFetch(`/historical/quant?${params}`);
       setResults(data);
@@ -165,12 +167,20 @@ export default function HistoricalPerformance() {
             <div>
               <Lbl>Date Range</Lbl>
               <div className="space-y-1.5">
-                <input type="date" value={form.start_date}
-                  onChange={e => set('start_date')(e.target.value)}
-                  className={inputCls} />
-                <input type="date" value={form.end_date}
-                  onChange={e => set('end_date')(e.target.value)}
-                  className={inputCls} />
+                <div>
+                  <p className="mb-0.5 text-[9px] uppercase tracking-wider text-slate-500">From</p>
+                  <input type="date" value={form.start_date}
+                    onChange={e => set('start_date')(e.target.value)}
+                    style={{ colorScheme: 'dark' }}
+                    className={inputCls} />
+                </div>
+                <div>
+                  <p className="mb-0.5 text-[9px] uppercase tracking-wider text-slate-500">To</p>
+                  <input type="date" value={form.end_date}
+                    onChange={e => set('end_date')(e.target.value)}
+                    style={{ colorScheme: 'dark' }}
+                    className={inputCls} />
+                </div>
               </div>
             </div>
 
@@ -184,6 +194,20 @@ export default function HistoricalPerformance() {
               <p className="mt-1.5 text-[9px] text-slate-600">
                 Sets the period used to calculate R1/R2/S1/S2 pivot levels
               </p>
+            </div>
+
+            <div>
+              <Lbl>Daily SMA Filter</Lbl>
+              <select
+                value={form.sma_filter}
+                onChange={e => set('sma_filter')(e.target.value)}
+                className={inputCls}
+              >
+                <option value="none">None</option>
+                <option value="spx_above_20ma">SPX above 20MA</option>
+                <option value="spx_below_20ma">SPX below 20MA</option>
+              </select>
+              <p className="mt-1 text-[9px] text-slate-600">Filter periods by SPX vs 20-day MA</p>
             </div>
 
             {/* ── View toggle ───────────────────────────────────────── */}
