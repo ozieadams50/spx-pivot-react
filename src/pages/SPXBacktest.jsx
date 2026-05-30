@@ -1,69 +1,68 @@
 import { useState } from 'react';
 import { apiFetch } from '../lib/api';
 
-// ── SVG Chart helpers ─────────────────────────────────────────────────────────
+// ── Period filter ─────────────────────────────────────────────────────────────
+
+function filterByPeriod(data, period) {
+  if (!data || period === 'All') return data;
+  const days = { '1yr': 252, '3yr': 756, '5yr': 1260 };
+  const n = days[period] ?? data.length;
+  return data.slice(-n);
+}
+
+// ── Equity Curve SVG ──────────────────────────────────────────────────────────
 
 function EquityCurve({ data }) {
-  if (!data || data.length < 2) return <div className="h-56 flex items-center justify-center text-slate-600 text-sm">No data</div>;
+  if (!data || data.length < 2) return (
+    <div className="flex h-56 items-center justify-center text-sm text-slate-600">No data</div>
+  );
 
-  const W = 800, H = 220, PAD = { t: 12, r: 12, b: 32, l: 68 };
-  const cw = W - PAD.l - PAD.r, ch = H - PAD.t - PAD.b;
+  const W = 860, H = 240, PAD = { t: 12, r: 16, b: 36, l: 76 };
+  const cw = W - PAD.l - PAD.r;
+  const ch = H - PAD.t - PAD.b;
 
-  const vals  = data.map(d => d.equity);
-  const minV  = Math.min(...vals);
-  const maxV  = Math.max(...vals);
-  const rng   = maxV - minV || 1;
+  const vals = data.map(d => d.equity);
+  const minV = Math.min(...vals);
+  const maxV = Math.max(...vals);
+  const rng  = maxV - minV || 1;
 
-  const px = (i) => PAD.l + (i / (data.length - 1)) * cw;
-  const py = (v) => PAD.t + ch - ((v - minV) / rng) * ch;
+  const px = i => PAD.l + (i / (data.length - 1)) * cw;
+  const py = v => PAD.t + ch - ((v - minV) / rng) * ch;
 
-  const pts = data.map((d, i) => `${px(i)},${py(d.equity)}`).join(' ');
+  const pts     = data.map((d, i) => `${px(i)},${py(d.equity)}`).join(' ');
+  const fillPts = `${px(0)},${PAD.t + ch} ${pts} ${px(data.length - 1)},${PAD.t + ch}`;
 
-  // Fill path beneath the line
-  const fillPts = `${px(0)},${PAD.t + ch} ` + pts + ` ${px(data.length - 1)},${PAD.t + ch}`;
-
-  // Y-axis labels (5 ticks)
   const yTicks = Array.from({ length: 5 }, (_, i) => minV + (rng / 4) * i);
-
-  // X-axis: show ~6 evenly spaced date labels
-  const xStep  = Math.max(1, Math.floor(data.length / 6));
+  const xStep  = Math.max(1, Math.floor(data.length / 7));
   const xTicks = data.filter((_, i) => i % xStep === 0 || i === data.length - 1);
 
-  const fmtK = v => v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${v.toFixed(0)}`;
-  const fmtDate = s => s.slice(0, 7);
-
-  const lineColor  = vals[vals.length - 1] >= vals[0] ? '#22d3ee' : '#f87171';
-  const fillColor  = vals[vals.length - 1] >= vals[0] ? '#22d3ee18' : '#f8717118';
+  const fmtY   = v => v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v.toFixed(0)}`;
+  const fmtX   = s => s.slice(0, 7);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 220 }}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 240 }}>
       <defs>
-        <linearGradient id="eq-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={lineColor} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={lineColor} stopOpacity="0" />
+        <linearGradient id="eq-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor="#22c55e" stopOpacity="0.30" />
+          <stop offset="100%" stopColor="#22c55e" stopOpacity="0.02" />
         </linearGradient>
       </defs>
 
-      {/* Grid lines */}
       {yTicks.map((v, i) => (
         <g key={i}>
-          <line x1={PAD.l} x2={W - PAD.r} y1={py(v)} y2={py(v)} stroke="#ffffff0f" strokeWidth="1" />
-          <text x={PAD.l - 6} y={py(v) + 4} textAnchor="end" fontSize="9" fill="#64748b">{fmtK(v)}</text>
+          <line x1={PAD.l} x2={W - PAD.r} y1={py(v)} y2={py(v)} stroke="#ffffff0a" strokeWidth="1" />
+          <text x={PAD.l - 8} y={py(v) + 4} textAnchor="end" fontSize="10" fill="#475569">{fmtY(v)}</text>
         </g>
       ))}
 
-      {/* Fill area */}
-      <polygon points={fillPts} fill="url(#eq-fill)" />
+      <polygon points={fillPts} fill="url(#eq-grad)" />
+      <polyline points={pts} fill="none" stroke="#22c55e" strokeWidth="1.8" strokeLinejoin="round" />
 
-      {/* Line */}
-      <polyline points={pts} fill="none" stroke={lineColor} strokeWidth="1.5" strokeLinejoin="round" />
-
-      {/* X labels */}
       {xTicks.map((d, i) => {
         const idx = data.indexOf(d);
         return (
-          <text key={i} x={px(idx)} y={H - 4} textAnchor="middle" fontSize="9" fill="#64748b">
-            {fmtDate(d.date)}
+          <text key={i} x={px(idx)} y={H - 6} textAnchor="middle" fontSize="10" fill="#475569">
+            {fmtX(d.date)}
           </text>
         );
       })}
@@ -71,31 +70,32 @@ function EquityCurve({ data }) {
   );
 }
 
+// ── Monthly Bars SVG ──────────────────────────────────────────────────────────
+
 function MonthlyBars({ data }) {
   if (!data || data.length === 0) return null;
-  const W = 800, H = 180, PAD = { t: 8, r: 8, b: 32, l: 56 };
+  const W = 760, H = 180, PAD = { t: 12, r: 8, b: 36, l: 52 };
   const cw = W - PAD.l - PAD.r, ch = H - PAD.t - PAD.b;
   const maxAbs = Math.max(...data.map(d => Math.abs(d.pnl)), 1);
-  const barW   = Math.max(4, (cw / data.length) - 2);
+  const barW   = Math.max(6, (cw / data.length) - 3);
   const midY   = PAD.t + ch / 2;
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 180 }}>
-      {/* Zero line */}
-      <line x1={PAD.l} x2={W - PAD.r} y1={midY} y2={midY} stroke="#ffffff1a" strokeWidth="1" />
+      <line x1={PAD.l} x2={W - PAD.r} y1={midY} y2={midY} stroke="#ffffff12" strokeWidth="1" />
 
       {data.map((m, i) => {
         const x   = PAD.l + i * (cw / data.length) + (cw / data.length - barW) / 2;
-        const h   = (Math.abs(m.pnl) / maxAbs) * (ch / 2);
+        const h   = Math.max(2, (Math.abs(m.pnl) / maxAbs) * (ch / 2));
         const y   = m.pnl >= 0 ? midY - h : midY;
         const clr = m.pnl >= 0 ? '#22c55e' : '#ef4444';
         return (
           <g key={i}>
-            <rect x={x} y={y} width={barW} height={h} fill={clr} rx="2" opacity="0.8">
-              <title>{m.month}: ${m.pnl >= 0 ? '+' : ''}{m.pnl}</title>
+            <rect x={x} y={y} width={barW} height={h} fill={clr} rx="2" opacity="0.85">
+              <title>{m.month}: {m.pnl >= 0 ? '+' : ''}${m.pnl}</title>
             </rect>
-            {data.length <= 24 && (
-              <text x={x + barW / 2} y={H - 4} textAnchor="middle" fontSize="8" fill="#475569">
+            {data.length <= 30 && (
+              <text x={x + barW / 2} y={H - 6} textAnchor="middle" fontSize="8" fill="#475569">
                 {m.month.slice(2)}
               </text>
             )}
@@ -103,60 +103,104 @@ function MonthlyBars({ data }) {
         );
       })}
 
-      {/* Y labels */}
       {[maxAbs, 0, -maxAbs].map((v, i) => {
-        const yp = PAD.t + (ch / 2) - (v / maxAbs) * (ch / 2);
-        const fmtV = v === 0 ? '0' : `${v >= 0 ? '+' : ''}$${Math.abs(v).toFixed(0)}`;
+        const yp  = PAD.t + (ch / 2) - (v / maxAbs) * (ch / 2);
+        const lbl = v === 0 ? '$0' : `${v >= 0 ? '+' : ''}$${Math.abs(v).toFixed(0)}`;
         return (
-          <text key={i} x={PAD.l - 4} y={yp + 4} textAnchor="end" fontSize="9" fill="#64748b">{fmtV}</text>
+          <text key={i} x={PAD.l - 4} y={yp + 4} textAnchor="end" fontSize="9" fill="#475569">{lbl}</text>
         );
       })}
     </svg>
   );
 }
 
-function DonutChart({ wins, losses }) {
-  const total = wins + losses;
-  if (total === 0) return null;
-  const pct   = wins / total;
-  const R = 60, r = 38, cx = 80, cy = 80;
-  const angle = pct * 2 * Math.PI;
+// ── Trade Outcomes donut ──────────────────────────────────────────────────────
+
+function TradeOutcomes({ s, fmtDollar }) {
+  if (!s) return null;
+  const total = s.wins + s.losses;
+  const pct   = total > 0 ? s.wins / total : 0;
+  const R = 70, r = 48, cx = 90, cy = 90;
+  const angle  = pct * 2 * Math.PI;
   const x1 = cx + R * Math.sin(0),     y1 = cy - R * Math.cos(0);
   const x2 = cx + R * Math.sin(angle), y2 = cy - R * Math.cos(angle);
-  const large = angle > Math.PI ? 1 : 0;
-  const winPath  = `M ${cx} ${cy} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`;
-  const losePath = `M ${cx} ${cy} L ${x2} ${y2} A ${R} ${R} 0 ${1 - large} 1 ${x1} ${y1} Z`;
+  const large  = angle > Math.PI ? 1 : 0;
+  const winArc  = `M ${cx} ${cy} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`;
+  const loseArc = `M ${cx} ${cy} L ${x2} ${y2} A ${R} ${R} 0 ${1 - large} 1 ${x1} ${y1} Z`;
 
   return (
-    <svg viewBox="0 0 160 160" className="w-full max-w-[160px] mx-auto">
-      {losses > 0 && <path d={losePath} fill="#ef4444" opacity="0.7" />}
-      {wins   > 0 && <path d={winPath}  fill="#22c55e" opacity="0.85" />}
-      <circle cx={cx} cy={cy} r={r} fill="#0d1f2d" />
-      <text x={cx} y={cy - 6}  textAnchor="middle" fontSize="16" fontWeight="bold" fill="white">
-        {(pct * 100).toFixed(1)}%
-      </text>
-      <text x={cx} y={cy + 12} textAnchor="middle" fontSize="9" fill="#94a3b8">Win Rate</text>
-    </svg>
+    <div>
+      <svg viewBox="0 0 180 180" className="w-full max-w-[180px] mx-auto">
+        {s.losses > 0 && <path d={loseArc} fill="#ef4444" opacity="0.75" />}
+        {s.wins   > 0 && <path d={winArc}  fill="#22c55e" opacity="0.85" />}
+        <circle cx={cx} cy={cy} r={r} fill="#0d1f2d" />
+        <text x={cx} y={cy - 8}  textAnchor="middle" fontSize="22" fontWeight="bold" fill="white">
+          {total.toLocaleString()}
+        </text>
+        <text x={cx} y={cy + 10} textAnchor="middle" fontSize="11" fill="#94a3b8">Trades</text>
+      </svg>
+
+      <div className="mt-3 space-y-1.5 text-xs">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="text-slate-400">Winning Trades</span>
+          </span>
+          <span className="font-semibold text-emerald-400">
+            {s.wins.toLocaleString()} <span className="text-slate-500">({s.win_rate}%)</span>
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2 w-2 rounded-full bg-rose-500" />
+            <span className="text-slate-400">Losing Trades</span>
+          </span>
+          <span className="font-semibold text-rose-400">
+            {s.losses.toLocaleString()} <span className="text-slate-500">({(100 - s.win_rate).toFixed(1)}%)</span>
+          </span>
+        </div>
+
+        <div className="mt-2 border-t border-white/10 pt-2 space-y-1">
+          <div className="flex justify-between">
+            <span className="text-slate-500">Avg Win</span>
+            <span className="text-emerald-400">{fmtDollar(s.avg_win_pnl)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Avg Loss</span>
+            <span className="text-rose-400">{fmtDollar(s.avg_loss_pnl)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Largest Win</span>
+            <span className="text-emerald-400">{fmtDollar(s.largest_win)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Largest Loss</span>
+            <span className="text-rose-400">{fmtDollar(s.largest_loss)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
 // ── Metric card ───────────────────────────────────────────────────────────────
 
-function Metric({ label, value, sub, color = 'text-white' }) {
+function Metric({ label, value, sub, color = 'text-white', badge }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
-      <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">{label}</p>
-      <p className={`mt-1 text-2xl font-bold ${color}`}>{value}</p>
-      {sub && <p className="mt-0.5 text-xs text-slate-500">{sub}</p>}
+    <div className="rounded-xl border border-white/10 bg-[#0d1f2d] p-3">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</p>
+      <p className={`mt-1 text-xl font-bold leading-none ${color}`}>{value}</p>
+      {badge && (
+        <span className="mt-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-500/15 text-emerald-400">
+          {badge}
+        </span>
+      )}
+      {sub && !badge && <p className="mt-0.5 text-[10px] text-slate-500">{sub}</p>}
     </div>
   );
 }
 
-// ── Input helpers ─────────────────────────────────────────────────────────────
-
-function Label({ children }) {
-  return <label className="mb-1.5 block text-xs font-medium text-slate-400">{children}</label>;
-}
+// ── Segmented button ──────────────────────────────────────────────────────────
 
 function Seg({ options, value, onChange }) {
   return (
@@ -166,23 +210,33 @@ function Seg({ options, value, onChange }) {
           className={`flex-1 rounded-lg border py-1.5 text-xs font-medium transition ${
             value === o.v
               ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300'
-              : 'border-white/10 bg-white/5 text-slate-400 hover:border-cyan-500/30'
-          }`}>{o.l || o.v}</button>
+              : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
+          }`}>
+          {o.l ?? o.v}
+        </button>
       ))}
     </div>
   );
 }
 
-function NumIn({ value, onChange, min, max, step = 0.05, prefix = '' }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      {prefix && <span className="text-xs text-slate-500">{prefix}</span>}
-      <input type="number" value={value} min={min} max={max} step={step}
-        onChange={e => onChange(parseFloat(e.target.value) || value)}
-        className="w-full rounded-lg border border-white/10 bg-[#061018] px-2 py-1.5 text-sm text-white outline-none focus:border-cyan-500/50" />
-    </div>
-  );
+// ── Label ─────────────────────────────────────────────────────────────────────
+
+function Lbl({ children }) {
+  return <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">{children}</label>;
 }
+
+// ── Input ─────────────────────────────────────────────────────────────────────
+
+const inputCls = 'w-full rounded-lg border border-white/10 bg-[#061018] px-2 py-1.5 text-sm text-white outline-none focus:border-cyan-500/50';
+
+// ── EXIT COLORS ───────────────────────────────────────────────────────────────
+
+const EXIT_COLORS = {
+  expiry:        { bg: 'bg-emerald-500/15', text: 'text-emerald-300', label: 'Expiration'     },
+  profit_target: { bg: 'bg-cyan-500/15',    text: 'text-cyan-300',    label: 'Profit Target'  },
+  stop_loss:     { bg: 'bg-amber-500/15',   text: 'text-amber-300',   label: 'Stop Loss'      },
+  breach:        { bg: 'bg-rose-500/15',    text: 'text-rose-300',    label: 'Strike Breach'  },
+};
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
@@ -191,14 +245,8 @@ const DEFAULTS = {
   mode: 'weekly', strike_level: 'S1', spread_width: 5,
   profit_target_pct: 0.50, stop_loss_pct: 2.00,
   vix_min: 0, vix_max: 80, contracts: 1,
+  min_credit: 0.50,
   ema_filter: 'none', entry_days: ['Any'],
-};
-
-const EXIT_COLORS = {
-  expiry:        { bg: 'bg-emerald-500/15', text: 'text-emerald-300', label: 'Expired Worthless' },
-  profit_target: { bg: 'bg-cyan-500/15',    text: 'text-cyan-300',    label: 'Profit Target'     },
-  stop_loss:     { bg: 'bg-amber-500/15',   text: 'text-amber-300',   label: 'Stop Loss'         },
-  breach:        { bg: 'bg-rose-500/15',    text: 'text-rose-300',    label: 'Strike Breach'     },
 };
 
 export default function SPXBacktest() {
@@ -206,16 +254,14 @@ export default function SPXBacktest() {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
+  const [period,  setPeriod]  = useState('All');
 
-  function set(key) { return val => setForm(f => ({ ...f, [key]: val })); }
+  const set = key => val => setForm(f => ({ ...f, [key]: val }));
 
   async function runBacktest() {
     setLoading(true); setError(''); setResults(null);
     try {
-      const data = await apiFetch('/backtest/spx', {
-        method: 'POST',
-        body: JSON.stringify(form),
-      });
+      const data = await apiFetch('/backtest/spx', { method: 'POST', body: JSON.stringify(form) });
       setResults(data);
     } catch (e) {
       setError(e.message ?? 'Backtest failed.');
@@ -233,91 +279,140 @@ export default function SPXBacktest() {
     return v < 0 ? `-${str}` : str;
   };
 
+  const eqData = results ? filterByPeriod(results.equity_curve, period) : null;
+
   return (
-    <div className="p-4 md:p-6 lg:p-8">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">SPX Put Credit Spread Backtester</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          5-wide bull put spreads at pivot support levels. Credits estimated via Black-Scholes + VIX.
-        </p>
+    <div className="p-4 md:p-5">
+
+      {/* ── Page header ──────────────────────────────────────────────────── */}
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">SPX Put Credit Spread</h1>
+          <p className="text-sm text-slate-400">Backtester</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-white/10">
+            Save Strategy
+          </button>
+          <button className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-white/10">
+            Load Strategy
+          </button>
+          <button onClick={runBacktest} disabled={loading}
+            className="rounded-lg bg-green-600 px-4 py-1.5 text-xs font-bold text-white transition hover:bg-green-500 disabled:opacity-50">
+            {loading ? 'Running…' : '▶  Run Backtest'}
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[280px_1fr]">
+      {/* ── Main grid: 3 inputs + 9 results ──────────────────────────────── */}
+      <div className="grid grid-cols-12 gap-4">
 
-        {/* ── Left: Inputs ─────────────────────────────────────────────────── */}
-        <div className="rounded-2xl border border-white/10 bg-[#0d1f2d] p-5">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">Strategy Inputs</p>
+        {/* ── Left: Inputs ─────────────────────────────────────────────── */}
+        <div className="col-span-3 rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Strategy Inputs</p>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
 
             {/* Date range */}
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label>Start Date</Label>
-                <input type="date" value={form.start_date} onChange={e => set('start_date')(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-[#061018] px-2 py-1.5 text-sm text-white outline-none focus:border-cyan-500/50" />
-              </div>
-              <div>
-                <Label>End Date</Label>
-                <input type="date" value={form.end_date} onChange={e => set('end_date')(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-[#061018] px-2 py-1.5 text-sm text-white outline-none focus:border-cyan-500/50" />
+            <div>
+              <Lbl>Date Range</Lbl>
+              <div className="grid grid-cols-2 gap-1.5">
+                <input type="date" value={form.start_date}
+                  onChange={e => set('start_date')(e.target.value)} className={inputCls} />
+                <input type="date" value={form.end_date}
+                  onChange={e => set('end_date')(e.target.value)} className={inputCls} />
               </div>
             </div>
 
             {/* Mode */}
             <div>
-              <Label>DTE / Mode</Label>
-              <Seg options={[{v:'weekly',l:'Weekly'},{v:'monthly',l:'Monthly'},{v:'daily',l:'Daily 0DTE'}]}
-                   value={form.mode} onChange={set('mode')} />
+              <Lbl>DTE / Mode</Lbl>
+              <Seg options={[{v:'weekly',l:'Weekly'},{v:'monthly',l:'Monthly'},{v:'daily',l:'Daily'}]}
+                value={form.mode} onChange={set('mode')} />
             </div>
 
             {/* Strike level */}
             <div>
-              <Label>Short Strike Level</Label>
+              <Lbl>Short Strike Level</Lbl>
               <Seg options={[{v:'S2'},{v:'MidS'},{v:'S1'}]}
-                   value={form.strike_level} onChange={set('strike_level')} />
-              <p className="mt-1 text-[10px] text-slate-600">
-                S1 = nearest support · MidS = midpoint · S2 = outer support
-              </p>
+                value={form.strike_level} onChange={set('strike_level')} />
             </div>
 
-            {/* Spread width */}
+            {/* Spread width slider */}
             <div>
-              <Label>Spread Width (pts)</Label>
-              <Seg options={[{v:5},{v:10},{v:25},{v:50}]}
-                   value={form.spread_width} onChange={set('spread_width')} />
+              <div className="flex items-center justify-between">
+                <Lbl>Spread Width (Pts)</Lbl>
+                <span className="mb-1 text-xs font-semibold text-cyan-400">${form.spread_width}</span>
+              </div>
+              <input type="range" min={5} max={50} step={5} value={form.spread_width}
+                onChange={e => set('spread_width')(Number(e.target.value))}
+                className="w-full accent-cyan-500" />
+              <div className="flex justify-between text-[9px] text-slate-600 mt-0.5">
+                <span>$5</span><span>$25</span><span>$50</span>
+              </div>
+            </div>
+
+            {/* Min credit */}
+            <div>
+              <Lbl>Min Credit Per Spread</Lbl>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-slate-500">$</span>
+                <input type="number" value={form.min_credit} min={0} max={10} step={0.10}
+                  onChange={e => set('min_credit')(parseFloat(e.target.value) || 0)}
+                  className={inputCls} />
+              </div>
+            </div>
+
+            {/* Contracts */}
+            <div>
+              <Lbl>Number of Contracts</Lbl>
+              <input type="number" value={form.contracts} min={1} max={100} step={1}
+                onChange={e => set('contracts')(parseInt(e.target.value) || 1)}
+                className={inputCls} />
+            </div>
+
+            {/* VIX range */}
+            <div>
+              <div className="flex items-center justify-between">
+                <Lbl>VIX Range</Lbl>
+                <span className="mb-1 text-[10px] text-slate-500">Per Spread</span>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-slate-500 w-6">Min</span>
+                  <input type="number" value={form.vix_min} min={0} max={79} step={1}
+                    onChange={e => set('vix_min')(Number(e.target.value))}
+                    className={inputCls} />
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-slate-500 w-6">Max</span>
+                  <input type="number" value={form.vix_max} min={1} max={150} step={1}
+                    onChange={e => set('vix_max')(Number(e.target.value))}
+                    className={inputCls} />
+                </div>
+              </div>
             </div>
 
             {/* Profit target */}
             <div>
-              <Label>Profit Target</Label>
+              <Lbl>Profit Target</Lbl>
               <Seg options={[{v:0.25,l:'25%'},{v:0.50,l:'50%'},{v:0.75,l:'75%'},{v:1.00,l:'Hold'}]}
-                   value={form.profit_target_pct} onChange={set('profit_target_pct')} />
+                value={form.profit_target_pct} onChange={set('profit_target_pct')} />
             </div>
 
             {/* Stop loss */}
             <div>
-              <Label>Stop Loss</Label>
+              <Lbl>Stop Loss</Lbl>
               <Seg options={[{v:1.0,l:'1×'},{v:2.0,l:'2×'},{v:3.0,l:'3×'}]}
-                   value={form.stop_loss_pct} onChange={set('stop_loss_pct')} />
-              <p className="mt-1 text-[10px] text-slate-600">Multiples of credit received</p>
-            </div>
-
-            {/* VIX filter */}
-            <div>
-              <Label>VIX Range</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <NumIn value={form.vix_min} onChange={set('vix_min')} min={0} max={79} step={1} prefix="Min" />
-                <NumIn value={form.vix_max} onChange={set('vix_max')} min={1} max={150} step={1} prefix="Max" />
-              </div>
+                value={form.stop_loss_pct} onChange={set('stop_loss_pct')} />
+              <p className="mt-0.5 text-[9px] text-slate-600">Multiples of credit received</p>
             </div>
 
             {/* EMA filter */}
             <div>
-              <Label>Trend Filter (EMA)</Label>
+              <Lbl>EMA Filter</Lbl>
               <select value={form.ema_filter} onChange={e => set('ema_filter')(e.target.value)}
-                className="w-full rounded-lg border border-white/10 bg-[#061018] px-2 py-1.5 text-sm text-white outline-none">
+                className={inputCls}>
                 <option value="none">None (all conditions)</option>
                 <option value="above_20">SPX above 20 EMA</option>
                 <option value="above_50">SPX above 50 EMA</option>
@@ -327,15 +422,9 @@ export default function SPXBacktest() {
 
             {/* Entry day */}
             <div>
-              <Label>Entry Day</Label>
-              <Seg options={[{v:'Any'},{v:'Monday',l:'Mon'},{v:'Tuesday',l:'Tue'},{v:'Wednesday',l:'Wed'}]}
-                   value={form.entry_days[0]} onChange={v => set('entry_days')([v])} />
-            </div>
-
-            {/* Contracts */}
-            <div>
-              <Label>Contracts</Label>
-              <NumIn value={form.contracts} onChange={set('contracts')} min={1} max={100} step={1} />
+              <Lbl>Exit Rules</Lbl>
+              <Seg options={[{v:'Any'},{v:'Monday',l:'Mon'},{v:'Wednesday',l:'Wed'},{v:'Friday',l:'Fri'}]}
+                value={form.entry_days[0]} onChange={v => set('entry_days')([v])} />
             </div>
 
             {error && (
@@ -343,30 +432,31 @@ export default function SPXBacktest() {
             )}
 
             <button onClick={runBacktest} disabled={loading}
-              className="w-full rounded-xl bg-cyan-500 py-2.5 text-sm font-bold text-[#061018] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50">
-              {loading ? 'Running…' : '▶  Run Backtest'}
+              className="w-full rounded-xl bg-green-600 py-2.5 text-sm font-bold text-white transition hover:bg-green-500 disabled:opacity-50">
+              {loading ? 'Running…' : '▶  RUN BACKTEST'}
             </button>
 
-            <p className="text-center text-[10px] text-slate-600">
-              Credits are B-S estimates (±20%). Win/loss based on SPX vs strike at close.
+            <p className="text-center text-[9px] text-slate-600">
+              Credits estimated via Black-Scholes + VIX (±20%)
             </p>
           </div>
         </div>
 
-        {/* ── Right: Results ───────────────────────────────────────────────── */}
-        <div className="space-y-6">
+        {/* ── Right: Results ────────────────────────────────────────────── */}
+        <div className="col-span-9 space-y-4">
 
-          {/* Loading */}
+          {/* Loading state */}
           {loading && (
             <div className="flex h-64 items-center justify-center rounded-2xl border border-white/10 bg-[#0d1f2d]">
               <div className="text-center">
-                <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-cyan-500/30 border-t-cyan-400" />
-                <p className="text-sm text-slate-400">Fetching data and running simulation…</p>
-                <p className="mt-1 text-xs text-slate-600">Usually 4-10 seconds</p>
+                <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-green-500/30 border-t-green-400" />
+                <p className="text-sm text-slate-400">Running simulation…</p>
+                <p className="mt-1 text-xs text-slate-600">Usually 4–10 seconds</p>
               </div>
             </div>
           )}
 
+          {/* Empty state */}
           {!results && !loading && (
             <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-[#0d1f2d]">
               <p className="text-sm text-slate-600">Configure inputs and click Run Backtest</p>
@@ -375,54 +465,82 @@ export default function SPXBacktest() {
 
           {results && s && (
             <>
-              {/* Summary cards */}
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-                <Metric label="Trades"        value={s.total_trades} sub={`${s.wins}W · ${s.losses}L`} />
-                <Metric label="Win Rate"      value={`${s.win_rate}%`}
+              {/* ── Metric cards ───────────────────────────────────────── */}
+              <div className="grid grid-cols-6 gap-3">
+                <Metric label="Total Trades"
+                  value={s.total_trades.toLocaleString()}
+                  sub={`${s.wins}W · ${s.losses}L`} />
+                <Metric label="Win Rate"
+                  value={`${s.win_rate}%`}
                   color={s.win_rate >= 70 ? 'text-emerald-400' : s.win_rate >= 55 ? 'text-amber-400' : 'text-rose-400'} />
-                <Metric label="Profit Factor" value={s.profit_factor}
+                <Metric label="Profit Factor"
+                  value={s.profit_factor}
                   color={s.profit_factor >= 1.5 ? 'text-emerald-400' : 'text-slate-300'} />
-                <Metric label="Net Profit"    value={fmtDollar(s.net_profit)}
-                  color={s.net_profit >= 0 ? 'text-emerald-400' : 'text-rose-400'} sub={`Avg ${fmtDollar(s.avg_pnl)}/trade`} />
-                <Metric label="Max Drawdown"  value={fmtDollar(s.max_drawdown)} color="text-rose-400" />
-                <Metric label="Sharpe Ratio"  value={s.sharpe_ratio}
-                  color={s.sharpe_ratio >= 1.5 ? 'text-emerald-400' : 'text-slate-300'} sub={`Avg credit $${s.avg_credit}`} />
+                <Metric label="Net Profit"
+                  value={fmtDollar(s.net_profit)}
+                  color={s.net_profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}
+                  sub={`Avg ${fmtDollar(s.avg_pnl)} / trade`} />
+                <Metric label="Max Drawdown"
+                  value={fmtDollar(s.max_drawdown)}
+                  color="text-rose-400" />
+                <Metric label="Sharpe Ratio"
+                  value={s.sharpe_ratio}
+                  color={s.sharpe_ratio >= 1.5 ? 'text-emerald-400' : 'text-slate-300'}
+                  badge={s.sharpe_ratio >= 1.5 ? 'Excellent' : s.sharpe_ratio >= 1.0 ? 'Good' : null} />
               </div>
 
-              {/* Equity curve + Donut */}
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_200px]">
+              {/* ── Equity Curve + Trade Outcomes ──────────────────────── */}
+              <div className="grid grid-cols-[1fr_240px] gap-4">
+
+                {/* Equity curve */}
                 <div className="rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Equity Curve</p>
-                  <EquityCurve data={results.equity_curve} />
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
-                  <p className="mb-2 text-center text-xs font-semibold uppercase tracking-widest text-slate-500">Trade Outcomes</p>
-                  <DonutChart wins={s.wins} losses={s.losses} />
-                  <div className="mt-3 space-y-1 text-xs">
-                    <div className="flex justify-between text-emerald-400"><span>Avg Win</span><span>{fmtDollar(s.avg_win_pnl)}</span></div>
-                    <div className="flex justify-between text-rose-400"><span>Avg Loss</span><span>{fmtDollar(s.avg_loss_pnl)}</span></div>
-                    <div className="flex justify-between text-amber-400"><span>Max Consec L</span><span>{s.consecutive_losses}</span></div>
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Equity Curve</p>
+                    <div className="flex gap-1">
+                      {['1yr','3yr','5yr','All'].map(p => (
+                        <button key={p} onClick={() => setPeriod(p)}
+                          className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold transition ${
+                            period === p
+                              ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300'
+                              : 'border-white/10 text-slate-500 hover:text-slate-300'
+                          }`}>
+                          {p}
+                        </button>
+                      ))}
+                    </div>
                   </div>
+                  <EquityCurve data={eqData} />
+                </div>
+
+                {/* Trade outcomes */}
+                <div className="rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
+                  <p className="mb-3 text-center text-xs font-semibold uppercase tracking-widest text-slate-500">
+                    Trade Outcomes
+                  </p>
+                  <TradeOutcomes s={s} fmtDollar={fmtDollar} />
                 </div>
               </div>
 
-              {/* Monthly bars + VIX table */}
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
+              {/* ── Monthly P&L + VIX Range ────────────────────────────── */}
+              <div className="grid grid-cols-2 gap-4">
+
+                {/* Monthly Performance */}
                 <div className="rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">Monthly P&amp;L</p>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">Monthly Performance</p>
                   <MonthlyBars data={results.monthly_perf} />
                 </div>
 
+                {/* VIX Range Performance */}
                 <div className="rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">VIX Regime Performance</p>
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">VIX Range Performance</p>
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-white/10 text-slate-500">
-                        <th className="pb-1.5 text-left">VIX</th>
-                        <th className="pb-1.5 text-right">Trades</th>
-                        <th className="pb-1.5 text-right">Win %</th>
-                        <th className="pb-1.5 text-right">P&amp;L</th>
-                        <th className="pb-1.5 text-right">Avg Cr</th>
+                      <tr className="border-b border-white/10 text-[10px] uppercase tracking-widest text-slate-500">
+                        <th className="pb-2 text-left">VIX Range</th>
+                        <th className="pb-2 text-right">Trades</th>
+                        <th className="pb-2 text-right">Win Rate</th>
+                        <th className="pb-2 text-right">Net Profit</th>
+                        <th className="pb-2 text-right">Profit Factor</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -433,69 +551,65 @@ export default function SPXBacktest() {
                             <td className="py-1.5 text-slate-300">{v.vix_bucket}</td>
                             <td className="py-1.5 text-right text-slate-400">{v.trades}</td>
                             <td className={`py-1.5 text-right font-semibold ${clr}`}>{v.win_rate}%</td>
-                            <td className={`py-1.5 text-right ${v.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            <td className={`py-1.5 text-right font-semibold ${v.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                               {fmtDollar(v.pnl)}
                             </td>
-                            <td className="py-1.5 text-right text-slate-400">${v.avg_credit}</td>
+                            <td className={`py-1.5 text-right ${v.profit_factor >= 1.5 ? 'text-emerald-400' : 'text-slate-300'}`}>
+                              {v.profit_factor ?? '—'}
+                            </td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
-
-                  {/* Exit reason breakdown */}
-                  <div className="mt-4 border-t border-white/10 pt-3">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">Exit Reasons</p>
-                    <div className="space-y-1">
-                      {Object.entries(s.exit_reasons || {}).map(([reason, count]) => {
-                        const cfg = EXIT_COLORS[reason] ?? { bg:'bg-white/5', text:'text-slate-400', label: reason };
-                        const pct = ((count / s.total_trades) * 100).toFixed(0);
-                        return (
-                          <div key={reason} className="flex items-center gap-2">
-                            <div className="w-28 flex-shrink-0">
-                              <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${cfg.bg} ${cfg.text}`}>{cfg.label}</span>
-                            </div>
-                            <div className="flex-1 h-1.5 rounded-full bg-white/5">
-                              <div className={`h-full rounded-full ${cfg.bg.replace('15','40')}`} style={{ width: `${pct}%` }} />
-                            </div>
-                            <span className="w-8 text-right text-[10px] text-slate-500">{pct}%</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
                 </div>
               </div>
 
-              {/* Trade log */}
+              {/* ── Trade Log ──────────────────────────────────────────── */}
               <div className="rounded-2xl border border-white/10 bg-[#0d1f2d]">
                 <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
                   <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Trade Log</p>
-                  <span className="text-xs text-slate-600">Showing last {results.trades.length} of {s.total_trades}</span>
+                  <button
+                    onClick={() => {
+                      const cols = ['Date','SPX','VIX','Short Strike','Long Strike','DTE','Credit','P&L','Exit Type'];
+                      const rows = results.trades.map(t => [
+                        t.entry_date, t.spx_entry?.toFixed(0), t.vix_entry?.toFixed(1),
+                        t.short_strike, t.long_strike, t.dte,
+                        t.credit?.toFixed(2), t.pnl?.toFixed(0),
+                        EXIT_COLORS[t.exit_reason]?.label ?? t.exit_reason,
+                      ].join(','));
+                      const csv = [cols.join(','), ...rows].join('\n');
+                      const a   = document.createElement('a');
+                      a.href    = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+                      a.download = 'spx_backtest.csv';
+                      a.click();
+                    }}
+                    className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-400 transition hover:bg-cyan-500/20">
+                    ↓ Export CSV
+                  </button>
                 </div>
+
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-white/5 text-[10px] uppercase tracking-widest text-slate-600">
-                        <th className="px-3 py-2 text-left">Entry</th>
-                        <th className="px-3 py-2 text-left">Exit</th>
-                        <th className="px-3 py-2 text-right">SPX Entry</th>
+                        <th className="px-3 py-2 text-left">Date</th>
+                        <th className="px-3 py-2 text-right">SPX</th>
                         <th className="px-3 py-2 text-right">VIX</th>
-                        <th className="px-3 py-2 text-right">Short</th>
-                        <th className="px-3 py-2 text-right">Long</th>
+                        <th className="px-3 py-2 text-right">Short Strike</th>
+                        <th className="px-3 py-2 text-right">Long Strike</th>
                         <th className="px-3 py-2 text-right">DTE</th>
                         <th className="px-3 py-2 text-right">Credit</th>
                         <th className="px-3 py-2 text-right">P&amp;L</th>
-                        <th className="px-3 py-2 text-left">Reason</th>
+                        <th className="px-3 py-2 text-left">Exit Type</th>
                       </tr>
                     </thead>
                     <tbody>
                       {[...results.trades].reverse().map((t, i) => {
-                        const cfg = EXIT_COLORS[t.exit_reason] ?? { bg:'bg-white/5', text:'text-slate-400', label: t.exit_reason };
+                        const cfg = EXIT_COLORS[t.exit_reason] ?? { bg: 'bg-white/5', text: 'text-slate-400', label: t.exit_reason };
                         return (
-                          <tr key={i} className={`border-b border-white/[0.04] ${t.win ? '' : 'bg-rose-500/[0.03]'}`}>
+                          <tr key={i} className={`border-b border-white/[0.04] transition-colors hover:bg-white/[0.02] ${!t.win ? 'bg-rose-500/[0.03]' : ''}`}>
                             <td className="px-3 py-1.5 font-mono text-slate-300">{t.entry_date}</td>
-                            <td className="px-3 py-1.5 font-mono text-slate-500">{t.exit_date}</td>
                             <td className="px-3 py-1.5 text-right font-mono text-slate-300">{t.spx_entry?.toFixed(0)}</td>
                             <td className="px-3 py-1.5 text-right font-mono text-slate-400">{t.vix_entry?.toFixed(1)}</td>
                             <td className="px-3 py-1.5 text-right font-mono text-slate-300">{t.short_strike}</td>
@@ -506,7 +620,9 @@ export default function SPXBacktest() {
                               {t.pnl >= 0 ? '+' : ''}{t.pnl?.toFixed(0)}
                             </td>
                             <td className="px-3 py-1.5">
-                              <span className={`rounded px-1.5 py-0.5 text-[9px] font-medium ${cfg.bg} ${cfg.text}`}>{cfg.label}</span>
+                              <span className={`rounded px-1.5 py-0.5 text-[9px] font-medium ${cfg.bg} ${cfg.text}`}>
+                                {cfg.label}
+                              </span>
                             </td>
                           </tr>
                         );
