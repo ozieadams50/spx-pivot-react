@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { MENU_ITEMS } from '../data/accessMatrix';
 import { loadAllRoles } from '../data/roles';
+import { apiFetch } from '../lib/api';
 
 const ROLE_BADGE = {
   subscriber: 'text-amber-300',
@@ -42,6 +43,8 @@ export default function ManageAccess() {
   const roles                         = loadAllRoles();
   const [matrix, setMatrix]           = useState({ ...accessMatrix });
   const [saved,  setSaved]            = useState(false);
+  const [saving, setSaving]           = useState(false);
+  const [error,  setError]            = useState('');
 
   const isSuperUser = currentRole === 'superuser';
 
@@ -56,10 +59,21 @@ export default function ManageAccess() {
     setSaved(false);
   }
 
-  function handleSave() {
-    updateMatrix(matrix);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  async function handleSave() {
+    setSaving(true); setError('');
+    try {
+      await apiFetch('/settings/access-matrix', {
+        method: 'PUT',
+        body: JSON.stringify({ matrix }),
+      });
+      updateMatrix(matrix);   // sync local state + localStorage cache
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err.message ?? 'Failed to save access rules.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -72,15 +86,18 @@ export default function ManageAccess() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {saved && (
-            <span className="text-sm text-emerald-400">Saved ✓</span>
+          {error && (
+            <span className="text-sm text-rose-400">{error}</span>
+          )}
+          {saved && !error && (
+            <span className="text-sm text-emerald-400">Saved — all users will see this on next load ✓</span>
           )}
           <button
             onClick={handleSave}
-            disabled={!isSuperUser}
+            disabled={!isSuperUser || saving}
             className="rounded-xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Save Access Rules
+            {saving ? 'Saving…' : 'Save Access Rules'}
           </button>
           <button
             onClick={() => navigate('/admin/access')}

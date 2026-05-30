@@ -1,47 +1,46 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { findUserByEmail, roleKeyForUser, subscriptionsForUser } from '../data/users';
+import { apiFetch } from '../lib/api';
+
+function subscriptionsFromLevel(subscriptionLevel) {
+  return subscriptionLevel && subscriptionLevel !== 'No Access' ? ['spx_pivots'] : [];
+}
 
 export default function Login() {
-  const navigate       = useNavigate();
-  const { login }      = useAuth();
+  const navigate      = useNavigate();
+  const { login }     = useAuth();
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [error,    setError]    = useState('');
   const [loading,  setLoading]  = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError('');
     if (!email.trim() || !password) { setError('Email and password are required.'); return; }
 
     setLoading(true);
-    const user = findUserByEmail(email);
+    try {
+      const { access_token, user } = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
 
-    if (!user) {
-      setError('No account found with that email address.');
-      setLoading(false);
-      return;
-    }
-    if (!user.isActive) {
-      setError('Your account has been deactivated. Please contact an administrator.');
-      setLoading(false);
-      return;
-    }
-    if (user.password !== password) {
-      setError('Incorrect password.');
-      setLoading(false);
-      return;
-    }
+      login({
+        userId:        user.id,
+        role:          user.role,
+        subscriptions: subscriptionsFromLevel(user.subscriptionLevel),
+        token:         access_token,
+        user,
+      });
 
-    login({
-      userId:        user.id,
-      role:          roleKeyForUser(user),
-      subscriptions: subscriptionsForUser(user),
-    });
-
-    navigate('/', { replace: true });
+      navigate('/', { replace: true });
+    } catch (err) {
+      setError(err.message ?? 'Sign in failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -98,10 +97,8 @@ export default function Login() {
           </form>
         </div>
 
-        {/* Demo hint */}
         <p className="mt-4 text-center text-xs text-slate-600">
-          Demo — default password for all accounts is{' '}
-          <span className="font-mono text-slate-500">password</span>
+          Contact your administrator if you need access.
         </p>
       </div>
     </div>

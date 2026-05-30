@@ -16,6 +16,12 @@ const FULL_NAV = [
           { title: 'Chart View',             path: '/spx-pivots/charts',  matrixKey: 'apps/spx-pivots/chart-view'             },
         ],
       },
+      {
+        title: 'SPX Backtester', matrixKey: 'apps/spx-backtest',
+        children: [
+          { title: 'Run Backtest', path: '/spx-backtest', matrixKey: 'apps/spx-backtest/run' },
+        ],
+      },
     ],
   },
   {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { apiFetch } from '../lib/api';
 
 function Field({ label, children }) {
   return (
@@ -9,24 +10,37 @@ function Field({ label, children }) {
   );
 }
 
+const INPUT_CLS = 'w-full rounded-xl border border-white/10 bg-[#061018] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30';
+
 export default function ManagePassword() {
   const [current,  setCurrent]  = useState('');
   const [newPw,    setNewPw]    = useState('');
   const [confirm,  setConfirm]  = useState('');
   const [error,    setError]    = useState('');
   const [success,  setSuccess]  = useState(false);
+  const [saving,   setSaving]   = useState(false);
 
-  function handleSubmit() {
-    setError('');
-    setSuccess(false);
-    if (!current)              { setError('Current password is required.'); return; }
-    if (!newPw)                { setError('New password is required.'); return; }
-    if (newPw !== confirm)     { setError('Passwords do not match.'); return; }
-    if (newPw.length < 8)     { setError('Password must be at least 8 characters.'); return; }
-    // In production this would call /api/profile/password
-    setCurrent(''); setNewPw(''); setConfirm('');
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 4000);
+  async function handleSubmit() {
+    setError(''); setSuccess(false);
+    if (!current)          { setError('Current password is required.'); return; }
+    if (!newPw)            { setError('New password is required.'); return; }
+    if (newPw !== confirm) { setError('Passwords do not match.'); return; }
+    if (newPw.length < 8)  { setError('Password must be at least 8 characters.'); return; }
+
+    setSaving(true);
+    try {
+      await apiFetch('/profile/password', {
+        method: 'PUT',
+        body: JSON.stringify({ currentPassword: current, newPassword: newPw }),
+      });
+      setCurrent(''); setNewPw(''); setConfirm('');
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 4000);
+    } catch (err) {
+      setError(err.message ?? 'Password update failed.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -39,48 +53,21 @@ export default function ManagePassword() {
       <div className="max-w-md rounded-2xl border border-white/10 bg-[#0d1f2d] p-6 shadow-lg">
         <div className="space-y-4">
           <Field label="Current Password">
-            <input
-              type="password"
-              value={current}
-              onChange={(e) => setCurrent(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-[#061018] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-            />
+            <input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} className={INPUT_CLS} />
           </Field>
-
           <Field label="New Password">
-            <input
-              type="password"
-              value={newPw}
-              onChange={(e) => setNewPw(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-[#061018] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-            />
+            <input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} className={INPUT_CLS} />
           </Field>
-
           <Field label="Confirm New Password">
-            <input
-              type="password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-[#061018] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-            />
+            <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={INPUT_CLS} />
           </Field>
 
-          {error && (
-            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
-              Password updated successfully.
-            </div>
-          )}
+          {error   && <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">{error}</div>}
+          {success && <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">Password updated successfully.</div>}
 
-          <button
-            onClick={handleSubmit}
-            className="w-full rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400"
-          >
-            Update Password
+          <button onClick={handleSubmit} disabled={saving}
+            className="w-full rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50">
+            {saving ? 'Updating…' : 'Update Password'}
           </button>
         </div>
       </div>

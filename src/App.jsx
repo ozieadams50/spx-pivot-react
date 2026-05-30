@@ -4,6 +4,7 @@ import { canAccess } from './data/accessMatrix';
 import AppLayout from './layouts/AppLayout';
 import Home from './pages/Home';
 import SPXPivots from './pages/SPXPivots';
+import SPXBacktest from './pages/SPXBacktest';
 import Placeholder from './pages/Placeholder';
 import SubscriberCommentary from './pages/SubscriberCommentary';
 import CommentaryHistory from './pages/CommentaryHistory';
@@ -45,6 +46,7 @@ function AppRoutes() {
 
         {/* SPX Pivots */}
         <Route path="spx-pivots"         element={<SPXPivots />} />
+        <Route path="spx-backtest"       element={<Guard matrixKey="apps/spx-backtest/run"><SPXBacktest /></Guard>} />
         <Route path="spx-pivots/history" element={<Placeholder title="Historical Performance" description="SPX pivot level performance history and trade outcomes." />} />
         <Route path="spx-pivots/charts"  element={<Placeholder title="Chart View" description="SPX price chart with pivot level overlays." />} />
 

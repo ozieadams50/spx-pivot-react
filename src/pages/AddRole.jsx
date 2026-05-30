@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loadCustomRoles, saveCustomRoles } from '../data/roles';
+import { apiFetch } from '../lib/api';
 
 function toKey(name) {
   return name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
@@ -26,31 +26,35 @@ export default function AddRole() {
   const [shortDescription, setShortDescription] = useState('');
   const [definition,       setDefinition]       = useState('');
   const [error,            setError]            = useState('');
+  const [saving,           setSaving]           = useState(false);
 
   function handleNameChange(val) {
     setName(val);
     if (!keyTouched) setKey(toKey(val));
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     setError('');
     if (!name.trim()) { setError('Role name is required.'); return; }
     if (!key.trim())  { setError('Role key is required.'); return; }
 
-    const custom = loadCustomRoles();
-    if (custom.some((r) => r.key === key.trim())) {
-      setError(`A role with key "${key}" already exists.`);
-      return;
+    setSaving(true);
+    try {
+      await apiFetch('/roles', {
+        method: 'POST',
+        body: JSON.stringify({
+          key:              key.trim(),
+          name:             name.trim(),
+          shortDescription: shortDescription.trim(),
+          definition:       definition.trim(),
+        }),
+      });
+      navigate('/admin/roles');
+    } catch (e) {
+      setError(e.message ?? 'Failed to create role.');
+    } finally {
+      setSaving(false);
     }
-
-    saveCustomRoles([...custom, {
-      key:              key.trim(),
-      name:             name.trim(),
-      shortDescription: shortDescription.trim(),
-      definition:       definition.trim(),
-      fixed:            false,
-    }]);
-    navigate('/admin/roles');
   }
 
   return (
@@ -108,8 +112,12 @@ export default function AddRole() {
           )}
 
           <div className="flex gap-3">
-            <button onClick={handleSubmit} className="flex-1 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400">
-              Create Role
+            <button
+              onClick={handleSubmit}
+              disabled={saving}
+              className="flex-1 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400 disabled:opacity-50"
+            >
+              {saving ? 'Creating…' : 'Create Role'}
             </button>
             <button onClick={() => navigate('/admin/roles')} className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/10">
               Cancel

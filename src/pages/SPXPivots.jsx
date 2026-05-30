@@ -1,102 +1,148 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import TradeModal from '../components/TradeModal';
+import { apiFetch } from '../lib/api';
 
 const TRADE_MODES = ['Monthly Trade', 'Weekly Trade', 'Daily Trade'];
 
-const PIVOT_DATA = {
-  'Monthly Trade': {
-    title: 'SPX Monthly Pivot',
-    caption: 'Month as of May 1, 2026',
-    primaryPivot: '7,234.54',
-    sentiment: 'Bullish',
-    expiry: 'May 29, 2026',
-    pivots: [
-      { label: 'R2 Resistance', value: '$7,639.87', tone: 'text-emerald-400', key: 'r2' },
-      { label: 'R1 Resistance', value: '$7,481.28', tone: 'text-green-400', key: 'r1' },
-      { label: 'S1 Support', value: '$7,044.86', tone: 'text-emerald-400', key: 's1' },
-      { label: 'S2 Support', value: '$6,818.65', tone: 'text-green-400', key: 's2' },
-    ],
-    spreads: [
-      { risk: 'Aggressive', level: 'S1 (Support 1)', pivot: '7,044.86', short: '7045', long: '7040', credit: '+$1.45', maxRisk: '$3.55', breakeven: '7,038.55' },
-      { risk: 'Moderate', level: 'Mid-S', pivot: '6,931.75', short: '6930', long: '6925', credit: '+$1.40', maxRisk: '$3.60', breakeven: '6,923.60' },
-      { risk: 'Conservative', level: 'S2 (Support 2)', pivot: '6,818.65', short: '6820', long: '6815', credit: '+$1.35', maxRisk: '$3.65', breakeven: '6,813.65' },
-    ],
-    execCards: {
-      Aggressive: { risk: 'Higher Risk / Higher Reward', level: 'S1 Pivot @ 7044.86 — 7045 / 7040', buy: 'May 29, 2026 • 7040 Put', sell: 'May 29, 2026 • 7045 Put', credit: '$1.45+', badge: 'border-rose-500/30 bg-rose-500/20 text-rose-300' },
-      Moderate: { risk: 'Balanced Risk / Reward', level: 'Mid-S Pivot @ 6931.75 — 6930 / 6925', buy: 'May 29, 2026 • 6925 Put', sell: 'May 29, 2026 • 6930 Put', credit: '$1.40+', badge: 'border-sky-500/30 bg-sky-500/20 text-sky-300' },
-      Conservative: { risk: 'Lower Risk / Lower Reward', level: 'S2 Pivot @ 6818.65 — 6820 / 6815', buy: 'May 29, 2026 • 6815 Put', sell: 'May 29, 2026 • 6820 Put', credit: '$1.35+', badge: 'border-emerald-500/30 bg-emerald-500/20 text-emerald-300' },
-    },
-  },
-  'Weekly Trade': {
-    title: 'SPX Weekly Pivot',
-    caption: 'Week of May 26, 2026',
-    primaryPivot: '5,802.13',
-    sentiment: 'Neutral to Bullish',
-    expiry: 'May 29, 2026',
-    pivots: [
-      { label: 'R2 Resistance', value: '$5,919.40', tone: 'text-emerald-400', key: 'r2' },
-      { label: 'R1 Resistance', value: '$5,860.77', tone: 'text-green-400', key: 'r1' },
-      { label: 'S1 Support', value: '$5,743.49', tone: 'text-emerald-400', key: 's1' },
-      { label: 'S2 Support', value: '$5,684.86', tone: 'text-green-400', key: 's2' },
-    ],
-    spreads: [
-      { risk: 'Aggressive', level: 'S1 (Support 1)', pivot: '5,743.49', short: '5740', long: '5735', credit: '+$1.20', maxRisk: '$3.80', breakeven: '5,733.80' },
-      { risk: 'Moderate', level: 'Mid-S', pivot: '5,713.93', short: '5710', long: '5705', credit: '+$1.15', maxRisk: '$3.85', breakeven: '5,703.85' },
-      { risk: 'Conservative', level: 'S2 (Support 2)', pivot: '5,684.86', short: '5685', long: '5680', credit: '+$1.10', maxRisk: '$3.90', breakeven: '5,678.90' },
-    ],
-    execCards: {
-      Aggressive: { risk: 'Higher Risk / Higher Reward', level: 'S1 Pivot @ 5743.49 — 5740 / 5735', buy: 'May 29, 2026 • 5735 Put', sell: 'May 29, 2026 • 5740 Put', credit: '$1.20+', badge: 'border-rose-500/30 bg-rose-500/20 text-rose-300' },
-      Moderate: { risk: 'Balanced Risk / Reward', level: 'Mid-S Pivot @ 5713.93 — 5710 / 5705', buy: 'May 29, 2026 • 5705 Put', sell: 'May 29, 2026 • 5710 Put', credit: '$1.15+', badge: 'border-sky-500/30 bg-sky-500/20 text-sky-300' },
-      Conservative: { risk: 'Lower Risk / Lower Reward', level: 'S2 Pivot @ 5684.86 — 5685 / 5680', buy: 'May 29, 2026 • 5680 Put', sell: 'May 29, 2026 • 5685 Put', credit: '$1.10+', badge: 'border-emerald-500/30 bg-emerald-500/20 text-emerald-300' },
-    },
-  },
-  'Daily Trade': {
-    title: 'SPX Daily Pivot',
-    caption: 'today',
-    primaryPivot: '5,774.22',
-    sentiment: 'Bullish (default)',
-    expiry: 'May 27, 2026',
-    pivots: [
-      { label: 'R2 Resistance', value: '$5,831.45', tone: 'text-emerald-400', key: 'r2' },
-      { label: 'R1 Resistance', value: '$5,802.84', tone: 'text-green-400', key: 'r1' },
-      { label: 'S1 Support', value: '$5,745.61', tone: 'text-emerald-400', key: 's1' },
-      { label: 'S2 Support', value: '$5,716.99', tone: 'text-green-400', key: 's2' },
-    ],
-    spreads: [
-      { risk: 'Aggressive', level: 'S1 (Support 1)', pivot: '5,745.61', short: '5745', long: '5740', credit: '+$0.90', maxRisk: '$4.10', breakeven: '5,739.10' },
-      { risk: 'Moderate', level: 'Mid-S', pivot: '5,731.30', short: '5730', long: '5725', credit: '+$0.85', maxRisk: '$4.15', breakeven: '5,724.15' },
-      { risk: 'Conservative', level: 'S2 (Support 2)', pivot: '5,716.99', short: '5715', long: '5710', credit: '+$0.80', maxRisk: '$4.20', breakeven: '5,709.20' },
-    ],
-    execCards: {
-      Aggressive: { risk: 'Higher Risk / Higher Reward', level: 'S1 Pivot @ 5745.61 — 5745 / 5740', buy: 'May 27, 2026 • 5740 Put', sell: 'May 27, 2026 • 5745 Put', credit: '$0.90+', badge: 'border-rose-500/30 bg-rose-500/20 text-rose-300' },
-      Moderate: { risk: 'Balanced Risk / Reward', level: 'Mid-S Pivot @ 5731.30 — 5730 / 5725', buy: 'May 27, 2026 • 5725 Put', sell: 'May 27, 2026 • 5730 Put', credit: '$0.85+', badge: 'border-sky-500/30 bg-sky-500/20 text-sky-300' },
-      Conservative: { risk: 'Lower Risk / Lower Reward', level: 'S2 Pivot @ 5716.99 — 5715 / 5710', buy: 'May 27, 2026 • 5710 Put', sell: 'May 27, 2026 • 5715 Put', credit: '$0.80+', badge: 'border-emerald-500/30 bg-emerald-500/20 text-emerald-300' },
-    },
-  },
+const MODE_MAP = {
+  'Monthly Trade': 'monthly',
+  'Weekly Trade':  'weekly',
+  'Daily Trade':   'daily',
 };
 
 const BADGE_STYLES = {
-  Aggressive: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
-  Moderate: 'bg-sky-500/20 text-sky-300 border-sky-500/30',
+  Aggressive:   'bg-rose-500/20 text-rose-300 border-rose-500/30',
+  Moderate:     'bg-sky-500/20 text-sky-300 border-sky-500/30',
   Conservative: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
 };
 
 const SENTIMENT_STYLES = {
-  'Bullish': 'text-emerald-400',
-  'Bullish (default)': 'text-emerald-400/70',
-  'Neutral to Bullish': 'text-emerald-300',
-  'Neutral': 'text-slate-300',
-  'Bearish to Neutral': 'text-orange-400',
-  'Bearish': 'text-rose-400',
+  'Bullish':              'text-emerald-400',
+  'Bullish (default)':    'text-emerald-400/70',
+  'Neutral to Bullish':   'text-emerald-300',
+  'Neutral':              'text-slate-300',
+  'Bearish to Neutral':   'text-orange-400',
+  'Bearish':              'text-rose-400',
 };
 
+// ── Formatters ───────────────────────────────────────────────────────────────
+
+function fmtNumber(n) {
+  return Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtCurrency(n) {
+  return `$${fmtNumber(n)}`;
+}
+
+function fmtDate(isoDate) {
+  return new Date(`${isoDate}T12:00:00`).toLocaleDateString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric',
+  });
+}
+
+function isToday(isoDate) {
+  return isoDate === new Date().toISOString().slice(0, 10);
+}
+
+function buildCaption(mode, periodStart) {
+  const label = fmtDate(periodStart);
+  if (mode === 'daily')  return isToday(periodStart) ? 'today' : `prev-trading-day:${label}`;
+  if (mode === 'weekly') return `Week of ${label}`;
+  return `Month as of ${label}`;
+}
+
+// ── API → component shape ─────────────────────────────────────────────────────
+
+function transformPivotData(api, mode) {
+  const { periodOpen, r1, r2, s1, s2, sentiment, expiry, periodStart, spreads } = api;
+  const expiryFmt = fmtDate(expiry);
+  const modeLabel = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }[mode];
+
+  return {
+    title:        `SPX ${modeLabel} Pivot`,
+    caption:      buildCaption(mode, periodStart),
+    primaryPivot: fmtNumber(periodOpen),
+    sentiment,
+    expiry:       expiryFmt,
+    pivots: [
+      { label: 'R2 Resistance', value: fmtCurrency(r2), tone: 'text-emerald-400', key: 'r2' },
+      { label: 'R1 Resistance', value: fmtCurrency(r1), tone: 'text-green-400',   key: 'r1' },
+      { label: 'S1 Support',    value: fmtCurrency(s1), tone: 'text-emerald-400', key: 's1' },
+      { label: 'S2 Support',    value: fmtCurrency(s2), tone: 'text-green-400',   key: 's2' },
+    ],
+    spreads: [
+      { risk: 'Aggressive',   level: 'S1 (Support 1)',   pivot: fmtNumber(spreads.Aggressive.level),   short: spreads.Aggressive.short,   long: spreads.Aggressive.long },
+      { risk: 'Moderate',     level: 'Mid-S',            pivot: fmtNumber(spreads.Moderate.level),     short: spreads.Moderate.short,     long: spreads.Moderate.long   },
+      { risk: 'Conservative', level: 'S2 (Support 2)',   pivot: fmtNumber(spreads.Conservative.level), short: spreads.Conservative.short, long: spreads.Conservative.long },
+    ],
+    execCards: {
+      Aggressive: {
+        risk:   'Higher Risk / Higher Reward',
+        level:  `S1 Pivot @ ${fmtNumber(spreads.Aggressive.level)} — ${spreads.Aggressive.short} / ${spreads.Aggressive.long}`,
+        buy:    `${expiryFmt} • ${spreads.Aggressive.long} Put`,
+        sell:   `${expiryFmt} • ${spreads.Aggressive.short} Put`,
+        credit: '—',
+        badge:  'border-rose-500/30 bg-rose-500/20 text-rose-300',
+      },
+      Moderate: {
+        risk:   'Balanced Risk / Reward',
+        level:  `Mid-S Pivot @ ${fmtNumber(spreads.Moderate.level)} — ${spreads.Moderate.short} / ${spreads.Moderate.long}`,
+        buy:    `${expiryFmt} • ${spreads.Moderate.long} Put`,
+        sell:   `${expiryFmt} • ${spreads.Moderate.short} Put`,
+        credit: '—',
+        badge:  'border-sky-500/30 bg-sky-500/20 text-sky-300',
+      },
+      Conservative: {
+        risk:   'Lower Risk / Lower Reward',
+        level:  `S2 Pivot @ ${fmtNumber(spreads.Conservative.level)} — ${spreads.Conservative.short} / ${spreads.Conservative.long}`,
+        buy:    `${expiryFmt} • ${spreads.Conservative.long} Put`,
+        sell:   `${expiryFmt} • ${spreads.Conservative.short} Put`,
+        credit: '—',
+        badge:  'border-emerald-500/30 bg-emerald-500/20 text-emerald-300',
+      },
+    },
+  };
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
 export default function SPXPivots() {
-  const [tradeMode, setTradeMode] = useState('Monthly Trade');
+  const [tradeMode,        setTradeMode]        = useState('Weekly Trade');
   const [selectedStrategy, setSelectedStrategy] = useState('Moderate');
-  const [showModal, setShowModal] = useState(false);
-const data = PIVOT_DATA[tradeMode];
-  const activeExec = data.execCards[selectedStrategy];
-  const sentimentClass = SENTIMENT_STYLES[data.sentiment] || 'text-slate-300';
+  const [showModal,        setShowModal]        = useState(false);
+  const [pivotData,        setPivotData]        = useState(null);
+  const [loading,          setLoading]          = useState(true);
+  const [error,            setError]            = useState(null);
+
+  const fetchPivots = useCallback((mode, signal) => {
+    setLoading(true);
+    setError(null);
+    apiFetch(`/pivots/spx?mode=${mode}`, { signal })
+      .then((raw) => { if (raw) setPivotData(transformPivotData(raw, mode)); })
+      .catch((err) => { if (err?.name !== 'AbortError') setError(err.message); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Fetch on trade mode change
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchPivots(MODE_MAP[tradeMode], controller.signal);
+    return () => controller.abort();
+  }, [tradeMode, fetchPivots]);
+
+  // Re-fetch when user returns to this tab (picks up sentiment changes made elsewhere)
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState === 'visible') fetchPivots(MODE_MAP[tradeMode]);
+    }
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [tradeMode, fetchPivots]);
+
+  const data           = pivotData;
+  const activeExec     = data?.execCards?.[selectedStrategy];
+  const sentimentClass = SENTIMENT_STYLES[data?.sentiment] ?? 'text-slate-300';
 
   return (
     <div className="mx-auto max-w-7xl p-3 sm:p-4 lg:p-8">
@@ -111,7 +157,11 @@ const data = PIVOT_DATA[tradeMode];
 
         <div className="rounded-3xl border border-white/10 bg-black/30 px-8 py-5 text-right">
           <p className="mb-1 text-xs uppercase tracking-[0.2em] text-slate-500">Market Sentiment</p>
-          <p className={`text-3xl font-bold sm:text-4xl ${sentimentClass}`}>{data.sentiment}</p>
+          {loading ? (
+            <div className="h-10 w-40 animate-pulse rounded-xl bg-white/10" />
+          ) : (
+            <p className={`text-3xl font-bold sm:text-4xl ${sentimentClass}`}>{data?.sentiment ?? '—'}</p>
+          )}
         </div>
       </div>
 
@@ -132,34 +182,58 @@ const data = PIVOT_DATA[tradeMode];
         ))}
       </div>
 
+      {/* Error state */}
+      {error && !loading && (
+        <div className="mb-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-4 text-rose-300">
+          Failed to load pivot data: {error}
+        </div>
+      )}
+
       {/* Main pivot card */}
       <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[#0b1420] shadow-2xl">
         {/* Pivot header */}
         <div className="border-b border-white/10 px-4 py-5 lg:px-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-white">{data.title}</h2>
-              <p className="mt-2 text-sm text-slate-400">
-                {data.caption === 'today'
-                  ? `Today — ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
-                  : data.caption}
-              </p>
+              {loading ? (
+                <>
+                  <div className="mb-2 h-8 w-56 animate-pulse rounded-xl bg-white/10" />
+                  <div className="h-4 w-40 animate-pulse rounded-lg bg-white/10" />
+                </>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-bold text-white">{data?.title}</h2>
+                  <p className="mt-2 text-sm text-slate-400">
+                    {data?.caption === 'today'
+                      ? `Today — ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+                      : data?.caption?.startsWith('prev-trading-day:')
+                        ? `Previous Trading Day — ${data.caption.slice('prev-trading-day:'.length)}`
+                        : data?.caption}
+                  </p>
+                </>
+              )}
             </div>
-
           </div>
         </div>
 
         {/* Pivot levels grid */}
         <div className="grid grid-cols-1 border-b border-white/10 sm:grid-cols-2 xl:grid-cols-4">
-          {data.pivots.map((item) => (
-            <div
-              key={item.key}
-              className="border-b border-white/5 p-5 text-center xl:border-b-0 xl:border-r xl:border-white/5 last:border-r-0"
-            >
-              <p className="text-xs uppercase tracking-wide text-slate-500">{item.label}</p>
-              <p className={`mt-3 text-2xl font-bold lg:text-3xl ${item.tone}`}>{item.value}</p>
-            </div>
-          ))}
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="border-b border-white/5 p-5 text-center xl:border-b-0 xl:border-r xl:border-white/5 last:border-r-0">
+                  <div className="mx-auto mb-3 h-3 w-24 animate-pulse rounded bg-white/10" />
+                  <div className="mx-auto h-8 w-32 animate-pulse rounded-xl bg-white/10" />
+                </div>
+              ))
+            : data?.pivots.map((item) => (
+                <div
+                  key={item.key}
+                  className="border-b border-white/5 p-5 text-center xl:border-b-0 xl:border-r xl:border-white/5 last:border-r-0"
+                >
+                  <p className="text-xs uppercase tracking-wide text-slate-500">{item.label}</p>
+                  <p className={`mt-3 text-2xl font-bold lg:text-3xl ${item.tone}`}>{item.value}</p>
+                </div>
+              ))}
         </div>
 
         {/* Credit spread subheader */}
@@ -169,7 +243,12 @@ const data = PIVOT_DATA[tradeMode];
               Bull Put Spreads
             </div>
             <div>
-              Expiry: <span className="font-semibold text-emerald-400">{data.expiry}</span>
+              Expiry:{' '}
+              {loading ? (
+                <span className="inline-block h-4 w-24 animate-pulse rounded bg-white/10 align-middle" />
+              ) : (
+                <span className="font-semibold text-emerald-400">{data?.expiry}</span>
+              )}
             </div>
             <div>
               Width: <span className="font-semibold text-white">5 pts</span>
@@ -191,7 +270,8 @@ const data = PIVOT_DATA[tradeMode];
               </div>
               <button
                 onClick={() => setShowModal(true)}
-                className="self-start rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors lg:self-auto"
+                disabled={loading || !data}
+                className="self-start rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors disabled:opacity-40 lg:self-auto"
               >
                 ⓘ How to Trade
               </button>
@@ -206,36 +286,38 @@ const data = PIVOT_DATA[tradeMode];
                     <th className="px-4 py-4 text-right">Pivot</th>
                     <th className="px-4 py-4 text-right">Short Put</th>
                     <th className="px-4 py-4 text-right">Long Put</th>
-                    <th className="px-4 py-4 text-right">Net Credit</th>
-                    <th className="px-4 py-4 text-right">Max Risk</th>
-                    <th className="px-4 py-4 text-right">Breakeven</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.spreads.map((row) => (
-                    <tr
-                      key={row.risk}
-                      onClick={() => setSelectedStrategy(row.risk)}
-                      className={`border-t border-white/5 text-slate-300 cursor-pointer transition-colors hover:bg-white/5 ${
-                        selectedStrategy === row.risk ? 'bg-white/[0.03]' : ''
-                      }`}
-                    >
-                      <td className="px-4 py-4">
-                        <div
-                          className={`inline-flex rounded-xl border px-3 py-1 text-sm font-semibold ${BADGE_STYLES[row.risk]}`}
+                  {loading
+                    ? Array.from({ length: 3 }).map((_, i) => (
+                        <tr key={i} className="border-t border-white/5">
+                          {Array.from({ length: 5 }).map((__, j) => (
+                            <td key={j} className="px-4 py-4">
+                              <div className="h-4 animate-pulse rounded bg-white/10" />
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    : data?.spreads.map((row) => (
+                        <tr
+                          key={row.risk}
+                          onClick={() => setSelectedStrategy(row.risk)}
+                          className={`border-t border-white/5 text-slate-300 cursor-pointer transition-colors hover:bg-white/5 ${
+                            selectedStrategy === row.risk ? 'bg-white/[0.03]' : ''
+                          }`}
                         >
-                          {row.risk}
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-slate-300">{row.level}</td>
-                      <td className="px-4 py-4 text-right font-mono">{row.pivot}</td>
-                      <td className="px-4 py-4 text-right font-mono font-semibold text-white">{row.short}</td>
-                      <td className="px-4 py-4 text-right font-mono text-slate-400">{row.long}</td>
-                      <td className="px-4 py-4 text-right font-mono text-emerald-400 font-semibold">{row.credit}</td>
-                      <td className="px-4 py-4 text-right font-mono text-rose-400">{row.maxRisk}</td>
-                      <td className="px-4 py-4 text-right font-mono text-slate-400">{row.breakeven}</td>
-                    </tr>
-                  ))}
+                          <td className="px-4 py-4">
+                            <div className={`inline-flex rounded-xl border px-3 py-1 text-sm font-semibold ${BADGE_STYLES[row.risk]}`}>
+                              {row.risk}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-slate-300">{row.level}</td>
+                          <td className="px-4 py-4 text-right font-mono">{row.pivot}</td>
+                          <td className="px-4 py-4 text-right font-mono font-semibold text-white">{row.short}</td>
+                          <td className="px-4 py-4 text-right font-mono text-slate-400">{row.long}</td>
+                        </tr>
+                      ))}
                 </tbody>
               </table>
             </div>
@@ -243,7 +325,7 @@ const data = PIVOT_DATA[tradeMode];
         </div>
       </div>
 
-      {showModal && (
+      {showModal && data && (
         <TradeModal
           selectedStrategy={selectedStrategy}
           setSelectedStrategy={setSelectedStrategy}

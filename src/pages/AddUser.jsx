@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { loadUsers, saveUsers } from '../data/users';
+import { apiFetch } from '../lib/api';
 
-const SUB_LEVELS = ['No Access', 'Trial', 'Monthly', 'Annual'];
-const ROLES      = ['Subscriber', 'Admin', 'Super User'];
-const PIVOT_OPTS = ['Daily', 'Weekly', 'Monthly'];
-const STYLE_OPTS = ['Aggressive', 'Moderate', 'Conservative'];
-const INDEX_OPTS = ['SPX', 'XSP'];
+const ROLE_KEY     = { Subscriber: 'subscriber', Admin: 'admin', 'Super User': 'superuser' };
+const SUB_LEVELS   = ['No Access', 'Trial', 'Monthly', 'Annual'];
+const ROLES        = ['Subscriber', 'Admin', 'Super User'];
+const PIVOT_OPTS   = ['Daily', 'Weekly', 'Monthly'];
+const STYLE_OPTS   = ['Aggressive', 'Moderate', 'Conservative'];
+const INDEX_OPTS   = ['SPX', 'XSP'];
 
 const DEFAULTS = {
   firstName: '', lastName: '', suffix: '',
@@ -86,7 +87,7 @@ function MultiToggle({ options, value, onChange }) {
   );
 }
 
-function Toggle({ label, checked, onChange }) {
+function ToggleSwitch({ label, checked, onChange }) {
   return (
     <button
       type="button"
@@ -98,11 +99,7 @@ function Toggle({ label, checked, onChange }) {
       }`}
     >
       <span className="relative inline-block h-4 w-8 rounded-full bg-slate-700 transition">
-        <span
-          className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${
-            checked ? 'left-4 bg-cyan-300' : 'left-0.5'
-          }`}
-        />
+        <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${checked ? 'left-4 bg-cyan-300' : 'left-0.5'}`} />
       </span>
       {label}
     </button>
@@ -112,46 +109,40 @@ function Toggle({ label, checked, onChange }) {
 export default function AddUser() {
   const navigate = useNavigate();
   const { role: currentRole } = useAuth();
-  const [form, setForm] = useState({ ...DEFAULTS });
-  const [error, setError]   = useState('');
+  const [form,   setForm]   = useState({ ...DEFAULTS });
+  const [error,  setError]  = useState('');
   const [saving, setSaving] = useState(false);
 
   function set(field) {
     return (val) => setForm((f) => ({ ...f, [field]: val }));
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     setError('');
-    if (!form.firstName.trim() || !form.lastName.trim()) {
-      setError('First Name and Last Name are required.');
-      return;
-    }
-    if (!form.email.trim()) {
-      setError('Email is required.');
-      return;
-    }
-    if (!form.password) {
-      setError('Password is required.');
-      return;
-    }
+    if (!form.firstName.trim() || !form.lastName.trim()) { setError('First Name and Last Name are required.'); return; }
+    if (!form.email.trim())  { setError('Email is required.'); return; }
+    if (!form.password)      { setError('Password is required.'); return; }
 
     setSaving(true);
-    const users = loadUsers();
-    const newId = users.length ? Math.max(...users.map((u) => u.id)) + 1 : 1;
-    const newUser = {
-      ...form,
-      firstName: form.firstName.trim(),
-      lastName:  form.lastName.trim(),
-      suffix:    form.suffix.trim(),
-      email:     form.email.trim().toLowerCase(),
-      phone:     form.phone.trim(),
-      id:        newId,
-      isActive:  true,
-      updatedAt: new Date().toISOString(),
-    };
-    saveUsers([...users, newUser]);
-    setSaving(false);
-    navigate('/admin/users');
+    try {
+      await apiFetch('/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          ...form,
+          firstName:  form.firstName.trim(),
+          lastName:   form.lastName.trim(),
+          suffix:     form.suffix.trim(),
+          email:      form.email.trim().toLowerCase(),
+          phone:      form.phone.trim(),
+          role:       ROLE_KEY[form.role] ?? 'subscriber',
+        }),
+      });
+      navigate('/admin/user-mgmt/manage-users');
+    } catch (err) {
+      setError(err.message ?? 'Failed to create user.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -163,99 +154,77 @@ export default function AddUser() {
 
       <div className="max-w-2xl rounded-2xl border border-white/10 bg-[#0d1f2d] p-6 shadow-lg">
 
-          {/* ── Identity ─────────────────────────────────────────── */}
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Identity</p>
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Identity</p>
+        <div className="grid grid-cols-3 gap-3">
+          <Field label="First Name"><TextInput value={form.firstName} onChange={set('firstName')} placeholder="Jane" /></Field>
+          <Field label="Last Name"><TextInput value={form.lastName}   onChange={set('lastName')}  placeholder="Smith" /></Field>
+          <Field label="Suffix"><TextInput value={form.suffix} onChange={set('suffix')} placeholder="Jr." /></Field>
+        </div>
+
+        <div className="mt-6 border-t border-white/10 pt-5">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Contact</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Email"><TextInput value={form.email} onChange={set('email')} placeholder="jane@example.com" /></Field>
+            <Field label="Phone"><TextInput value={form.phone} onChange={set('phone')} placeholder="+15551234567" /></Field>
+          </div>
+        </div>
+
+        <div className="mt-6 border-t border-white/10 pt-5">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Trading Preferences</p>
           <div className="grid grid-cols-3 gap-3">
-            <Field label="First Name">
-              <TextInput value={form.firstName} onChange={set('firstName')} placeholder="Jane" />
-            </Field>
-            <Field label="Last Name">
-              <TextInput value={form.lastName} onChange={set('lastName')} placeholder="Smith" />
-            </Field>
-            <Field label="Suffix">
-              <TextInput value={form.suffix} onChange={set('suffix')} placeholder="Jr." />
-            </Field>
-          </div>
-
-          {/* ── Contact ──────────────────────────────────────────── */}
-          <div className="mt-6 border-t border-white/10 pt-5">
-            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Contact</p>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Email">
-                <TextInput value={form.email} onChange={set('email')} placeholder="jane@example.com" />
-              </Field>
-              <Field label="Phone">
-                <TextInput value={form.phone} onChange={set('phone')} placeholder="+15551234567" />
-              </Field>
-            </div>
-          </div>
-
-          {/* ── Trading Preferences ──────────────────────────────── */}
-          <div className="mt-6 border-t border-white/10 pt-5">
-            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Trading Preferences</p>
-            <div className="grid grid-cols-3 gap-3">
-              <Field label="Trading Style">
-                <Segment options={STYLE_OPTS} value={form.tradingStyle} onChange={set('tradingStyle')} />
-              </Field>
-              <Field label="Index">
-                <Segment options={INDEX_OPTS} value={form.index} onChange={set('index')} />
-              </Field>
-              <Field label="Delta Trigger">
-                <input
-                  type="number"
-                  min={0.05} max={0.99} step={0.05}
-                  value={form.deltaTrigger}
-                  onChange={(e) => set('deltaTrigger')(parseFloat(e.target.value))}
-                  className="w-full rounded-xl border border-white/10 bg-[#061018] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
-                />
-              </Field>
-            </div>
-            <div className="mt-4">
-              <Field label="Pivot Periods">
-                <MultiToggle options={PIVOT_OPTS} value={form.pivotPeriods} onChange={set('pivotPeriods')} />
-              </Field>
-            </div>
-          </div>
-
-          {/* ── Alerts ───────────────────────────────────────────── */}
-          <div className="mt-6 border-t border-white/10 pt-5">
-            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Alerts</p>
-            <div className="flex gap-3">
-              <Toggle label="Email Alerts" checked={form.notifEmail} onChange={set('notifEmail')} />
-              <Toggle label="ntfy Push"    checked={form.notifNtfy}  onChange={set('notifNtfy')} />
-            </div>
-          </div>
-
-          {/* ── Access ───────────────────────────────────────────── */}
-          <div className="mt-6 border-t border-white/10 pt-5">
-            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Access</p>
-            <div className="space-y-4">
-              <Field label="Subscription Level">
-                <Segment options={SUB_LEVELS} value={form.subscriptionLevel} onChange={set('subscriptionLevel')} />
-              </Field>
-              <Field label="Role">
-                <Segment
-                  options={currentRole === 'superuser' ? ROLES : ['Subscriber']}
-                  value={form.role}
-                  onChange={set('role')}
-                />
-                {currentRole !== 'superuser' && (
-                  <p className="mt-1.5 text-xs text-slate-500">Only Super Users can assign Admin or Super User roles.</p>
-                )}
-              </Field>
-            </div>
-          </div>
-
-          {/* ── Password ─────────────────────────────────────────── */}
-          <div className="mt-6 border-t border-white/10 pt-5">
-            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Password</p>
-            <Field label="Password">
-              <TextInput type="password" value={form.password} onChange={set('password')} placeholder="••••••••" />
+            <Field label="Trading Style"><Segment options={STYLE_OPTS} value={form.tradingStyle} onChange={set('tradingStyle')} /></Field>
+            <Field label="Index"><Segment options={INDEX_OPTS} value={form.index} onChange={set('index')} /></Field>
+            <Field label="Delta Trigger">
+              <input
+                type="number" min={0.05} max={0.99} step={0.05}
+                value={form.deltaTrigger}
+                onChange={(e) => set('deltaTrigger')(parseFloat(e.target.value))}
+                className="w-full rounded-xl border border-white/10 bg-[#061018] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+              />
             </Field>
           </div>
+          <div className="mt-4">
+            <Field label="Pivot Periods">
+              <MultiToggle options={PIVOT_OPTS} value={form.pivotPeriods} onChange={set('pivotPeriods')} />
+            </Field>
+          </div>
+        </div>
 
-          {/* ── Actions ──────────────────────────────────────────── */}
-          <div className="mt-6 border-t border-white/10 pt-5">
+        <div className="mt-6 border-t border-white/10 pt-5">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Alerts</p>
+          <div className="flex gap-3">
+            <ToggleSwitch label="Email Alerts" checked={form.notifEmail} onChange={set('notifEmail')} />
+            <ToggleSwitch label="ntfy Push"    checked={form.notifNtfy}  onChange={set('notifNtfy')} />
+          </div>
+        </div>
+
+        <div className="mt-6 border-t border-white/10 pt-5">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Access</p>
+          <div className="space-y-4">
+            <Field label="Subscription Level">
+              <Segment options={SUB_LEVELS} value={form.subscriptionLevel} onChange={set('subscriptionLevel')} />
+            </Field>
+            <Field label="Role">
+              <Segment
+                options={currentRole === 'superuser' ? ROLES : ['Subscriber']}
+                value={form.role}
+                onChange={set('role')}
+              />
+              {currentRole !== 'superuser' && (
+                <p className="mt-1.5 text-xs text-slate-500">Only Super Users can assign Admin or Super User roles.</p>
+              )}
+            </Field>
+          </div>
+        </div>
+
+        <div className="mt-6 border-t border-white/10 pt-5">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Password</p>
+          <Field label="Password">
+            <TextInput type="password" value={form.password} onChange={set('password')} placeholder="••••••••" />
+          </Field>
+        </div>
+
+        <div className="mt-6 border-t border-white/10 pt-5">
           {error && (
             <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
               {error}
@@ -270,13 +239,13 @@ export default function AddUser() {
               {saving ? 'Creating…' : 'Create User'}
             </button>
             <button
-              onClick={() => navigate('/admin/users')}
+              onClick={() => navigate('/admin/user-mgmt/manage-users')}
               className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/10"
             >
               Cancel
             </button>
           </div>
-          </div>
+        </div>
       </div>
     </div>
   );

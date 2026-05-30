@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { loadAllRoles, loadCustomRoles, saveCustomRoles, FIXED_ROLES } from '../data/roles';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { apiFetch } from '../lib/api';
 
 const ROLE_BADGE = {
   subscriber: 'bg-amber-500/15 text-amber-300',
@@ -10,10 +11,24 @@ const ROLE_BADGE = {
 function EditModal({ role, onClose, onSave }) {
   const [shortDescription, setShortDescription] = useState(role.shortDescription);
   const [definition,       setDefinition]       = useState(role.definition);
+  const [saving,           setSaving]           = useState(false);
+  const [error,            setError]            = useState('');
 
-  function handleSave() {
-    onSave({ ...role, shortDescription, definition });
-    onClose();
+  async function handleSave() {
+    setSaving(true);
+    setError('');
+    try {
+      const updated = await apiFetch(`/roles/${role.key}`, {
+        method: 'PUT',
+        body: JSON.stringify({ shortDescription, definition }),
+      });
+      onSave(updated);
+      onClose();
+    } catch (e) {
+      setError(e.message ?? 'Save failed.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -52,9 +67,17 @@ function EditModal({ role, onClose, onSave }) {
             />
           </div>
 
+          {error && (
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">{error}</div>
+          )}
+
           <div className="flex gap-3">
-            <button onClick={handleSave} className="flex-1 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400">
-              Save Changes
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400 disabled:opacity-50"
+            >
+              {saving ? 'Saving…' : 'Save Changes'}
             </button>
             <button onClick={onClose} className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/10">
               Cancel
@@ -67,63 +90,108 @@ function EditModal({ role, onClose, onSave }) {
 }
 
 export default function ManageRoles() {
-  const [roles,       setRoles]       = useState(loadAllRoles);
+  const [roles,       setRoles]       = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState('');
   const [editingRole, setEditingRole] = useState(null);
+  const [deleting,    setDeleting]    = useState(null);
+
+  useEffect(() => {
+    apiFetch('/roles')
+      .then(setRoles)
+      .catch((e) => setError(e.message ?? 'Failed to load roles.'))
+      .finally(() => setLoading(false));
+  }, []);
 
   function handleSave(updated) {
-    if (updated.fixed) {
-      // For fixed roles, persist description changes via customRoles overrides
-      const custom = loadCustomRoles().filter((r) => r.key !== updated.key);
-      saveCustomRoles([...custom, { ...updated }]);
-    } else {
-      const custom = loadCustomRoles().map((r) => r.key === updated.key ? updated : r);
-      saveCustomRoles(custom);
+    setRoles((prev) => prev.map((r) => r.key === updated.key ? updated : r));
+  }
+
+  async function handleDelete(role) {
+    if (!window.confirm(`Delete the "${role.name}" role? This cannot be undone.`)) return;
+    setDeleting(role.key);
+    try {
+      await apiFetch(`/roles/${role.key}`, { method: 'DELETE' });
+      setRoles((prev) => prev.filter((r) => r.key !== role.key));
+    } catch (e) {
+      alert(e.message ?? 'Delete failed.');
+    } finally {
+      setDeleting(null);
     }
-    setRoles(loadAllRoles());
   }
 
   return (
     <div className="p-6 md:p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Manage Roles</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          View and edit role definitions. Click a role name to edit its description.
-        </p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Manage Roles</h1>
+          <p className="mt-1 text-sm text-slate-400">
+            View and edit role definitions. Click a role name to edit its description.
+          </p>
+        </div>
+        <Link
+          to="/admin/roles/add"
+          className="rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400"
+        >
+          + Add Role
+        </Link>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 bg-[#0d1f2d]">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-white/10 text-xs font-semibold uppercase tracking-widest text-slate-500">
-              <th className="px-4 py-3 text-left">Role</th>
-              <th className="px-4 py-3 text-left">Short Description</th>
-              <th className="px-4 py-3 text-left">Type</th>
-            </tr>
-          </thead>
-          <tbody>
-            {roles.map((r, i) => (
-              <tr key={r.key} className={`transition-colors hover:bg-white/5 ${i < roles.length - 1 ? 'border-b border-white/5' : ''}`}>
-                <td className="px-4 py-3">
-                  <button
-                    onClick={() => setEditingRole(r)}
-                    className="font-medium text-cyan-400 transition-colors hover:text-cyan-300 hover:underline"
-                  >
-                    <span className={`mr-2 rounded-lg px-2 py-0.5 text-xs font-semibold ${ROLE_BADGE[r.key] ?? 'bg-white/5 text-slate-300'}`}>
-                      {r.name}
-                    </span>
-                  </button>
-                </td>
-                <td className="px-4 py-3 text-slate-300">{r.shortDescription}</td>
-                <td className="px-4 py-3">
-                  <span className={`rounded-lg px-2 py-0.5 text-xs font-medium ${r.fixed ? 'bg-white/5 text-slate-500' : 'bg-emerald-500/15 text-emerald-300'}`}>
-                    {r.fixed ? 'Fixed' : 'Custom'}
-                  </span>
-                </td>
+      {loading && (
+        <p className="text-sm text-slate-400">Loading roles…</p>
+      )}
+
+      {error && !loading && (
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">{error}</div>
+      )}
+
+      {!loading && !error && (
+        <div className="overflow-x-auto rounded-2xl border border-white/10 bg-[#0d1f2d]">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/10 text-xs font-semibold uppercase tracking-widest text-slate-500">
+                <th className="px-4 py-3 text-left">Role</th>
+                <th className="px-4 py-3 text-left">Short Description</th>
+                <th className="px-4 py-3 text-left">Type</th>
+                <th className="px-4 py-3" />
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {roles.map((r, i) => (
+                <tr key={r.key} className={`transition-colors hover:bg-white/5 ${i < roles.length - 1 ? 'border-b border-white/5' : ''}`}>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => setEditingRole(r)}
+                      className="font-medium text-cyan-400 transition-colors hover:text-cyan-300 hover:underline"
+                    >
+                      <span className={`mr-2 rounded-lg px-2 py-0.5 text-xs font-semibold ${ROLE_BADGE[r.key] ?? 'bg-white/5 text-slate-300'}`}>
+                        {r.name}
+                      </span>
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-slate-300">{r.shortDescription}</td>
+                  <td className="px-4 py-3">
+                    <span className={`rounded-lg px-2 py-0.5 text-xs font-medium ${r.fixed ? 'bg-white/5 text-slate-500' : 'bg-emerald-500/15 text-emerald-300'}`}>
+                      {r.fixed ? 'Fixed' : 'Custom'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {!r.fixed && (
+                      <button
+                        onClick={() => handleDelete(r)}
+                        disabled={deleting === r.key}
+                        className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-xs text-rose-400 transition hover:bg-rose-500/20 disabled:opacity-40"
+                      >
+                        {deleting === r.key ? '…' : 'Delete'}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {editingRole && (
         <EditModal

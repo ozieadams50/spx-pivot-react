@@ -1,4 +1,5 @@
-import { loadProfile } from '../data/profile';
+import { useState, useEffect } from 'react';
+import { apiFetch } from '../lib/api';
 
 function Row({ label, value }) {
   return (
@@ -12,8 +13,11 @@ function Row({ label, value }) {
 }
 
 export default function ContactInfo() {
-  const p = loadProfile();
-  const fullName = [p.firstName, p.lastName, p.suffix].filter(Boolean).join(' ');
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    apiFetch('/profile').then(setProfile).catch(() => {});
+  }, []);
 
   return (
     <div className="p-6 md:p-8">
@@ -25,17 +29,25 @@ export default function ContactInfo() {
       </div>
 
       <div className="max-w-2xl rounded-2xl border border-white/10 bg-[#0d1f2d] p-6 shadow-lg">
-        <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-3">
-            <Row label="First Name" value={p.firstName} />
-            <Row label="Last Name"  value={p.lastName}  />
-            <Row label="Suffix"     value={p.suffix}    />
+        {!profile ? (
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-10 animate-pulse rounded-xl bg-white/5" />
+            ))}
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Row label="Email Address"  value={p.email} />
-            <Row label="Phone Number"   value={p.phone} />
+        ) : (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              <Row label="First Name" value={profile.firstName} />
+              <Row label="Last Name"  value={profile.lastName}  />
+              <Row label="Suffix"     value={profile.suffix}    />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Row label="Email Address" value={profile.email} />
+              <Row label="Phone Number"  value={profile.phone} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

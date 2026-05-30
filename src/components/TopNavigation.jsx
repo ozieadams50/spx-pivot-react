@@ -5,7 +5,6 @@ import {
 } from '../data/notifications';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { loadProfile } from '../data/profile';
 
 const PROFILE_MENU = [
   { label: 'Contact Info',          path: '/profile/contact'       },
@@ -39,9 +38,8 @@ const ROLE_BADGE  = {
 };
 
 export default function TopNavigation({ title, subtitle }) {
-  const { role, setRole, logout }        = useAuth();
-  const navigate                         = useNavigate();
-  const profile                         = loadProfile();
+  const { role, setRole, logout, user: profile } = useAuth();
+  const navigate = useNavigate();
   const [profileOpen, setProfileOpen]   = useState(false);
   const [bellOpen,    setBellOpen]      = useState(false);
   const [notifs,      setNotifs]        = useState([]);
@@ -196,9 +194,9 @@ export default function TopNavigation({ title, subtitle }) {
                 <div className="absolute right-0 z-50 mt-3 w-64 rounded-3xl border border-white/10 bg-[#0d1726] p-3 shadow-2xl">
                   <div className="mb-3 border-b border-white/10 px-4 pb-3 pt-1">
                     <p className="text-sm font-semibold text-white">
-                      {[profile.firstName, profile.lastName].filter(Boolean).join(' ') || 'My Account'}
+                      {[profile?.firstName, profile?.lastName].filter(Boolean).join(' ') || 'My Account'}
                     </p>
-                    <p className="text-xs text-slate-500">{profile.email || 'ozie.adams@gmail.com'}</p>
+                    <p className="text-xs text-slate-500">{profile?.email || ''}</p>
                     <span className={`mt-1.5 inline-block rounded-lg px-2 py-0.5 text-xs font-semibold ${ROLE_BADGE[role]}`}>
                       {ROLE_LABELS[role]}
                     </span>
