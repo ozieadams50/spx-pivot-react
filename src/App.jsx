@@ -7,6 +7,7 @@ import SPXPivots from './pages/SPXPivots';
 import SPXBacktest from './pages/SPXBacktest';
 import Placeholder from './pages/Placeholder';
 import ChartView from './pages/ChartView';
+import HistoricalPerformance from './pages/HistoricalPerformance';
 import SubscriberCommentary from './pages/SubscriberCommentary';
 import CommentaryHistory from './pages/CommentaryHistory';
 import SetMarketSentiment from './pages/SetMarketSentiment';
@@ -48,7 +49,7 @@ function AppRoutes() {
         {/* SPX Pivots */}
         <Route path="spx-pivots"         element={<SPXPivots />} />
         <Route path="spx-backtest"       element={<Guard matrixKey="apps/spx-backtest/run"><SPXBacktest /></Guard>} />
-        <Route path="spx-pivots/history" element={<Placeholder title="Historical Performance" description="SPX pivot level performance history and trade outcomes." />} />
+        <Route path="spx-pivots/history" element={<Guard matrixKey="apps/spx-pivots/history"><HistoricalPerformance /></Guard>} />
         <Route path="spx-pivots/charts"  element={<Guard matrixKey="apps/spx-pivots/chart-view"><ChartView /></Guard>} />
 
         {/* Admin — Market Sentiment */}

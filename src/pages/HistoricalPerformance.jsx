@@ -1,0 +1,459 @@
+import { useState } from 'react';
+import { apiFetch } from '../lib/api';
+
+// ── Metric card with tooltip ──────────────────────────────────────────────────
+
+const ICONS = {
+  periods: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" opacity="0.7">
+      <path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clipRule="evenodd" />
+    </svg>
+  ),
+  touch: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" opacity="0.7">
+      <path d="M13.28 7.78l3.22-3.22v1.69a.75.75 0 001.5 0v-3.5A.75.75 0 0017.25 2h-3.5a.75.75 0 000 1.5h1.69l-3.22 3.22a.75.75 0 001.06 1.06z" />
+      <path d="M2 17.25v-3.5a.75.75 0 011.5 0v1.69l3.22-3.22a.75.75 0 011.06 1.06L4.56 16.5h1.69a.75.75 0 010 1.5h-3.5A.75.75 0 012 17.25z" />
+    </svg>
+  ),
+  close_up: (
+    <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.5" opacity="0.7">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-3.182-.818m3.182.818L17.25 6" />
+    </svg>
+  ),
+  close_down: (
+    <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.5" opacity="0.7">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6L9 12.75l4.306-4.307a11.95 11.95 0 015.814 5.519l2.74 1.22m0 0l-3.182.818m3.182-.818L17.25 14" />
+    </svg>
+  ),
+  inside: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" opacity="0.7">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+    </svg>
+  ),
+};
+
+function MetricCard({ label, value, sub, color = 'text-white', icon, tooltip }) {
+  return (
+    <div className="group relative rounded-xl border border-white/10 bg-[#0d1f2d] p-3 cursor-default">
+      {tooltip && (
+        <div className="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 z-50 w-56 -translate-x-1/2 rounded-xl border border-white/10 bg-[#0a1628] p-3 opacity-0 shadow-2xl transition-opacity duration-150 group-hover:opacity-100">
+          {tooltip.map((line, i) => (
+            <p key={i} className={i === 0 ? 'text-[11px] font-semibold text-white' : 'mt-1 text-[10px] text-slate-400'}>
+              {line}
+            </p>
+          ))}
+          <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[#0a1628]" />
+        </div>
+      )}
+      <div className="flex items-start justify-between">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</p>
+        {icon && <span className="text-slate-600">{ICONS[icon]}</span>}
+      </div>
+      <p className={`mt-1 text-xl font-bold leading-none ${color}`}>{value}</p>
+      {sub !== undefined && (
+        <p className="mt-0.5 text-[10px] text-slate-500">{sub}</p>
+      )}
+    </div>
+  );
+}
+
+// ── Segmented control ─────────────────────────────────────────────────────────
+
+function Seg({ options, value, onChange }) {
+  return (
+    <div className="flex gap-1">
+      {options.map(o => (
+        <button key={o.v} type="button" onClick={() => onChange(o.v)}
+          className={`flex-1 rounded-lg border py-1.5 text-xs font-medium transition ${
+            value === o.v
+              ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300'
+              : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
+          }`}>
+          {o.l ?? o.v}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const inputCls = 'w-full rounded-lg border border-white/10 bg-[#061018] px-2 py-1.5 text-sm text-white outline-none focus:border-cyan-500/50';
+const Lbl = ({ children }) => (
+  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">{children}</label>
+);
+
+const EVENT_BADGE = {
+  touch_r1: { bg: 'bg-rose-500/15',    text: 'text-rose-300',    label: 'T>R1' },
+  close_r1: { bg: 'bg-rose-500/30',    text: 'text-rose-200',    label: 'C>R1' },
+  touch_r2: { bg: 'bg-orange-500/15',  text: 'text-orange-300',  label: 'T>R2' },
+  close_r2: { bg: 'bg-orange-500/30',  text: 'text-orange-200',  label: 'C>R2' },
+  touch_s1: { bg: 'bg-emerald-500/15', text: 'text-emerald-300', label: 'T<S1' },
+  close_s1: { bg: 'bg-emerald-500/30', text: 'text-emerald-200', label: 'C<S1' },
+  touch_s2: { bg: 'bg-cyan-500/15',    text: 'text-cyan-300',    label: 'T<S2' },
+  close_s2: { bg: 'bg-cyan-500/30',    text: 'text-cyan-200',    label: 'C<S2' },
+};
+
+// ── Main page ─────────────────────────────────────────────────────────────────
+
+const DEFAULTS = {
+  ticker:     'SPX',
+  start_date: '2025-01-01',
+  end_date:   new Date().toISOString().slice(0, 10),
+  period:     'daily',
+};
+
+export default function HistoricalPerformance() {
+  const [form,    setForm]    = useState({ ...DEFAULTS });
+  const [results,     setResults]     = useState(null);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState('');
+  const [showInverse, setShowInverse] = useState(false);
+
+  const set = k => v => setForm(f => ({ ...f, [k]: v }));
+
+  async function runQuery() {
+    setLoading(true); setError(''); setResults(null);
+    try {
+      const params = new URLSearchParams({
+        ticker:     form.ticker.trim().toUpperCase(),
+        start_date: form.start_date,
+        end_date:   form.end_date,
+        period:     form.period,
+      });
+      const data = await apiFetch(`/historical/quant?${params}`);
+      setResults(data);
+    } catch (e) {
+      setError(e.message ?? 'Query failed.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const s = results?.summary;
+
+  return (
+    <div className="p-4 md:p-5">
+
+      {/* ── Header ───────────────────────────────────────────────────────── */}
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Historical Performance</h1>
+          <p className="text-sm text-slate-400">DKQPivot touch &amp; close statistics by period</p>
+        </div>
+        <button onClick={runQuery} disabled={loading}
+          className="rounded-lg bg-violet-600 px-4 py-1.5 text-xs font-bold text-white transition hover:bg-violet-500 disabled:opacity-50">
+          {loading ? 'Running…' : '▶  Run Query'}
+        </button>
+      </div>
+
+      {/* ── Main grid ────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-12 gap-4">
+
+        {/* ── Left: Inputs ─────────────────────────────────────────────── */}
+        <div className="col-span-3 rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Query Inputs</p>
+
+          <div className="space-y-4">
+            <div>
+              <Lbl>Symbol</Lbl>
+              <input type="text" value={form.ticker}
+                onChange={e => set('ticker')(e.target.value)}
+                placeholder="SPY"
+                className={inputCls} />
+              <p className="mt-1 text-[9px] text-slate-600">SPX, SPY, or any ticker in the database</p>
+            </div>
+
+            <div>
+              <Lbl>Date Range</Lbl>
+              <div className="space-y-1.5">
+                <input type="date" value={form.start_date}
+                  onChange={e => set('start_date')(e.target.value)}
+                  className={inputCls} />
+                <input type="date" value={form.end_date}
+                  onChange={e => set('end_date')(e.target.value)}
+                  className={inputCls} />
+              </div>
+            </div>
+
+            <div>
+              <Lbl>Quant Period</Lbl>
+              <Seg
+                options={[{ v: 'daily', l: 'Daily' }, { v: 'weekly', l: 'Weekly' }, { v: 'monthly', l: 'Monthly' }]}
+                value={form.period}
+                onChange={set('period')}
+              />
+              <p className="mt-1.5 text-[9px] text-slate-600">
+                Sets the period used to calculate R1/R2/S1/S2 pivot levels
+              </p>
+            </div>
+
+            {/* ── View toggle ───────────────────────────────────────── */}
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <Lbl>Card View</Lbl>
+              <button
+                type="button"
+                onClick={() => setShowInverse(v => !v)}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
+                  showInverse ? 'bg-violet-600' : 'bg-white/10'
+                }`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                  showInverse ? 'translate-x-5' : 'translate-x-0'
+                }`} />
+              </button>
+              <p className="mt-2 text-[10px] leading-relaxed text-slate-400">
+                {showInverse
+                  ? <><span className="font-semibold text-violet-300">Inverse view:</span> periods that DID NOT touch or close the level</>
+                  : <><span className="font-semibold text-cyan-300">Default view:</span> periods that DID touch or close the level</>
+                }
+              </p>
+            </div>
+
+            {error && (
+              <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">{error}</div>
+            )}
+
+            <button onClick={runQuery} disabled={loading}
+              className="w-full rounded-xl bg-violet-600 py-2.5 text-sm font-bold text-white transition hover:bg-violet-500 disabled:opacity-50">
+              {loading ? 'Running…' : '▶  RUN QUERY'}
+            </button>
+          </div>
+        </div>
+
+        {/* ── Right: Results ────────────────────────────────────────────── */}
+        <div className="col-span-9 space-y-4">
+
+          {loading && (
+            <div className="flex h-48 items-center justify-center rounded-2xl border border-white/10 bg-[#0d1f2d]">
+              <div className="text-center">
+                <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-violet-500/30 border-t-violet-400" />
+                <p className="text-sm text-slate-400">Calculating pivot statistics…</p>
+              </div>
+            </div>
+          )}
+
+          {!results && !loading && (
+            <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-[#0d1f2d]">
+              <p className="text-sm text-slate-600">Configure inputs and click Run Query</p>
+            </div>
+          )}
+
+          {results && s && (
+            <>
+              {/* ── Inverse helper ───────────────────────────────────────── */}
+              {(() => {
+                const n = s.periods_analyzed;
+                const inv = key => n - s[key];
+                const invPct = key => parseFloat((100 - s[key + '_pct']).toFixed(1));
+
+                // Row 1 summary card logic
+                const inside1     = showInverse ? inv('inside_r1s1') : s.inside_r1s1;
+                const inside1Pct  = showInverse ? invPct('inside_r1s1') : s.inside_r1s1_pct;
+                const inside2     = showInverse ? inv('inside_r2s2') : s.inside_r2s2;
+                const inside2Pct  = showInverse ? invPct('inside_r2s2') : s.inside_r2s2_pct;
+
+                return (
+                  <>
+              {/* ── View state banner ────────────────────────────────────── */}
+              <div className={`flex items-center gap-2.5 rounded-xl border px-4 py-2.5 ${
+                showInverse
+                  ? 'border-violet-500/30 bg-violet-500/10'
+                  : 'border-cyan-500/30 bg-cyan-500/10'
+              }`}>
+                <span className={`h-2 w-2 flex-shrink-0 rounded-full ${showInverse ? 'bg-violet-400' : 'bg-cyan-400'}`} />
+                <p className="text-xs font-semibold text-white">
+                  {showInverse ? 'Inverse View' : 'Default View'}
+                </p>
+                <span className="text-xs text-slate-400">—</span>
+                <p className="text-xs text-slate-400">
+                  {showInverse
+                    ? 'Showing periods that DID NOT touch or close the level'
+                    : 'Showing periods that DID touch or close the level'}
+                </p>
+              </div>
+
+              {/* ── Row 1: Summary ───────────────────────────────────────── */}
+              <div className="grid grid-cols-3 gap-3">
+                <MetricCard
+                  label="Periods Analyzed"
+                  value={n.toLocaleString()}
+                  color="text-white"
+                  icon="periods"
+                  tooltip={[
+                    `${n.toLocaleString()} complete ${form.period} periods`,
+                    `From ${form.start_date} to ${form.end_date}`,
+                    'R1/R2/S1/S2 are the DKQPivot levels',
+                  ]}
+                />
+                <MetricCard
+                  label={showInverse ? 'Outside R1 / S1' : 'Inside R1 / S1'}
+                  value={`${inside1Pct}%`}
+                  sub={`${inside1.toLocaleString()} periods`}
+                  color="text-cyan-400"
+                  icon="inside"
+                  tooltip={showInverse ? [
+                    `${inside1} periods (${inside1Pct}%) closed`,
+                    'OUTSIDE the R1/S1 range',
+                    'i.e. closed above R1 or below S1',
+                  ] : [
+                    `${inside1} periods (${inside1Pct}%) closed`,
+                    'between R1 and S1',
+                  ]}
+                />
+                <MetricCard
+                  label={showInverse ? 'Outside R2 / S2' : 'Inside R2 / S2'}
+                  value={`${inside2Pct}%`}
+                  sub={`${inside2.toLocaleString()} periods`}
+                  color="text-violet-400"
+                  icon="inside"
+                  tooltip={showInverse ? [
+                    `${inside2} periods (${inside2Pct}%) closed`,
+                    'OUTSIDE the R2/S2 range',
+                    'i.e. closed above R2 or below S2',
+                  ] : [
+                    `${inside2} periods (${inside2Pct}%) closed`,
+                    'between R2 and S2',
+                  ]}
+                />
+              </div>
+
+              {/* ── Row 2: Resistance (R1/R2) ────────────────────────────── */}
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { base: 'touch_r1', label: 'Touch > R1', invLabel: 'No Touch > R1', color: 'text-rose-400',   icon: 'touch',    tip: ['where the HIGH reached R1'], invTip: ['where HIGH stayed BELOW R1', 'price did not reach resistance'] },
+                  { base: 'close_r1', label: 'Close > R1', invLabel: 'No Close > R1', color: 'text-rose-300',   icon: 'close_up', tip: ['that CLOSED above R1'], invTip: ['that CLOSED below R1',         'price did not break resistance at close'] },
+                  { base: 'touch_r2', label: 'Touch > R2', invLabel: 'No Touch > R2', color: 'text-orange-400', icon: 'touch',    tip: ['where the HIGH reached R2'],  invTip: ['where HIGH stayed BELOW R2', 'price did not reach extended resistance'] },
+                  { base: 'close_r2', label: 'Close > R2', invLabel: 'No Close > R2', color: 'text-orange-300', icon: 'close_up', tip: ['that CLOSED above R2'], invTip: ['that CLOSED below R2',    'price did not break extended resistance'] },
+                ].map(({ base, label, invLabel, color, icon, tip, invTip }) => {
+                  const count = showInverse ? inv(base) : s[base];
+                  const pct   = showInverse ? invPct(base) : s[base + '_pct'];
+                  return (
+                    <MetricCard key={base}
+                      label={showInverse ? invLabel : label}
+                      value={`${pct}%`}
+                      sub={`${count.toLocaleString()} periods`}
+                      color={color}
+                      icon={icon}
+                      tooltip={[
+                        `${count} periods (${pct}%)`,
+                        ...(showInverse ? invTip : tip),
+                      ]}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* ── Row 3: Support (S1/S2) ───────────────────────────────── */}
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { base: 'touch_s1', label: 'Touch < S1', invLabel: 'No Touch < S1', color: 'text-emerald-400', icon: 'touch',      tip: ['where the LOW fell below S1'], invTip: ['where LOW stayed ABOVE S1', 'price did not reach support'] },
+                  { base: 'close_s1', label: 'Close < S1', invLabel: 'No Close < S1', color: 'text-emerald-300', icon: 'close_down', tip: ['that CLOSED below S1'], invTip: ['that CLOSED above S1',         'price held above support at close'] },
+                  { base: 'touch_s2', label: 'Touch < S2', invLabel: 'No Touch < S2', color: 'text-cyan-400',    icon: 'touch',      tip: ['where the LOW fell below S2'], invTip: ['where LOW stayed ABOVE S2', 'price did not reach extended support'] },
+                  { base: 'close_s2', label: 'Close < S2', invLabel: 'No Close < S2', color: 'text-cyan-300',    icon: 'close_down', tip: ['that CLOSED below S2'], invTip: ['that CLOSED above S2', 'price did not break extended support'] },
+                ].map(({ base, label, invLabel, color, icon, tip, invTip }) => {
+                  const count = showInverse ? inv(base) : s[base];
+                  const pct   = showInverse ? invPct(base) : s[base + '_pct'];
+                  return (
+                    <MetricCard key={base}
+                      label={showInverse ? invLabel : label}
+                      value={`${pct}%`}
+                      sub={`${count.toLocaleString()} periods`}
+                      color={color}
+                      icon={icon}
+                      tooltip={[
+                        `${count} periods (${pct}%)`,
+                        ...(showInverse ? invTip : tip),
+                      ]}
+                    />
+                  );
+                })}
+              </div>
+                  </>
+                );
+              })()}
+
+              {/* ── Period detail table ───────────────────────────────────── */}
+              <div className="rounded-2xl border border-white/10 bg-[#0d1f2d]">
+                <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+                    Period Detail — {results.periods.length.toLocaleString()} {form.period} periods
+                  </p>
+                  <button
+                    onClick={() => {
+                      const cols = ['Date','Period Open','R1','R2','S1','S2','Open','High','Low','Close','T>R1','C>R1','T>R2','C>R2','T<S1','C<S1','T<S2','C<S2'];
+                      const rows = results.periods.map(p => [
+                        p.date, p.period_open, p.r1, p.r2, p.s1, p.s2,
+                        p.open, p.high, p.low, p.close,
+                        p.touch_r1?1:0, p.close_r1?1:0, p.touch_r2?1:0, p.close_r2?1:0,
+                        p.touch_s1?1:0, p.close_s1?1:0, p.touch_s2?1:0, p.close_s2?1:0,
+                      ].join(','));
+                      const csv = [cols.join(','), ...rows].join('\n');
+                      const a = document.createElement('a');
+                      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+                      a.download = `${form.ticker}_${form.period}_quant.csv`;
+                      a.click();
+                    }}
+                    className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-400 transition hover:bg-cyan-500/20">
+                    ↓ Export CSV
+                  </button>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-white/5 text-[10px] uppercase tracking-widest text-slate-600">
+                        <th className="px-3 py-2 text-left">Date</th>
+                        <th className="px-3 py-2 text-right">Open</th>
+                        <th className="px-3 py-2 text-right text-orange-500/70">R2</th>
+                        <th className="px-3 py-2 text-right text-rose-500/70">R1</th>
+                        <th className="px-3 py-2 text-right text-emerald-500/70">S1</th>
+                        <th className="px-3 py-2 text-right text-cyan-500/70">S2</th>
+                        <th className="px-3 py-2 text-right">High</th>
+                        <th className="px-3 py-2 text-right">Low</th>
+                        <th className="px-3 py-2 text-right">Close</th>
+                        <th className="px-3 py-2 text-left">Events</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...results.periods].reverse().map((p, i) => {
+                        const events = Object.entries(EVENT_BADGE).filter(([k]) => p[k]);
+                        const hasResistance = p.close_r1 || p.close_r2;
+                        const hasSupport    = p.close_s1 || p.close_s2;
+                        const rowBg = hasResistance
+                          ? 'bg-rose-500/[0.03]'
+                          : hasSupport ? 'bg-emerald-500/[0.03]' : '';
+                        return (
+                          <tr key={i} className={`border-b border-white/[0.04] transition-colors hover:bg-white/[0.02] ${rowBg}`}>
+                            <td className="px-3 py-1.5 font-mono text-slate-300">{p.date}</td>
+                            <td className="px-3 py-1.5 text-right font-mono text-slate-400">{p.period_open}</td>
+                            <td className="px-3 py-1.5 text-right font-mono text-orange-400/70">{p.r2}</td>
+                            <td className="px-3 py-1.5 text-right font-mono font-medium text-rose-400">{p.r1}</td>
+                            <td className="px-3 py-1.5 text-right font-mono font-medium text-emerald-400">{p.s1}</td>
+                            <td className="px-3 py-1.5 text-right font-mono text-cyan-400/70">{p.s2}</td>
+                            <td className="px-3 py-1.5 text-right font-mono text-slate-300">{p.high}</td>
+                            <td className="px-3 py-1.5 text-right font-mono text-slate-300">{p.low}</td>
+                            <td className={`px-3 py-1.5 text-right font-mono font-semibold ${p.close > p.period_open ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {p.close}
+                            </td>
+                            <td className="px-3 py-1.5">
+                              <div className="flex flex-wrap gap-1">
+                                {events.map(([k, cfg]) => (
+                                  <span key={k} className={`rounded px-1.5 py-0.5 text-[9px] font-bold ${cfg.bg} ${cfg.text}`}>
+                                    {cfg.label}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
