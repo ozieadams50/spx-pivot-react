@@ -223,9 +223,19 @@ const ICONS = {
   ),
 };
 
-function Metric({ label, value, sub, color = 'text-white', badge, icon }) {
+function Metric({ label, value, sub, color = 'text-white', badge, icon, tooltip }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-[#0d1f2d] p-3">
+    <div className="group relative rounded-xl border border-white/10 bg-[#0d1f2d] p-3 cursor-default">
+      {tooltip && (
+        <div className="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 z-50 w-52 -translate-x-1/2 rounded-xl border border-white/10 bg-[#0a1628] p-3 opacity-0 shadow-2xl transition-opacity duration-150 group-hover:opacity-100">
+          {tooltip.map((line, i) => (
+            <p key={i} className={i === 0 ? 'text-[11px] font-semibold text-white' : 'mt-1 text-[10px] text-slate-400'}>
+              {line}
+            </p>
+          ))}
+          <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-[#0a1628]" />
+        </div>
+      )}
       <div className="flex items-start justify-between">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</p>
         {icon && <span className="text-slate-600">{ICONS[icon]}</span>}
@@ -511,29 +521,67 @@ export default function SPXBacktest() {
                 <Metric label="Total Trades"
                   value={s.total_trades.toLocaleString()}
                   sub={`${s.wins}W · ${s.losses}L`}
-                  icon="trades" />
+                  icon="trades"
+                  tooltip={[
+                    `${s.total_trades.toLocaleString()} trades executed`,
+                    `Winning: ${s.wins.toLocaleString()} (${s.win_rate}%)`,
+                    `Losing:  ${s.losses.toLocaleString()} (${(100 - s.win_rate).toFixed(1)}%)`,
+                    `Consec. losses: ${s.consecutive_losses}`,
+                  ]} />
                 <Metric label="Win Rate"
                   value={`${s.win_rate}%`}
                   color={s.win_rate >= 70 ? 'text-emerald-400' : s.win_rate >= 55 ? 'text-amber-400' : 'text-rose-400'}
-                  icon="winrate" />
+                  icon="winrate"
+                  tooltip={[
+                    `${s.win_rate}% of trades profitable`,
+                    `${s.wins} wins out of ${s.total_trades} total`,
+                    `Avg win:  ${fmtDollar(s.avg_win_pnl)}`,
+                    `Avg loss: ${fmtDollar(s.avg_loss_pnl)}`,
+                  ]} />
                 <Metric label="Profit Factor"
                   value={s.profit_factor}
                   color={s.profit_factor >= 1.5 ? 'text-emerald-400' : 'text-slate-300'}
-                  icon="factor" />
+                  icon="factor"
+                  tooltip={[
+                    `Profit factor: ${s.profit_factor}`,
+                    'Gross profit ÷ gross loss',
+                    s.profit_factor >= 2.0 ? 'Rating: Strong edge' :
+                    s.profit_factor >= 1.5 ? 'Rating: Good edge' :
+                    s.profit_factor >= 1.0 ? 'Rating: Marginal' : 'Rating: Negative edge',
+                  ]} />
                 <Metric label="Net Profit"
                   value={fmtDollar(s.net_profit)}
                   color={s.net_profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}
                   sub={`Avg ${fmtDollar(s.avg_pnl)} / trade`}
-                  icon="profit" />
+                  icon="profit"
+                  tooltip={[
+                    `Net P&L: ${fmtDollar(s.net_profit)}`,
+                    `Avg per trade: ${fmtDollar(s.avg_pnl)}`,
+                    `Avg credit: $${s.avg_credit}`,
+                    `Largest win:  ${fmtDollar(s.largest_win)}`,
+                    `Largest loss: ${fmtDollar(s.largest_loss)}`,
+                  ]} />
                 <Metric label="Max Drawdown"
                   value={fmtDollar(s.max_drawdown)}
                   color="text-rose-400"
-                  icon="drawdown" />
+                  icon="drawdown"
+                  tooltip={[
+                    `Max drawdown: ${fmtDollar(s.max_drawdown)}`,
+                    'Largest peak-to-trough',
+                    'equity decline in the period',
+                  ]} />
                 <Metric label="Sharpe Ratio"
                   value={s.sharpe_ratio}
                   color={s.sharpe_ratio >= 1.5 ? 'text-white' : 'text-slate-300'}
                   badge={s.sharpe_ratio >= 1.5 ? 'Excellent' : s.sharpe_ratio >= 1.0 ? 'Good' : null}
-                  icon="sharpe" />
+                  icon="sharpe"
+                  tooltip={[
+                    `Sharpe ratio: ${s.sharpe_ratio}`,
+                    'Annualized return ÷ std deviation',
+                    s.sharpe_ratio >= 2.0 ? 'Rating: Excellent (>2.0)' :
+                    s.sharpe_ratio >= 1.5 ? 'Rating: Very good (>1.5)' :
+                    s.sharpe_ratio >= 1.0 ? 'Rating: Good (>1.0)' : 'Rating: Below average',
+                  ]} />
               </div>
 
               {/* ── Equity Curve + Trade Outcomes ──────────────────────── */}
