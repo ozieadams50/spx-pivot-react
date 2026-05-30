@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { MENU_ITEMS } from '../data/accessMatrix';
-import { loadAllRoles } from '../data/roles';
 import { apiFetch } from '../lib/api';
 
 const ROLE_BADGE = {
@@ -40,11 +39,15 @@ function Checkbox({ checked, onChange, disabled }) {
 export default function ManageAccess() {
   const navigate                      = useNavigate();
   const { role: currentRole, accessMatrix, updateMatrix } = useAuth();
-  const roles                         = loadAllRoles();
-  const [matrix, setMatrix]           = useState({ ...accessMatrix });
-  const [saved,  setSaved]            = useState(false);
-  const [saving, setSaving]           = useState(false);
-  const [error,  setError]            = useState('');
+  const [roles,   setRoles]           = useState([]);
+  const [matrix,  setMatrix]          = useState({ ...accessMatrix });
+  const [saved,   setSaved]           = useState(false);
+  const [saving,  setSaving]          = useState(false);
+  const [error,   setError]           = useState('');
+
+  useEffect(() => {
+    apiFetch('/roles').then(setRoles).catch(() => {});
+  }, []);
 
   const isSuperUser = currentRole === 'superuser';
 
