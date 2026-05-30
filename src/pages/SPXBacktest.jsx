@@ -43,8 +43,8 @@ function EquityCurve({ data }) {
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 240 }}>
       <defs>
         <linearGradient id="eq-grad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%"   stopColor="#22c55e" stopOpacity="0.30" />
-          <stop offset="100%" stopColor="#22c55e" stopOpacity="0.02" />
+          <stop offset="0%"   stopColor="#06b6d4" stopOpacity="0.30" />
+          <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.02" />
         </linearGradient>
       </defs>
 
@@ -56,7 +56,7 @@ function EquityCurve({ data }) {
       ))}
 
       <polygon points={fillPts} fill="url(#eq-grad)" />
-      <polyline points={pts} fill="none" stroke="#22c55e" strokeWidth="1.8" strokeLinejoin="round" />
+      <polyline points={pts} fill="none" stroke="#06b6d4" strokeWidth="1.8" strokeLinejoin="round" />
 
       {xTicks.map((d, i) => {
         const idx = data.indexOf(d);
@@ -185,13 +185,54 @@ function TradeOutcomes({ s, fmtDollar }) {
 
 // ── Metric card ───────────────────────────────────────────────────────────────
 
-function Metric({ label, value, sub, color = 'text-white', badge }) {
+// ── Metric icons (inline SVG) ─────────────────────────────────────────────────
+
+const ICONS = {
+  trades: (
+    <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.5">
+      <rect x="2" y="10" width="3" height="8" rx="1" fill="currentColor" stroke="none" opacity="0.7" />
+      <rect x="7" y="6"  width="3" height="12" rx="1" fill="currentColor" stroke="none" opacity="0.7" />
+      <rect x="12" y="2" width="3" height="16" rx="1" fill="currentColor" stroke="none" opacity="0.7" />
+      <rect x="17" y="8" width="3" height="10" rx="1" fill="currentColor" stroke="none" opacity="0.7" />
+    </svg>
+  ),
+  winrate: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4" opacity="0.7">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+    </svg>
+  ),
+  factor: (
+    <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.5" opacity="0.7">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2 10h16M10 2l-4 4m4-4l4 4M10 18l-4-4m4 4l4-4" />
+    </svg>
+  ),
+  profit: (
+    <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.5" opacity="0.7">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-3.182-.818m3.182.818L17.25 6" />
+    </svg>
+  ),
+  drawdown: (
+    <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.5" opacity="0.7">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6L9 12.75l4.306-4.307a11.95 11.95 0 015.814 5.519l2.74 1.22m0 0l-3.182.818m3.182-.818L17.25 14" />
+    </svg>
+  ),
+  sharpe: (
+    <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.5" opacity="0.7">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h2l2-6 3 12 2-8 2 4 2-2h3" />
+    </svg>
+  ),
+};
+
+function Metric({ label, value, sub, color = 'text-white', badge, icon }) {
   return (
     <div className="rounded-xl border border-white/10 bg-[#0d1f2d] p-3">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</p>
+      <div className="flex items-start justify-between">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</p>
+        {icon && <span className="text-slate-600">{ICONS[icon]}</span>}
+      </div>
       <p className={`mt-1 text-xl font-bold leading-none ${color}`}>{value}</p>
       {badge && (
-        <span className="mt-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-500/15 text-emerald-400">
+        <span className="mt-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold bg-violet-500/20 text-violet-300">
           {badge}
         </span>
       )}
@@ -298,7 +339,7 @@ export default function SPXBacktest() {
             Load Strategy
           </button>
           <button onClick={runBacktest} disabled={loading}
-            className="rounded-lg bg-green-600 px-4 py-1.5 text-xs font-bold text-white transition hover:bg-green-500 disabled:opacity-50">
+            className="rounded-lg bg-violet-600 px-4 py-1.5 text-xs font-bold text-white transition hover:bg-violet-500 disabled:opacity-50">
             {loading ? 'Running…' : '▶  Run Backtest'}
           </button>
         </div>
@@ -432,7 +473,7 @@ export default function SPXBacktest() {
             )}
 
             <button onClick={runBacktest} disabled={loading}
-              className="w-full rounded-xl bg-green-600 py-2.5 text-sm font-bold text-white transition hover:bg-green-500 disabled:opacity-50">
+              className="w-full rounded-xl bg-violet-600 py-2.5 text-sm font-bold text-white transition hover:bg-violet-500 disabled:opacity-50">
               {loading ? 'Running…' : '▶  RUN BACKTEST'}
             </button>
 
@@ -449,7 +490,7 @@ export default function SPXBacktest() {
           {loading && (
             <div className="flex h-64 items-center justify-center rounded-2xl border border-white/10 bg-[#0d1f2d]">
               <div className="text-center">
-                <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-green-500/30 border-t-green-400" />
+                <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-violet-500/30 border-t-violet-400" />
                 <p className="text-sm text-slate-400">Running simulation…</p>
                 <p className="mt-1 text-xs text-slate-600">Usually 4–10 seconds</p>
               </div>
@@ -469,24 +510,30 @@ export default function SPXBacktest() {
               <div className="grid grid-cols-6 gap-3">
                 <Metric label="Total Trades"
                   value={s.total_trades.toLocaleString()}
-                  sub={`${s.wins}W · ${s.losses}L`} />
+                  sub={`${s.wins}W · ${s.losses}L`}
+                  icon="trades" />
                 <Metric label="Win Rate"
                   value={`${s.win_rate}%`}
-                  color={s.win_rate >= 70 ? 'text-emerald-400' : s.win_rate >= 55 ? 'text-amber-400' : 'text-rose-400'} />
+                  color={s.win_rate >= 70 ? 'text-emerald-400' : s.win_rate >= 55 ? 'text-amber-400' : 'text-rose-400'}
+                  icon="winrate" />
                 <Metric label="Profit Factor"
                   value={s.profit_factor}
-                  color={s.profit_factor >= 1.5 ? 'text-emerald-400' : 'text-slate-300'} />
+                  color={s.profit_factor >= 1.5 ? 'text-emerald-400' : 'text-slate-300'}
+                  icon="factor" />
                 <Metric label="Net Profit"
                   value={fmtDollar(s.net_profit)}
                   color={s.net_profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}
-                  sub={`Avg ${fmtDollar(s.avg_pnl)} / trade`} />
+                  sub={`Avg ${fmtDollar(s.avg_pnl)} / trade`}
+                  icon="profit" />
                 <Metric label="Max Drawdown"
                   value={fmtDollar(s.max_drawdown)}
-                  color="text-rose-400" />
+                  color="text-rose-400"
+                  icon="drawdown" />
                 <Metric label="Sharpe Ratio"
                   value={s.sharpe_ratio}
-                  color={s.sharpe_ratio >= 1.5 ? 'text-emerald-400' : 'text-slate-300'}
-                  badge={s.sharpe_ratio >= 1.5 ? 'Excellent' : s.sharpe_ratio >= 1.0 ? 'Good' : null} />
+                  color={s.sharpe_ratio >= 1.5 ? 'text-white' : 'text-slate-300'}
+                  badge={s.sharpe_ratio >= 1.5 ? 'Excellent' : s.sharpe_ratio >= 1.0 ? 'Good' : null}
+                  icon="sharpe" />
               </div>
 
               {/* ── Equity Curve + Trade Outcomes ──────────────────────── */}
