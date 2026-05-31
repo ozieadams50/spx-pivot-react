@@ -102,9 +102,90 @@ const DEFAULTS = {
   sma_filter: 'none',
 };
 
+// ── Premium estimate table ────────────────────────────────────────────────────
+
+function PremiumTable({ title, subtitle, color, columns, data, overall }) {
+  const C = {
+    emerald: { hdr: 'text-emerald-400', val: 'text-emerald-300', border: 'border-emerald-500/30', bg: 'bg-emerald-500/[0.06]' },
+    rose:    { hdr: 'text-rose-400',    val: 'text-rose-300',    border: 'border-rose-500/30',    bg: 'bg-rose-500/[0.06]' },
+  }[color];
+
+  return (
+    <div className={`rounded-2xl border ${C.border} ${C.bg}`}>
+      <div className="border-b border-white/10 px-4 py-3">
+        <p className={`text-xs font-bold ${C.hdr}`}>{title}</p>
+        <p className="mt-0.5 text-[10px] text-slate-500">{subtitle}</p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-white/5 text-[10px] uppercase tracking-widest text-slate-600">
+              <th className="px-3 py-2 text-left">VIX</th>
+              <th className="px-3 py-2 text-right">Days</th>
+              {columns.map(c => (
+                <th key={c.key} className={`px-3 py-2 text-right ${C.hdr}`}>{c.label}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row, i) => (
+              <tr key={i} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                <td className="px-3 py-2 font-mono text-slate-300">{row.vix_range}</td>
+                <td className="px-3 py-2 text-right text-slate-500">{row.count}</td>
+                {columns.map(c => {
+                  const s = row.spreads[c.key];
+                  return (
+                    <td key={c.key} className="px-3 py-2 text-right">
+                      {s ? (
+                        <>
+                          <span className={`font-bold ${C.val}`}>${s.mean.toFixed(2)}</span>
+                          <span className="ml-1 text-[9px] text-slate-600">
+                            ${s.p25}–${s.p75}
+                          </span>
+                        </>
+                      ) : '—'}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+            {overall && (
+              <tr className="border-t border-white/10 bg-white/[0.025]">
+                <td className="px-3 py-2 text-[10px] font-semibold text-slate-400">All VIX</td>
+                <td className="px-3 py-2 text-right text-slate-500">
+                  {data.reduce((s, r) => s + r.count, 0)}
+                </td>
+                {columns.map(c => {
+                  const s = overall.spreads[c.key];
+                  return (
+                    <td key={c.key} className="px-3 py-2 text-right">
+                      {s ? (
+                        <>
+                          <span className={`font-bold ${C.val}`}>${s.mean.toFixed(2)}</span>
+                          <span className="ml-1 text-[9px] text-slate-600">
+                            ${s.p25}–${s.p75}
+                          </span>
+                        </>
+                      ) : '—'}
+                    </td>
+                  );
+                })}
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <p className="px-4 py-2 text-[9px] text-slate-600">
+        Mean premium shown. ( p25–p75 range ). Black-Scholes at open, 0DTE, 5-wide spread, VIX as IV.
+      </p>
+    </div>
+  );
+}
+
 export default function HistoricalPerformance() {
-  const [form,    setForm]    = useState({ ...DEFAULTS });
+  const [form,        setForm]        = useState({ ...DEFAULTS });
   const [results,     setResults]     = useState(null);
+  const [premiums,    setPremiums]    = useState(null);
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState('');
   const [showInverse, setShowInverse] = useState(false);
@@ -112,17 +193,23 @@ export default function HistoricalPerformance() {
   const set = k => v => setForm(f => ({ ...f, [k]: v }));
 
   async function runQuery() {
-    setLoading(true); setError(''); setResults(null);
+    setLoading(true); setError(''); setResults(null); setPremiums(null);
     try {
-      const params = new URLSearchParams({
-        ticker:     form.ticker.trim().toUpperCase(),
-        start_date: form.start_date,
-        end_date:   form.end_date,
-        period:     form.period,
-        sma_filter: form.sma_filter,
-      });
-      const data = await apiFetch(`/historical/quant?${params}`);
+      const base = {
+        ticker:       form.ticker.trim().toUpperCase(),
+        start_date:   form.start_date,
+        end_date:     form.end_date,
+        sma_filter:   form.sma_filter,
+      };
+      const quantParams = new URLSearchParams({ ...base, period: form.period });
+      const premParams  = new URLSearchParams({ ...base, spread_width: '5' });
+
+      const [data, prem] = await Promise.all([
+        apiFetch(`/historical/quant?${quantParams}`),
+        apiFetch(`/historical/premium-estimate?${premParams}`).catch(() => null),
+      ]);
       setResults(data);
+      setPremiums(prem);
     } catch (e) {
       setError(e.message ?? 'Query failed.');
     } finally {
@@ -394,6 +481,44 @@ export default function HistoricalPerformance() {
                   </>
                 );
               })()}
+
+              {/* ── Premium estimates ────────────────────────────────────── */}
+              {premiums && premiums.by_vix_bucket.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5">
+                    <span className="h-2 w-2 flex-shrink-0 rounded-full bg-violet-400" />
+                    <p className="text-xs font-semibold text-white">5-Wide Spread Premium Estimates</p>
+                    <span className="text-xs text-slate-400">—</span>
+                    <p className="text-xs text-slate-400">Black-Scholes at open · 0DTE · VIX as IV · {premiums.total_days} trading days</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <PremiumTable
+                      title="Bull Put Credit Spreads"
+                      subtitle="Sell put at level, buy 5 pts lower — profit if SPX holds above"
+                      color="emerald"
+                      columns={[
+                        { key: 'bull_put_s2',   label: 'S2' },
+                        { key: 'bull_put_mids', label: 'Mid-S' },
+                        { key: 'bull_put_s1',   label: 'S1' },
+                      ]}
+                      data={premiums.by_vix_bucket}
+                      overall={premiums.overall}
+                    />
+                    <PremiumTable
+                      title="Bear Call Credit Spreads"
+                      subtitle="Sell call at level, buy 5 pts higher — profit if SPX holds below"
+                      color="rose"
+                      columns={[
+                        { key: 'bear_call_r2',   label: 'R2' },
+                        { key: 'bear_call_midr', label: 'Mid-R' },
+                        { key: 'bear_call_r1',   label: 'R1' },
+                      ]}
+                      data={premiums.by_vix_bucket}
+                      overall={premiums.overall}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* ── Period detail table ───────────────────────────────────── */}
               <div className="rounded-2xl border border-white/10 bg-[#0d1f2d]">
