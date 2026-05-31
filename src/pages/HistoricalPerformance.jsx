@@ -202,7 +202,7 @@ export default function HistoricalPerformance() {
         sma_filter:   form.sma_filter,
       };
       const quantParams = new URLSearchParams({ ...base, period: form.period });
-      const premParams  = new URLSearchParams({ ...base, spread_width: '5' });
+      const premParams  = new URLSearchParams({ ...base, spread_width: '5', period: form.period });
 
       const [data, prem] = await Promise.all([
         apiFetch(`/historical/quant?${quantParams}`),
@@ -489,7 +489,7 @@ export default function HistoricalPerformance() {
                     <span className="h-2 w-2 flex-shrink-0 rounded-full bg-violet-400" />
                     <p className="text-xs font-semibold text-white">5-Wide Spread Premium Estimates</p>
                     <span className="text-xs text-slate-400">—</span>
-                    <p className="text-xs text-slate-400">Black-Scholes at open · 0DTE · VIX as IV · {premiums.total_days} trading days</p>
+                    <p className="text-xs text-slate-400">Black-Scholes at open · {premiums.params?.dte ?? '0DTE'} · VIX as IV · {premiums.total_days} trading days</p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <PremiumTable
