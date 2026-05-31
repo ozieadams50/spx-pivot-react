@@ -82,14 +82,18 @@ const Lbl = ({ children }) => (
 );
 
 const EVENT_BADGE = {
-  touch_r1: { bg: 'bg-rose-500/15',    text: 'text-rose-300',    label: 'T>R1' },
-  close_r1: { bg: 'bg-rose-500/30',    text: 'text-rose-200',    label: 'C>R1' },
-  touch_r2: { bg: 'bg-orange-500/15',  text: 'text-orange-300',  label: 'T>R2' },
-  close_r2: { bg: 'bg-orange-500/30',  text: 'text-orange-200',  label: 'C>R2' },
-  touch_s1: { bg: 'bg-emerald-500/15', text: 'text-emerald-300', label: 'T<S1' },
-  close_s1: { bg: 'bg-emerald-500/30', text: 'text-emerald-200', label: 'C<S1' },
-  touch_s2: { bg: 'bg-cyan-500/15',    text: 'text-cyan-300',    label: 'T<S2' },
-  close_s2: { bg: 'bg-cyan-500/30',    text: 'text-cyan-200',    label: 'C<S2' },
+  touch_r1:   { bg: 'bg-rose-500/15',    text: 'text-rose-300',    label: 'T>R1' },
+  close_r1:   { bg: 'bg-rose-500/30',    text: 'text-rose-200',    label: 'C>R1' },
+  touch_midr: { bg: 'bg-orange-500/15',  text: 'text-orange-300',  label: 'T>MR' },
+  close_midr: { bg: 'bg-orange-500/30',  text: 'text-orange-200',  label: 'C>MR' },
+  touch_r2:   { bg: 'bg-amber-500/15',   text: 'text-amber-300',   label: 'T>R2' },
+  close_r2:   { bg: 'bg-amber-500/30',   text: 'text-amber-200',   label: 'C>R2' },
+  touch_s1:   { bg: 'bg-emerald-500/15', text: 'text-emerald-300', label: 'T<S1' },
+  close_s1:   { bg: 'bg-emerald-500/30', text: 'text-emerald-200', label: 'C<S1' },
+  touch_mids: { bg: 'bg-teal-500/15',    text: 'text-teal-300',    label: 'T<MS' },
+  close_mids: { bg: 'bg-teal-500/30',    text: 'text-teal-200',    label: 'C<MS' },
+  touch_s2:   { bg: 'bg-cyan-500/15',    text: 'text-cyan-300',    label: 'T<S2' },
+  close_s2:   { bg: 'bg-cyan-500/30',    text: 'text-cyan-200',    label: 'C<S2' },
 };
 
 // ── Main page ─────────────────────────────────────────────────────────────────
@@ -453,6 +457,32 @@ export default function HistoricalPerformance() {
                 })}
               </div>
 
+              {/* ── Row 2b: Mid-R / Mid-S ────────────────────────────────── */}
+              <div className="grid grid-cols-4 gap-3">
+                {[
+                  { base: 'touch_midr', label: 'Touch > Mid-R', invLabel: 'No Touch > Mid-R', color: 'text-orange-400', icon: 'touch',      tip: ['where the HIGH reached Mid-R', 'midpoint between R1 and R2'], invTip: ['where HIGH stayed BELOW Mid-R'] },
+                  { base: 'close_midr', label: 'Close > Mid-R', invLabel: 'No Close > Mid-R', color: 'text-orange-300', icon: 'close_up',   tip: ['that CLOSED above Mid-R'],                                    invTip: ['that CLOSED below Mid-R'] },
+                  { base: 'touch_mids', label: 'Touch < Mid-S', invLabel: 'No Touch < Mid-S', color: 'text-teal-400',   icon: 'touch',      tip: ['where the LOW fell below Mid-S', 'midpoint between S1 and S2'], invTip: ['where LOW stayed ABOVE Mid-S'] },
+                  { base: 'close_mids', label: 'Close < Mid-S', invLabel: 'No Close < Mid-S', color: 'text-teal-300',   icon: 'close_down', tip: ['that CLOSED below Mid-S'],                                    invTip: ['that CLOSED above Mid-S'] },
+                ].map(({ base, label, invLabel, color, icon, tip, invTip }) => {
+                  const count = showInverse ? inv(base) : s[base];
+                  const pct   = showInverse ? invPct(base) : s[base + '_pct'];
+                  return (
+                    <MetricCard key={base}
+                      label={showInverse ? invLabel : label}
+                      value={`${pct}%`}
+                      sub={`${count.toLocaleString()} periods`}
+                      color={color}
+                      icon={icon}
+                      tooltip={[
+                        `${count} periods (${pct}%)`,
+                        ...(showInverse ? invTip : tip),
+                      ]}
+                    />
+                  );
+                })}
+              </div>
+
               {/* ── Row 3: Support (S1/S2) ───────────────────────────────── */}
               <div className="grid grid-cols-4 gap-3">
                 {[
@@ -528,12 +558,14 @@ export default function HistoricalPerformance() {
                   </p>
                   <button
                     onClick={() => {
-                      const cols = ['Date','Period Open','R1','R2','S1','S2','Open','High','Low','Close','T>R1','C>R1','T>R2','C>R2','T<S1','C<S1','T<S2','C<S2'];
+                      const cols = ['Date','Period Open','R2','Mid-R','R1','S1','Mid-S','S2','Open','High','Low','Close','T>R1','C>R1','T>MR','C>MR','T>R2','C>R2','T<S1','C<S1','T<MS','C<MS','T<S2','C<S2'];
                       const rows = results.periods.map(p => [
-                        p.date, p.period_open, p.r1, p.r2, p.s1, p.s2,
+                        p.date, p.period_open, p.r2, p.mid_r, p.r1, p.s1, p.mid_s, p.s2,
                         p.open, p.high, p.low, p.close,
-                        p.touch_r1?1:0, p.close_r1?1:0, p.touch_r2?1:0, p.close_r2?1:0,
-                        p.touch_s1?1:0, p.close_s1?1:0, p.touch_s2?1:0, p.close_s2?1:0,
+                        p.touch_r1?1:0, p.close_r1?1:0, p.touch_midr?1:0, p.close_midr?1:0,
+                        p.touch_r2?1:0, p.close_r2?1:0,
+                        p.touch_s1?1:0, p.close_s1?1:0, p.touch_mids?1:0, p.close_mids?1:0,
+                        p.touch_s2?1:0, p.close_s2?1:0,
                       ].join(','));
                       const csv = [cols.join(','), ...rows].join('\n');
                       const a = document.createElement('a');
@@ -552,9 +584,11 @@ export default function HistoricalPerformance() {
                       <tr className="border-b border-white/5 text-[10px] uppercase tracking-widest text-slate-600">
                         <th className="px-3 py-2 text-left">Date</th>
                         <th className="px-3 py-2 text-right">Open</th>
-                        <th className="px-3 py-2 text-right text-orange-500/70">R2</th>
+                        <th className="px-3 py-2 text-right text-amber-500/70">R2</th>
+                        <th className="px-3 py-2 text-right text-orange-500/70">Mid-R</th>
                         <th className="px-3 py-2 text-right text-rose-500/70">R1</th>
                         <th className="px-3 py-2 text-right text-emerald-500/70">S1</th>
+                        <th className="px-3 py-2 text-right text-teal-500/70">Mid-S</th>
                         <th className="px-3 py-2 text-right text-cyan-500/70">S2</th>
                         <th className="px-3 py-2 text-right">High</th>
                         <th className="px-3 py-2 text-right">Low</th>
@@ -574,9 +608,11 @@ export default function HistoricalPerformance() {
                           <tr key={i} className={`border-b border-white/[0.04] transition-colors hover:bg-white/[0.02] ${rowBg}`}>
                             <td className="px-3 py-1.5 font-mono text-slate-300">{p.date}</td>
                             <td className="px-3 py-1.5 text-right font-mono text-slate-400">{p.period_open}</td>
-                            <td className="px-3 py-1.5 text-right font-mono text-orange-400/70">{p.r2}</td>
+                            <td className="px-3 py-1.5 text-right font-mono text-amber-400/70">{p.r2}</td>
+                            <td className="px-3 py-1.5 text-right font-mono text-orange-400/70">{p.mid_r}</td>
                             <td className="px-3 py-1.5 text-right font-mono font-medium text-rose-400">{p.r1}</td>
                             <td className="px-3 py-1.5 text-right font-mono font-medium text-emerald-400">{p.s1}</td>
+                            <td className="px-3 py-1.5 text-right font-mono text-teal-400/70">{p.mid_s}</td>
                             <td className="px-3 py-1.5 text-right font-mono text-cyan-400/70">{p.s2}</td>
                             <td className="px-3 py-1.5 text-right font-mono text-slate-300">{p.high}</td>
                             <td className="px-3 py-1.5 text-right font-mono text-slate-300">{p.low}</td>
