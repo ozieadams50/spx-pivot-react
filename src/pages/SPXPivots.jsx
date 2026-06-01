@@ -52,14 +52,36 @@ function buildCaption(mode, periodStart) {
   return `Month as of ${label}`;
 }
 
+// ── Stale banner ──────────────────────────────────────────────────────────────
+
+function StaleBanner({ mode }) {
+  const label = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }[mode];
+  return (
+    <div className="mb-4 flex items-start gap-3 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-5 py-4">
+      <span className="mt-0.5 text-lg leading-none">🚨</span>
+      <div>
+        <p className="text-sm font-semibold text-rose-300">
+          {label} pivot data is stale — do not trade until corrected
+        </p>
+        <p className="mt-1 text-xs text-rose-400/70">
+          The {label.toLowerCase()} pivot has not been updated for the current period.
+          The Pivot Guardian is attempting to correct this automatically.
+          This banner will clear once fresh data is available.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ── API → component shape ─────────────────────────────────────────────────────
 
 function transformPivotData(api, mode) {
-  const { periodOpen, r1, r2, s1, s2, sentiment, expiry, periodStart, spreads } = api;
+  const { periodOpen, r1, r2, s1, s2, sentiment, expiry, periodStart, spreads, isStale } = api;
   const expiryFmt = fmtDate(expiry);
   const modeLabel = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }[mode];
 
   return {
+    isStale:      !!isStale,
     title:        `SPX ${modeLabel} Pivot`,
     caption:      buildCaption(mode, periodStart),
     primaryPivot: fmtNumber(periodOpen),
@@ -140,6 +162,14 @@ export default function SPXPivots() {
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [tradeMode, fetchPivots]);
 
+  // Auto-refresh every 60s while data is stale so the banner clears automatically
+  // once the Pivot Guardian corrects the issue
+  useEffect(() => {
+    if (!pivotData?.isStale) return;
+    const id = setInterval(() => fetchPivots(MODE_MAP[tradeMode]), 60_000);
+    return () => clearInterval(id);
+  }, [pivotData?.isStale, tradeMode, fetchPivots]);
+
   const data           = pivotData;
   const activeExec     = data?.execCards?.[selectedStrategy];
   const sentimentClass = SENTIMENT_STYLES[data?.sentiment] ?? 'text-slate-300';
@@ -188,6 +218,9 @@ export default function SPXPivots() {
           Failed to load pivot data: {error}
         </div>
       )}
+
+      {/* Stale data warning — shown per active pivot type only */}
+      {!loading && data?.isStale && <StaleBanner mode={MODE_MAP[tradeMode]} />}
 
       {/* Main pivot card */}
       <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[#0b1420] shadow-2xl">
@@ -270,8 +303,9 @@ export default function SPXPivots() {
               </div>
               <button
                 onClick={() => setShowModal(true)}
-                disabled={loading || !data}
-                className="self-start rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors disabled:opacity-40 lg:self-auto"
+                disabled={loading || !data || data.isStale}
+                title={data?.isStale ? 'Pivot data is stale — trading disabled until corrected' : undefined}
+                className="self-start rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed lg:self-auto"
               >
                 ⓘ How to Trade
               </button>
