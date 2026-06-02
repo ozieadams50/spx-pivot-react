@@ -91,7 +91,7 @@ export default function LogViewer() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px_1fr]">
         <div className="rounded-2xl border border-white/10 bg-[#0d1f2d] p-3">
           {/* Filter + sort controls */}
           <div className="mb-2 flex items-center gap-0.5 px-1">
