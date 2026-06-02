@@ -6,6 +6,8 @@ const CRON_JOBS = [
   { name: 'FadeEOD',          label: 'Fade EOD Recorder',     icon: '📝' },
   { name: 'FadeIntraday',     label: 'Fade Intraday Monitor', icon: '🔍' },
   { name: 'GEX_DailyRun',     label: 'GEX Daily Run',         icon: '⚡' },
+  { name: 'SPXEarlyPivots',   label: 'SPX Early Pivots',      icon: '🎯', app: 'spx_pivots' },
+  { name: 'PivotGuardian',    label: 'Pivot Guardian',        icon: '🛡', app: 'spx_pivots' },
   { name: 'MorningPivots',    label: 'Morning Pivots',        icon: '📐', app: 'spx_pivots' },
   { name: 'NightlyUpdate',    label: 'Nightly OHLC',          icon: '🌙', app: 'spx_pivots' },
   { name: 'SentimentDaily',   label: 'Sentiment Daily',       icon: '📊' },
