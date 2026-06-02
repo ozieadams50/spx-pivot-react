@@ -23,10 +23,11 @@ const LIGHT_BADGE = {
   green:  'bg-emerald-500/15 text-emerald-300',
   yellow: 'bg-amber-500/15 text-amber-300',
   red:    'bg-rose-500/15 text-rose-300',
+  blue:   'bg-blue-500/15 text-blue-300',
   grey:   'bg-white/5 text-slate-500',
 };
 
-function dot(light) { return light === 'green' ? '🟢' : light === 'yellow' ? '🟡' : light === 'red' ? '🔴' : '⚫'; }
+function dot(light) { return light === 'green' ? '🟢' : light === 'yellow' ? '🟡' : light === 'red' ? '🔴' : light === 'blue' ? '🔵' : '⚫'; }
 
 export default function LogViewer() {
   const [jobs,        setJobs]        = useState(null);
@@ -108,7 +109,7 @@ export default function LogViewer() {
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-white/10 pt-4">
-        {[{dot:'🟢',label:'Ran successfully'},{dot:'🟡',label:'Warning / no log'},{dot:'🔴',label:'Failed'},{dot:'⚫',label:'Not scheduled today'}].map(({dot:d,label}) => (
+        {[{dot:'🟢',label:'Ran successfully'},{dot:'🔵',label:'Scheduled to run today'},{dot:'🟡',label:'Warning / no log'},{dot:'🔴',label:'Failed'},{dot:'⚫',label:'Not scheduled today'}].map(({dot:d,label}) => (
           <div key={d} className="flex items-center gap-1.5">
             <span className="text-sm leading-none">{d}</span>
             <span className="text-xs text-slate-400">{label}</span>

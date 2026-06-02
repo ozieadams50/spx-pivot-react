@@ -23,10 +23,11 @@ const LIGHT = {
   green:  { border: 'border-emerald-500/30', bg: 'bg-emerald-500/10', text: 'text-emerald-300' },
   yellow: { border: 'border-amber-500/30',   bg: 'bg-amber-500/10',   text: 'text-amber-300'   },
   red:    { border: 'border-rose-500/30',    bg: 'bg-rose-500/10',    text: 'text-rose-300'     },
+  blue:   { border: 'border-blue-500/30',    bg: 'bg-blue-500/10',    text: 'text-blue-300'     },
   grey:   { border: 'border-white/10',       bg: 'bg-white/5',        text: 'text-slate-500'    },
 };
 
-function dot(light) { return light === 'green' ? '🟢' : light === 'yellow' ? '🟡' : light === 'red' ? '🔴' : '⚫'; }
+function dot(light) { return light === 'green' ? '🟢' : light === 'yellow' ? '🟡' : light === 'red' ? '🔴' : light === 'blue' ? '🔵' : '⚫'; }
 
 function MetricCard({ label, value, sub }) {
   return (
@@ -124,6 +125,14 @@ export default function OpenMonitor() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {CRON_JOBS.map((job) => (
             <JobCard key={job.name} job={job} status={data.jobs[job.name] ?? { light: 'grey', status_text: 'No data' }} />
+          ))}
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-6 border-t border-white/10 pt-3">
+          {[{d:'🟢',label:'Ran successfully'},{d:'🔵',label:'Scheduled to run today'},{d:'🟡',label:'Warning / no log'},{d:'🔴',label:'Failed'},{d:'⚫',label:'Not scheduled today'}].map(({d,label}) => (
+            <div key={d} className="flex items-center gap-1.5">
+              <span className="text-sm leading-none">{d}</span>
+              <span className="text-xs text-slate-400">{label}</span>
+            </div>
           ))}
         </div>
       </div>
