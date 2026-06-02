@@ -5,7 +5,7 @@ const CRON_JOBS = [
   { name: 'NightlyUpdate',    label: 'Nightly OHLC',          icon: '🌙', schedule: '12:30 AM',     app: 'spx_pivots' },
   { name: 'SentimentDaily',   label: 'Sentiment Daily',       icon: '📊', schedule: '8:00 AM'      },
   { name: 'SentimentWeekly',  label: 'Sentiment Weekly',      icon: '📅', schedule: '8:00 AM Mon'  },
-  { name: 'FadeIntraday',     label: 'Fade Intraday Monitor', icon: '🔍', schedule: '9:30-4:00 PM' },
+  { name: 'FadeIntraday',     label: 'Fade Intraday Monitor', icon: '🔍', schedule: '9:33-4:00 PM' },
   { name: 'SPX_WebSocket',    label: 'SPX WebSocket',         icon: '📡', schedule: '9:30-4:00 PM', app: 'spx_pivots' },
   { name: 'SPXEarlyPivots',   label: 'SPX Early Pivots',      icon: '🎯', schedule: '9:31 AM',      app: 'spx_pivots' },
   { name: 'PivotGuardian',    label: 'Pivot Guardian',        icon: '🛡', schedule: 'Every 10 min', app: 'spx_pivots' },

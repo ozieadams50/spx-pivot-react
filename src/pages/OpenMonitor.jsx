@@ -4,7 +4,7 @@ import { apiFetch } from '../lib/api';
 const CRON_JOBS = [
   { name: 'FadeSetup',        label: 'Fade Daily Setup',      icon: '📋', schedule: '~9:50 AM'      },
   { name: 'FadeEOD',          label: 'Fade EOD Recorder',     icon: '📝', schedule: '4:15 PM'       },
-  { name: 'FadeIntraday',     label: 'Fade Intraday Monitor', icon: '🔍', schedule: '9:30-4:00 PM'  },
+  { name: 'FadeIntraday',     label: 'Fade Intraday Monitor', icon: '🔍', schedule: '9:33-4:00 PM'  },
   { name: 'GEX_DailyRun',     label: 'GEX Daily Run',         icon: '⚡', schedule: '4:35 PM'       },
   { name: 'SPXEarlyPivots',   label: 'SPX Early Pivots',      icon: '🎯', schedule: '9:31 AM',       app: 'spx_pivots' },
   { name: 'PivotGuardian',    label: 'Pivot Guardian',        icon: '🛡', schedule: 'Every 10 min',  app: 'spx_pivots' },
