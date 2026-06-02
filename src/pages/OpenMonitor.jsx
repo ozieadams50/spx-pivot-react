@@ -29,6 +29,20 @@ const LIGHT = {
 
 function dot(light) { return light === 'green' ? '🟢' : light === 'yellow' ? '🟡' : light === 'red' ? '🔴' : light === 'blue' ? '🔵' : '⚫'; }
 
+function scheduleToMinutes(schedule) {
+  if (!schedule) return 9999;
+  if (/every/i.test(schedule)) return 9 * 60;
+  const s = schedule.replace('~', '').split(/[–\-]/)[0].trim();
+  const m = s.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+  if (!m) return 9999;
+  let h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  const mer = (m[3] || (h < 12 ? 'AM' : 'PM')).toUpperCase();
+  if (mer === 'PM' && h !== 12) h += 12;
+  if (mer === 'AM' && h === 12) h = 0;
+  return h * 60 + min;
+}
+
 function MetricCard({ label, value, sub }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
@@ -72,11 +86,13 @@ function DbCard({ db }) {
 }
 
 export default function OpenMonitor() {
-  const [data,        setData]       = useState(null);
-  const [demo,        setDemo]       = useState(false);
-  const [loading,     setLoading]    = useState(true);
-  const [refreshedAt, setRefreshedAt] = useState('');
-  const [backupsOpen, setBackupsOpen] = useState(false);
+  const [data,         setData]        = useState(null);
+  const [demo,         setDemo]        = useState(false);
+  const [loading,      setLoading]     = useState(true);
+  const [refreshedAt,  setRefreshedAt] = useState('');
+  const [backupsOpen,  setBackupsOpen] = useState(false);
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [sortByTime,   setSortByTime]   = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -98,6 +114,13 @@ export default function OpenMonitor() {
   }
 
   const bkOk = data.backups.count > 0 && data.backups.latest;
+
+  let visibleJobs = CRON_JOBS.filter(j =>
+    filterStatus === 'all' || (data.jobs[j.name]?.light ?? 'grey') === filterStatus
+  );
+  if (sortByTime) visibleJobs = [...visibleJobs].sort((a, b) =>
+    scheduleToMinutes(a.schedule) - scheduleToMinutes(b.schedule)
+  );
 
   return (
     <div className="p-6 md:p-8">
@@ -121,12 +144,36 @@ export default function OpenMonitor() {
       </div>
 
       <div className="mb-8">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">Scheduled Jobs</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {CRON_JOBS.map((job) => (
-            <JobCard key={job.name} job={job} status={data.jobs[job.name] ?? { light: 'grey', status_text: 'No data' }} />
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500 mr-1">Scheduled Jobs</h2>
+          {[['all','All'],['green','🟢 Ran'],['blue','🔵 Scheduled'],['yellow','🟡 Warning'],['red','🔴 Failed'],['grey','⚫ Not Scheduled']].map(([val, label]) => (
+            <button key={val} onClick={() => setFilterStatus(val)}
+              className={`rounded-lg px-3 py-1 text-xs font-medium transition-colors ${
+                filterStatus === val
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                  : 'border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200'
+              }`}>
+              {label}
+            </button>
           ))}
+          <button onClick={() => setSortByTime(v => !v)}
+            className={`ml-auto rounded-lg border px-3 py-1 text-xs font-medium transition-colors ${
+              sortByTime
+                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                : 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200'
+            }`}>
+            ⏰ {sortByTime ? 'By Schedule' : 'Sort by Time'}
+          </button>
         </div>
+        {visibleJobs.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {visibleJobs.map((job) => (
+              <JobCard key={job.name} job={job} status={data.jobs[job.name] ?? { light: 'grey', status_text: 'No data' }} />
+            ))}
+          </div>
+        ) : (
+          <p className="py-6 text-center text-sm text-slate-600">No jobs match this filter.</p>
+        )}
         <div className="mt-4 flex flex-wrap items-center gap-6 border-t border-white/10 pt-3">
           {[{d:'🟢',label:'Ran successfully'},{d:'🔵',label:'Scheduled to run today'},{d:'🟡',label:'Warning / no log'},{d:'🔴',label:'Failed'},{d:'⚫',label:'Not scheduled today'}].map(({d,label}) => (
             <div key={d} className="flex items-center gap-1.5">
