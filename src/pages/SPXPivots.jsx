@@ -52,7 +52,40 @@ function buildCaption(mode, periodStart) {
   return `Month as of ${label}`;
 }
 
-// ── Stale banner ──────────────────────────────────────────────────────────────
+// ── Time helpers ──────────────────────────────────────────────────────────────
+
+function isPreMarketET() {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    weekday: 'short', hour: 'numeric', minute: 'numeric', hour12: false,
+  }).formatToParts(now);
+  const weekday = parts.find((p) => p.type === 'weekday')?.value;
+  const hour    = parseInt(parts.find((p) => p.type === 'hour')?.value   ?? '0', 10);
+  const minute  = parseInt(parts.find((p) => p.type === 'minute')?.value ?? '0', 10);
+  const isWeekday   = !['Sat', 'Sun'].includes(weekday);
+  const beforeOpen  = hour < 9 || (hour === 9 && minute < 31);
+  return isWeekday && beforeOpen;
+}
+
+// ── Stale banners ─────────────────────────────────────────────────────────────
+
+function PreMarketBanner({ mode }) {
+  const label = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }[mode];
+  return (
+    <div className="mb-4 flex items-start gap-3 rounded-2xl border border-yellow-500/40 bg-yellow-500/10 px-5 py-4">
+      <span className="mt-0.5 text-lg leading-none">🕐</span>
+      <div>
+        <p className="text-sm font-semibold text-yellow-300">
+          {label} pivots are updated once the market opens (9:31 AM ET)
+        </p>
+        <p className="mt-1 text-xs text-yellow-400/70">
+          These are pivots from the prior trading day. Fresh data will be available shortly after market open.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function StaleBanner({ mode }) {
   const label = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }[mode];
@@ -219,8 +252,12 @@ export default function SPXPivots() {
         </div>
       )}
 
-      {/* Stale data warning — shown per active pivot type only */}
-      {!loading && data?.isStale && <StaleBanner mode={MODE_MAP[tradeMode]} />}
+      {/* Pre-market info or stale warning — shown per active pivot type only */}
+      {!loading && data?.isStale && (
+        isPreMarketET()
+          ? <PreMarketBanner mode={MODE_MAP[tradeMode]} />
+          : <StaleBanner mode={MODE_MAP[tradeMode]} />
+      )}
 
       {/* Main pivot card */}
       <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[#0b1420] shadow-2xl">
@@ -303,8 +340,8 @@ export default function SPXPivots() {
               </div>
               <button
                 onClick={() => setShowModal(true)}
-                disabled={loading || !data || data.isStale}
-                title={data?.isStale ? 'Pivot data is stale — trading disabled until corrected' : undefined}
+                disabled={loading || !data || (data.isStale && !isPreMarketET())}
+                title={data?.isStale && !isPreMarketET() ? 'Pivot data is stale — trading disabled until corrected' : undefined}
                 className="self-start rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed lg:self-auto"
               >
                 ⓘ How to Trade
