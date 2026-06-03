@@ -127,9 +127,9 @@ function transformPivotData(api, mode) {
       { label: 'S2 Support',    value: fmtCurrency(s2), tone: 'text-green-400',   key: 's2' },
     ],
     spreads: [
-      { risk: 'Aggressive',   level: 'S1 (Support 1)',   pivot: fmtNumber(spreads.Aggressive.level),   short: spreads.Aggressive.short,   long: spreads.Aggressive.long },
+      { risk: 'Aggressive',   level: 'S1',               pivot: fmtNumber(spreads.Aggressive.level),   short: spreads.Aggressive.short,   long: spreads.Aggressive.long },
       { risk: 'Moderate',     level: 'Mid-S',            pivot: fmtNumber(spreads.Moderate.level),     short: spreads.Moderate.short,     long: spreads.Moderate.long   },
-      { risk: 'Conservative', level: 'S2 (Support 2)',   pivot: fmtNumber(spreads.Conservative.level), short: spreads.Conservative.short, long: spreads.Conservative.long },
+      { risk: 'Conservative', level: 'S2',               pivot: fmtNumber(spreads.Conservative.level), short: spreads.Conservative.short, long: spreads.Conservative.long },
     ],
     execCards: {
       Aggressive: {
