@@ -167,6 +167,7 @@ export default function SPXPivots() {
   const [selectedStrategy, setSelectedStrategy] = useState('Moderate');
   const [showModal,        setShowModal]        = useState(false);
   const [pivotData,        setPivotData]        = useState(null);
+  const [premiums,         setPremiums]         = useState(null);
   const [loading,          setLoading]          = useState(true);
   const [error,            setError]            = useState(null);
 
@@ -194,6 +195,18 @@ export default function SPXPivots() {
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [tradeMode, fetchPivots]);
+
+  // Fetch historical premium estimates (non-blocking — used in How to Trade modal)
+  useEffect(() => {
+    const mode   = MODE_MAP[tradeMode];
+    const today  = new Date().toISOString().slice(0, 10);
+    const params = new URLSearchParams({
+      ticker: 'I:SPX', period: mode, spread_width: '5',
+      start_date: '2015-01-01', end_date: today,
+    });
+    setPremiums(null);
+    apiFetch(`/historical/premium-estimate?${params}`).then(setPremiums).catch(() => {});
+  }, [tradeMode]);
 
   // Auto-refresh every 60s while data is stale so the banner clears automatically
   // once the Pivot Guardian corrects the issue
@@ -402,6 +415,7 @@ export default function SPXPivots() {
           setSelectedStrategy={setSelectedStrategy}
           execCards={data.execCards}
           activeStrategy={activeExec}
+          premiums={premiums}
           onClose={() => setShowModal(false)}
         />
       )}

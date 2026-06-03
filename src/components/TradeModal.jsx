@@ -72,7 +72,16 @@ function TastyTradeTicket({ buy, sell, strategyImage }) {
   );
 }
 
-export default function TradeModal({ selectedStrategy, setSelectedStrategy, execCards, activeStrategy, onClose }) {
+const PREMIUM_KEY = {
+  Aggressive:   'bull_put_s1',
+  Moderate:     'bull_put_mids',
+  Conservative: 'bull_put_s2',
+};
+
+export default function TradeModal({ selectedStrategy, setSelectedStrategy, execCards, activeStrategy, premiums, onClose }) {
+  const premKey = PREMIUM_KEY[selectedStrategy];
+  const buckets = premiums?.by_vix_bucket ?? [];
+  const overall = premiums?.overall?.spreads?.[premKey];
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
       <div className="max-h-[95vh] w-full max-w-5xl overflow-auto rounded-[32px] border border-white/10 bg-[#09111d] shadow-2xl">
@@ -123,7 +132,60 @@ export default function TradeModal({ selectedStrategy, setSelectedStrategy, exec
             <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Target Net Credit</p>
               <p className="mt-2 text-3xl font-bold text-emerald-400">{activeStrategy.credit}</p>
-              <p className="mt-2 text-xs text-slate-500">
+
+              {buckets.length > 0 && (
+                <div className="mt-4">
+                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                    Historical Premium by VIX — Bull Put · 5-wide · 0DTE
+                  </p>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-white/10 text-[10px] uppercase tracking-widest text-slate-600">
+                        <th className="py-1 text-left">VIX</th>
+                        <th className="py-1 text-right">Days</th>
+                        <th className="py-1 text-right text-emerald-400">Mean</th>
+                        <th className="py-1 text-right">p25–p75</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {buckets.map((row, i) => {
+                        const s = row.spreads[premKey];
+                        return (
+                          <tr key={i} className="border-b border-white/[0.04]">
+                            <td className="py-1.5 font-mono text-slate-300">{row.vix_range}</td>
+                            <td className="py-1.5 text-right text-slate-500">{row.count}</td>
+                            <td className="py-1.5 text-right font-bold text-emerald-400">
+                              {s ? `$${s.mean.toFixed(2)}` : '—'}
+                            </td>
+                            <td className="py-1.5 text-right text-[10px] text-slate-500">
+                              {s ? `$${s.p25}–$${s.p75}` : '—'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {overall && (
+                        <tr className="border-t border-white/10">
+                          <td className="py-1.5 text-[10px] font-semibold text-slate-400">All VIX</td>
+                          <td className="py-1.5 text-right text-slate-500">
+                            {buckets.reduce((s, r) => s + r.count, 0)}
+                          </td>
+                          <td className="py-1.5 text-right font-bold text-emerald-400">
+                            ${overall.mean.toFixed(2)}
+                          </td>
+                          <td className="py-1.5 text-right text-[10px] text-slate-500">
+                            ${overall.p25}–${overall.p75}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                  <p className="mt-2 text-[9px] text-slate-600">
+                    Black-Scholes at period open · 5-pt wide spread · VIX as IV proxy
+                  </p>
+                </div>
+              )}
+
+              <p className="mt-3 text-xs text-slate-500">
                 Collect premium upfront. Max profit if SPX stays above short strike at expiry.
               </p>
             </div>
