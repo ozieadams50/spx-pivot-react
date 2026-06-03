@@ -379,12 +379,12 @@ export default function SPXPivots() {
               <table className="min-w-full border-collapse overflow-hidden rounded-3xl border border-white/10">
                 <thead className="bg-white/5 text-xs uppercase tracking-[0.2em] text-slate-400">
                   <tr>
-                    <th className="px-4 py-4 text-left">Risk</th>
-                    <th className="px-4 py-4 text-left">Level</th>
-                    <th className="px-4 py-4 text-right">Pivot</th>
-                    <th className="px-4 py-4 text-right">Short Put</th>
-                    <th className="px-4 py-4 text-right">Long Put</th>
-                    <th className="px-4 py-4 text-right">Hist Win %</th>
+                    <th className="px-4 py-4 text-center">Risk</th>
+                    <th className="px-4 py-4 text-center">Level</th>
+                    <th className="px-4 py-4 text-center">Pivot</th>
+                    <th className="px-4 py-4 text-center">Short Put</th>
+                    <th className="px-4 py-4 text-center">Long Put</th>
+                    <th className="px-4 py-4 text-center">Hist Win %</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -406,16 +406,16 @@ export default function SPXPivots() {
                             selectedStrategy === row.risk ? 'bg-white/[0.03]' : ''
                           }`}
                         >
-                          <td className="px-4 py-4">
+                          <td className="px-4 py-4 text-center">
                             <div className={`inline-flex rounded-xl border px-3 py-1 text-sm font-semibold ${BADGE_STYLES[row.risk]}`}>
                               {row.risk}
                             </div>
                           </td>
-                          <td className="px-4 py-4 text-slate-300">{row.level}</td>
-                          <td className="px-4 py-4 text-right font-mono">{row.pivot}</td>
-                          <td className="px-4 py-4 text-right font-mono font-semibold text-white">{row.short}</td>
-                          <td className="px-4 py-4 text-right font-mono text-slate-400">{row.long}</td>
-                          <td className="px-4 py-4 text-right font-mono font-semibold text-emerald-400">
+                          <td className="px-4 py-4 text-center text-slate-300">{row.level}</td>
+                          <td className="px-4 py-4 text-center font-mono">{row.pivot}</td>
+                          <td className="px-4 py-4 text-center font-mono font-semibold text-white">{row.short}</td>
+                          <td className="px-4 py-4 text-center font-mono text-slate-400">{row.long}</td>
+                          <td className="px-4 py-4 text-center font-mono font-semibold text-emerald-400">
                             {histStats
                               ? `${(100 - histStats[HIST_WIN_KEY[row.risk]]).toFixed(1)}%`
                               : '—'}
