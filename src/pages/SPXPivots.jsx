@@ -214,6 +214,7 @@ export default function SPXPivots() {
     const quantParams = new URLSearchParams({
       ticker: 'I:SPX', period: mode, summary_only: 'true',
       start_date: '2015-01-01', end_date: today,
+      sma_filter: 'spx_above_20ma',
     });
     setPremiums(null);
     setHistStats(null);
