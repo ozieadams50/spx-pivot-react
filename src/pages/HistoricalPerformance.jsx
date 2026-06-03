@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { apiFetch } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 // ── Metric card with tooltip ──────────────────────────────────────────────────
 
@@ -187,6 +188,8 @@ function PremiumTable({ title, subtitle, color, columns, data, overall }) {
 }
 
 export default function HistoricalPerformance() {
+  const { role }                       = useAuth();
+  const canSeePremiums                 = role === 'admin' || role === 'superuser';
   const [form,        setForm]        = useState({ ...DEFAULTS });
   const [results,     setResults]     = useState(null);
   const [premiums,    setPremiums]    = useState(null);
@@ -210,7 +213,9 @@ export default function HistoricalPerformance() {
 
       const [data, prem] = await Promise.all([
         apiFetch(`/historical/quant?${quantParams}`),
-        apiFetch(`/historical/premium-estimate?${premParams}`).catch(() => null),
+        canSeePremiums
+          ? apiFetch(`/historical/premium-estimate?${premParams}`).catch(() => null)
+          : Promise.resolve(null),
       ]);
       setResults(data);
       setPremiums(prem);
@@ -512,8 +517,8 @@ export default function HistoricalPerformance() {
                 );
               })()}
 
-              {/* ── Premium estimates ────────────────────────────────────── */}
-              {premiums && premiums.by_vix_bucket.length > 0 && (
+              {/* ── Premium estimates — Admin / Super User only ──────────── */}
+              {canSeePremiums && premiums && premiums.by_vix_bucket.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5">
                     <span className="h-2 w-2 flex-shrink-0 rounded-full bg-violet-400" />
