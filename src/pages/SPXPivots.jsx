@@ -10,6 +10,12 @@ const MODE_MAP = {
   'Daily Trade':   'daily',
 };
 
+const HIST_WIN_KEY = {
+  Aggressive:   'close_s1_pct',
+  Moderate:     'close_mids_pct',
+  Conservative: 'close_s2_pct',
+};
+
 const BADGE_STYLES = {
   Aggressive:   'bg-rose-500/20 text-rose-300 border-rose-500/30',
   Moderate:     'bg-sky-500/20 text-sky-300 border-sky-500/30',
@@ -168,6 +174,7 @@ export default function SPXPivots() {
   const [showModal,        setShowModal]        = useState(false);
   const [pivotData,        setPivotData]        = useState(null);
   const [premiums,         setPremiums]         = useState(null);
+  const [histStats,        setHistStats]        = useState(null);
   const [loading,          setLoading]          = useState(true);
   const [error,            setError]            = useState(null);
 
@@ -196,16 +203,22 @@ export default function SPXPivots() {
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [tradeMode, fetchPivots]);
 
-  // Fetch historical premium estimates (non-blocking — used in How to Trade modal)
+  // Fetch historical premium estimates + quant summary (non-blocking — used in table & modal)
   useEffect(() => {
     const mode   = MODE_MAP[tradeMode];
     const today  = new Date().toISOString().slice(0, 10);
-    const params = new URLSearchParams({
+    const premParams = new URLSearchParams({
       ticker: 'I:SPX', period: mode, spread_width: '5',
       start_date: '2015-01-01', end_date: today,
     });
+    const quantParams = new URLSearchParams({
+      ticker: 'I:SPX', period: mode, summary_only: 'true',
+      start_date: '2015-01-01', end_date: today,
+    });
     setPremiums(null);
-    apiFetch(`/historical/premium-estimate?${params}`).then(setPremiums).catch(() => {});
+    setHistStats(null);
+    apiFetch(`/historical/premium-estimate?${premParams}`).then(setPremiums).catch(() => {});
+    apiFetch(`/historical/quant?${quantParams}`).then(d => setHistStats(d?.summary ?? null)).catch(() => {});
   }, [tradeMode]);
 
   // Auto-refresh every 60s while data is stale so the banner clears automatically
@@ -370,13 +383,14 @@ export default function SPXPivots() {
                     <th className="px-4 py-4 text-right">Pivot</th>
                     <th className="px-4 py-4 text-right">Short Put</th>
                     <th className="px-4 py-4 text-right">Long Put</th>
+                    <th className="px-4 py-4 text-right">Hist Win %</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading
                     ? Array.from({ length: 3 }).map((_, i) => (
                         <tr key={i} className="border-t border-white/5">
-                          {Array.from({ length: 5 }).map((__, j) => (
+                          {Array.from({ length: 6 }).map((__, j) => (
                             <td key={j} className="px-4 py-4">
                               <div className="h-4 animate-pulse rounded bg-white/10" />
                             </td>
@@ -400,6 +414,11 @@ export default function SPXPivots() {
                           <td className="px-4 py-4 text-right font-mono">{row.pivot}</td>
                           <td className="px-4 py-4 text-right font-mono font-semibold text-white">{row.short}</td>
                           <td className="px-4 py-4 text-right font-mono text-slate-400">{row.long}</td>
+                          <td className="px-4 py-4 text-right font-mono font-semibold text-emerald-400">
+                            {histStats
+                              ? `${(100 - histStats[HIST_WIN_KEY[row.risk]]).toFixed(1)}%`
+                              : '—'}
+                          </td>
                         </tr>
                       ))}
                 </tbody>
