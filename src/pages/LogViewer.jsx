@@ -2,19 +2,21 @@ import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../lib/api';
 
 const CRON_JOBS = [
-  { name: 'FadeSetup',        label: 'Fade Daily Setup',      icon: '📋' },
-  { name: 'FadeEOD',          label: 'Fade EOD Recorder',     icon: '📝' },
-  { name: 'FadeIntraday',     label: 'Fade Intraday Monitor', icon: '🔍' },
-  { name: 'GEX_DailyRun',     label: 'GEX Daily Run',         icon: '⚡' },
-  { name: 'MorningPivots',    label: 'Morning Pivots',        icon: '📐', app: 'spx_pivots' },
-  { name: 'NightlyUpdate',    label: 'Nightly OHLC',          icon: '🌙', app: 'spx_pivots' },
-  { name: 'SentimentDaily',   label: 'Sentiment Daily',       icon: '📊' },
-  { name: 'SentimentMonthly', label: 'Sentiment Monthly',     icon: '📈' },
-  { name: 'SentimentWeekly',  label: 'Sentiment Weekly',      icon: '📅' },
-  { name: 'EveningSignal',    label: 'SPX Evening Signal',    icon: '🌆', app: 'spx_pivots' },
-  { name: 'PivotFallback',    label: 'SPX Pivot Fallback',    icon: '🛡', app: 'spx_pivots' },
-  { name: 'SignalRecorder',   label: 'SPX Signal Recorder',   icon: '🗂', app: 'spx_pivots' },
-  { name: 'SPX_WebSocket',    label: 'SPX WebSocket',         icon: '📡', app: 'spx_pivots' },
+  { name: "NightlyUpdate",    label: "Nightly OHLC",          icon: "🌙", app: "spx_pivots" },
+  { name: "SentimentDaily",   label: "Sentiment Daily",       icon: "📊" },
+  { name: "SentimentWeekly",  label: "Sentiment Weekly",      icon: "📅" },
+  { name: "HealthWatchdog",   label: "Health Watchdog",       icon: "❤️" },
+  { name: "SPX_WebSocket",    label: "SPX WebSocket",         icon: "📡", app: "spx_pivots" },
+  { name: "SPXEarlyPivots",   label: "SPX Early Pivots",      icon: "🎯", app: "spx_pivots" },
+  { name: "PivotGuardian",    label: "Pivot Guardian",        icon: "🛡️", app: "spx_pivots" },
+  { name: "MorningPivots",    label: "Morning Pivots",        icon: "📐", app: "spx_pivots" },
+  { name: "FadeSetup",        label: "Fade Daily Setup",      icon: "📋" },
+  { name: "FadeIntraday",     label: "Fade Intraday Monitor", icon: "🔍" },
+  { name: "EveningSignal",    label: "SPX Evening Signal",    icon: "🌆", app: "spx_pivots" },
+  { name: "FadeEOD",          label: "Fade EOD Recorder",     icon: "📝" },
+  { name: "SignalRecorder",   label: "SPX Signal Recorder",   icon: "🗂", app: "spx_pivots" },
+  { name: "GEX_DailyRun",     label: "GEX Daily Run",         icon: "⚡" },
+  { name: "SentimentMonthly", label: "Sentiment Monthly",     icon: "📈" },
 ];
 
 const LIGHT_BADGE = {
