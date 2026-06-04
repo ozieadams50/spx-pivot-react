@@ -293,9 +293,10 @@ const EXIT_COLORS = {
 
 const MIN_DATE   = '2015-01-01';
 const MIN_DATE_LABEL = '01/01/2015';
+const TODAY = new Date().toISOString().slice(0, 10);
 
 const DEFAULTS = {
-  start_date: '2015-01-01', end_date: '2024-12-31',
+  start_date: '2015-01-01', end_date: TODAY,
   mode: 'weekly', strike_level: 'S1', spread_width: 5,
   profit_target_pct: 0.50, stop_loss_pct: 2.00,
   vix_min: 0, vix_max: 80, contracts: 1,
