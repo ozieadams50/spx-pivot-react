@@ -291,13 +291,16 @@ const EXIT_COLORS = {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+const MIN_DATE   = '2015-01-01';
+const MIN_DATE_LABEL = '01/01/2015';
+
 const DEFAULTS = {
-  start_date: '2020-01-01', end_date: '2024-12-31',
+  start_date: '2015-01-01', end_date: '2024-12-31',
   mode: 'weekly', strike_level: 'S1', spread_width: 5,
   profit_target_pct: 0.50, stop_loss_pct: 2.00,
   vix_min: 0, vix_max: 80, contracts: 1,
   min_credit: 0.50,
-  ema_filter: 'none', entry_days: ['Any'],
+  sma_filter: 'none', entry_days: ['Any'],
 };
 
 export default function SPXBacktest() {
@@ -310,6 +313,10 @@ export default function SPXBacktest() {
   const set = key => val => setForm(f => ({ ...f, [key]: val }));
 
   async function runBacktest() {
+    if (form.start_date < MIN_DATE) {
+      setError(`${MIN_DATE_LABEL} is our earliest available data. Please choose a start date on or after that.`);
+      return;
+    }
     setLoading(true); setError(''); setResults(null);
     try {
       const data = await apiFetch('/backtest/spx', { method: 'POST', body: JSON.stringify(form) });
@@ -368,11 +375,16 @@ export default function SPXBacktest() {
             <div>
               <Lbl>Date Range</Lbl>
               <div className="grid grid-cols-2 gap-1.5">
-                <input type="date" value={form.start_date}
+                <input type="date" value={form.start_date} min={MIN_DATE}
                   onChange={e => set('start_date')(e.target.value)} className={inputCls} />
-                <input type="date" value={form.end_date}
+                <input type="date" value={form.end_date} min={MIN_DATE}
                   onChange={e => set('end_date')(e.target.value)} className={inputCls} />
               </div>
+              {form.start_date < MIN_DATE && (
+                <p className="mt-1 text-[10px] text-amber-400">
+                  {MIN_DATE_LABEL} is our earliest available data.
+                </p>
+              )}
             </div>
 
             {/* Mode */}
@@ -454,20 +466,22 @@ export default function SPXBacktest() {
             {/* Stop loss */}
             <div>
               <Lbl>Stop Loss</Lbl>
-              <Seg options={[{v:1.0,l:'1×'},{v:2.0,l:'2×'},{v:3.0,l:'3×'}]}
+              <Seg options={[{v:0,l:'None'},{v:1.0,l:'1×'},{v:2.0,l:'2×'},{v:3.0,l:'3×'}]}
                 value={form.stop_loss_pct} onChange={set('stop_loss_pct')} />
-              <p className="mt-0.5 text-[9px] text-slate-600">Multiples of credit received</p>
+              <p className="mt-0.5 text-[9px] text-slate-600">
+                {form.stop_loss_pct === 0 ? 'No stop loss — hold to expiry or profit target' : 'Multiples of credit received'}
+              </p>
             </div>
 
-            {/* EMA filter */}
+            {/* SMA filter */}
             <div>
-              <Lbl>EMA Filter</Lbl>
-              <select value={form.ema_filter} onChange={e => set('ema_filter')(e.target.value)}
+              <Lbl>SMA Filter</Lbl>
+              <select value={form.sma_filter} onChange={e => set('sma_filter')(e.target.value)}
                 className={inputCls}>
                 <option value="none">None (all conditions)</option>
-                <option value="above_20">SPX above 20 EMA</option>
-                <option value="above_50">SPX above 50 EMA</option>
-                <option value="below_20">SPX below 20 EMA</option>
+                <option value="above_20">SPX above 20-day SMA</option>
+                <option value="above_50">SPX above 50-day SMA</option>
+                <option value="below_20">SPX below 20-day SMA</option>
               </select>
             </div>
 
