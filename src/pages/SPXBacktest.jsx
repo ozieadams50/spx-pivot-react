@@ -585,7 +585,7 @@ export default function SPXBacktest() {
                     'Largest peak-to-trough',
                     'equity decline in the period',
                   ]} />
-                <Metric label="Annualized Return"
+                <Metric label="Ann. Return on Capital"
                   value={`${s.annualized_return}%`}
                   color={s.annualized_return >= 10 ? 'text-emerald-400' : s.annualized_return >= 0 ? 'text-amber-400' : 'text-rose-400'}
                   badge={s.annualized_return >= 20 ? 'Exceptional' : s.annualized_return >= 10 ? 'Strong' : null}
