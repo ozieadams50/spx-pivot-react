@@ -2,21 +2,21 @@ import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../lib/api';
 
 const CRON_JOBS = [
-  { name: 'NightlyUpdate',    label: 'Nightly OHLC',          icon: '🌙', schedule: '12:30 AM',     app: 'spx_pivots' },
-  { name: 'SentimentDaily',   label: 'Sentiment Daily',       icon: '📊', schedule: '8:00 AM'      },
-  { name: 'SentimentWeekly',  label: 'Sentiment Weekly',      icon: '📅', schedule: '8:00 AM Mon'  },
-  { name: 'FadeIntraday',     label: 'Fade Intraday Monitor', icon: '🔍', schedule: '9:33-4:00 PM' },
-  { name: 'SPX_WebSocket',    label: 'SPX WebSocket',         icon: '📡', schedule: '9:30-4:00 PM', app: 'spx_pivots' },
-  { name: 'SPXEarlyPivots',   label: 'SPX Early Pivots',      icon: '🎯', schedule: '9:31 AM',      app: 'spx_pivots' },
-  { name: 'PivotGuardian',    label: 'Pivot Guardian',        icon: '🛡', schedule: 'Every 10 min', app: 'spx_pivots' },
-  { name: 'PivotFallback',    label: 'SPX Pivot Fallback',    icon: '🛡', schedule: '9:45 AM',      app: 'spx_pivots' },
-  { name: 'MorningPivots',    label: 'Morning Pivots',        icon: '📐', schedule: '9:46 AM',      app: 'spx_pivots' },
-  { name: 'FadeSetup',        label: 'Fade Daily Setup',      icon: '📋', schedule: '~9:50 AM'     },
-  { name: 'EveningSignal',    label: 'SPX Evening Signal',    icon: '🌆', schedule: '3:45 PM',      app: 'spx_pivots' },
-  { name: 'FadeEOD',          label: 'Fade EOD Recorder',     icon: '📝', schedule: '4:15 PM'      },
-  { name: 'SignalRecorder',   label: 'SPX Signal Recorder',   icon: '🗂', schedule: '4:15 PM',      app: 'spx_pivots' },
-  { name: 'GEX_DailyRun',     label: 'GEX Daily Run',         icon: '⚡', schedule: '4:35 PM'      },
-  { name: 'SentimentMonthly', label: 'Sentiment Monthly',     icon: '📈', schedule: '5:00 PM'      },
+  { name: 'NightlyUpdate',    label: 'Nightly OHLC',          icon: '🌙', schedule: '12:30 AM',      app: 'spx_pivots' },
+  { name: 'SentimentDaily',   label: 'Sentiment Daily',       icon: '📊', schedule: '8:00 AM'       },
+  { name: 'SentimentWeekly',  label: 'Sentiment Weekly',      icon: '📅', schedule: '8:00 AM Mon'   },
+  { name: 'HealthWatchdog',   label: 'Health Watchdog',       icon: '❤️', schedule: 'Every 30 min' },
+  { name: 'SPX_WebSocket',    label: 'SPX WebSocket',         icon: '📡', schedule: '9:30-4:00 PM',  app: 'spx_pivots' },
+  { name: 'SPXEarlyPivots',   label: 'SPX Early Pivots',      icon: '🎯', schedule: '9:31 AM',       app: 'spx_pivots' },
+  { name: 'PivotGuardian',    label: 'Pivot Guardian',        icon: '🛡️', schedule: 'Every 10 min', app: 'spx_pivots' },
+  { name: 'MorningPivots',    label: 'Morning Pivots',        icon: '📐', schedule: '9:46 AM',       app: 'spx_pivots' },
+  { name: 'FadeSetup',        label: 'Fade Daily Setup',      icon: '📋', schedule: '9:50 AM'       },
+  { name: 'FadeIntraday',     label: 'Fade Intraday Monitor', icon: '🔍', schedule: '10:00-4:00 PM' },
+  { name: 'EveningSignal',    label: 'SPX Evening Signal',    icon: '🌆', schedule: '3:45 PM',       app: 'spx_pivots' },
+  { name: 'FadeEOD',          label: 'Fade EOD Recorder',     icon: '📝', schedule: '4:15 PM'       },
+  { name: 'SignalRecorder',   label: 'SPX Signal Recorder',   icon: '🗂', schedule: '4:15 PM',       app: 'spx_pivots' },
+  { name: 'GEX_DailyRun',     label: 'GEX Daily Run',         icon: '⚡', schedule: '4:35 PM'       },
+  { name: 'SentimentMonthly', label: 'Sentiment Monthly',     icon: '📈', schedule: '5:00 PM'       },
 ];
 
 function scheduleToMinutes(schedule) {
