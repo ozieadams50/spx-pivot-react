@@ -592,8 +592,9 @@ export default function SPXBacktest() {
                   icon="annual"
                   tooltip={[
                     `Annualized Return: ${s.annualized_return}%`,
-                    'Compound Annual Growth Rate (CAGR)',
-                    'Based on $10,000 starting capital',
+                    'Total P&L ÷ years ÷ avg capital at risk',
+                    `Avg capital at risk: $${s.avg_capital_at_risk?.toFixed(0)} / trade`,
+                    'Capital at risk = (spread width − credit) × $100',
                     'Benchmark: S&P 500 long-term avg ≈ 10%',
                   ]} />
               </div>
