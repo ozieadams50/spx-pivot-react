@@ -216,9 +216,9 @@ const ICONS = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6L9 12.75l4.306-4.307a11.95 11.95 0 015.814 5.519l2.74 1.22m0 0l-3.182.818m3.182-.818L17.25 14" />
     </svg>
   ),
-  sharpe: (
+  annual: (
     <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.5" opacity="0.7">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h2l2-6 3 12 2-8 2 4 2-2h3" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-3.182-.818m3.182.818L17.25 6" />
     </svg>
   ),
 };
@@ -584,17 +584,16 @@ export default function SPXBacktest() {
                     'Largest peak-to-trough',
                     'equity decline in the period',
                   ]} />
-                <Metric label="Sharpe Ratio"
-                  value={s.sharpe_ratio}
-                  color={s.sharpe_ratio >= 1.5 ? 'text-white' : 'text-slate-300'}
-                  badge={s.sharpe_ratio >= 1.5 ? 'Excellent' : s.sharpe_ratio >= 1.0 ? 'Good' : null}
-                  icon="sharpe"
+                <Metric label="Annualized Return"
+                  value={`${s.annualized_return}%`}
+                  color={s.annualized_return >= 10 ? 'text-emerald-400' : s.annualized_return >= 0 ? 'text-amber-400' : 'text-rose-400'}
+                  badge={s.annualized_return >= 20 ? 'Exceptional' : s.annualized_return >= 10 ? 'Strong' : null}
+                  icon="annual"
                   tooltip={[
-                    `Sharpe ratio: ${s.sharpe_ratio}`,
-                    'Annualized return ÷ std deviation',
-                    s.sharpe_ratio >= 2.0 ? 'Rating: Excellent (>2.0)' :
-                    s.sharpe_ratio >= 1.5 ? 'Rating: Very good (>1.5)' :
-                    s.sharpe_ratio >= 1.0 ? 'Rating: Good (>1.0)' : 'Rating: Below average',
+                    `Annualized Return: ${s.annualized_return}%`,
+                    'Compound Annual Growth Rate (CAGR)',
+                    'Based on $10,000 starting capital',
+                    'Benchmark: S&P 500 long-term avg ≈ 10%',
                   ]} />
               </div>
 
