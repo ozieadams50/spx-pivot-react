@@ -280,6 +280,41 @@ function Lbl({ children }) {
 
 const inputCls = 'w-full rounded-lg border border-white/10 bg-[#061018] px-2 py-1.5 text-sm text-white outline-none focus:border-cyan-500/50';
 
+// Free-key numeric input (no spinner arrows) with range validation on blur
+function NumInput({ value, onChange, min, max, step = 1, isFloat = false, className = '' }) {
+  const [raw, setRaw] = useState(String(value));
+  const [invalid, setInvalid] = useState(false);
+
+  const handleChange = e => {
+    setRaw(e.target.value);
+    setInvalid(false);
+  };
+
+  const handleBlur = () => {
+    const parsed = isFloat ? parseFloat(raw) : parseInt(raw, 10);
+    if (isNaN(parsed) || parsed < min || parsed > max) {
+      setRaw(String(value));
+      setInvalid(true);
+      setTimeout(() => setInvalid(false), 1500);
+    } else {
+      const snapped = isFloat ? parsed : parsed;
+      setRaw(String(snapped));
+      onChange(snapped);
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      inputMode={isFloat ? 'decimal' : 'numeric'}
+      value={raw}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      className={`${inputCls} ${invalid ? 'border-rose-500/60' : ''} ${className}`}
+    />
+  );
+}
+
 // ── EXIT COLORS ───────────────────────────────────────────────────────────────
 
 const EXIT_COLORS = {
@@ -368,7 +403,13 @@ export default function SPXBacktest() {
 
         {/* ── Left: Inputs ─────────────────────────────────────────────── */}
         <div className="col-span-3 rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
-          <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Strategy Inputs</p>
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Strategy Inputs</p>
+            <button type="button" onClick={() => setForm({ ...DEFAULTS })}
+              className="rounded-lg border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-slate-400 transition hover:bg-white/10 hover:text-slate-200">
+              Reset
+            </button>
+          </div>
 
           <div className="space-y-3">
 
@@ -377,9 +418,13 @@ export default function SPXBacktest() {
               <Lbl>Date Range</Lbl>
               <div className="grid grid-cols-2 gap-1.5">
                 <input type="date" value={form.start_date} min={MIN_DATE}
-                  onChange={e => set('start_date')(e.target.value)} className={inputCls} />
+                  onChange={e => set('start_date')(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
+                  className={inputCls} />
                 <input type="date" value={form.end_date} min={MIN_DATE}
-                  onChange={e => set('end_date')(e.target.value)} className={inputCls} />
+                  onChange={e => set('end_date')(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
+                  className={inputCls} />
               </div>
               {form.start_date < MIN_DATE && (
                 <p className="mt-1 text-[10px] text-amber-400">
@@ -421,18 +466,14 @@ export default function SPXBacktest() {
               <Lbl>Min Credit Per Spread</Lbl>
               <div className="flex items-center gap-1.5">
                 <span className="text-xs text-slate-500">$</span>
-                <input type="number" value={form.min_credit} min={0} max={10} step={0.10}
-                  onChange={e => set('min_credit')(parseFloat(e.target.value) || 0)}
-                  className={inputCls} />
+                <NumInput value={form.min_credit} onChange={set('min_credit')} min={0} max={20} isFloat />
               </div>
             </div>
 
             {/* Contracts */}
             <div>
               <Lbl>Number of Contracts</Lbl>
-              <input type="number" value={form.contracts} min={1} max={100} step={1}
-                onChange={e => set('contracts')(parseInt(e.target.value) || 1)}
-                className={inputCls} />
+              <NumInput value={form.contracts} onChange={set('contracts')} min={1} max={100} />
             </div>
 
             {/* VIX range */}
@@ -444,15 +485,11 @@ export default function SPXBacktest() {
               <div className="grid grid-cols-2 gap-1.5">
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] text-slate-500 w-6">Min</span>
-                  <input type="number" value={form.vix_min} min={0} max={79} step={1}
-                    onChange={e => set('vix_min')(Number(e.target.value))}
-                    className={inputCls} />
+                  <NumInput value={form.vix_min} onChange={set('vix_min')} min={0} max={149} />
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] text-slate-500 w-6">Max</span>
-                  <input type="number" value={form.vix_max} min={1} max={150} step={1}
-                    onChange={e => set('vix_max')(Number(e.target.value))}
-                    className={inputCls} />
+                  <NumInput value={form.vix_max} onChange={set('vix_max')} min={1} max={150} />
                 </div>
               </div>
             </div>
