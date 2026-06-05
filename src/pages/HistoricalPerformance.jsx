@@ -214,10 +214,12 @@ export default function HistoricalPerformance() {
     if (!results?.periods) return [];
     let running = 0;
     return results.periods.map(p => {
-      // Credit = bull_put_mids mean for that day's VIX bucket from premium estimates
+      // Credit = bull_put_mids mean for that day's VIX bucket; fall back to overall avg
       const bucket  = vixBucket(p.vix);
       const bktData = premiums?.by_vix_bucket?.find(b => b.vix_range === bucket);
-      const credit  = bktData?.spreads?.bull_put_mids?.mean ?? null;
+      const credit  = bktData?.spreads?.bull_put_mids?.mean
+                   ?? premiums?.overall?.spreads?.bull_put_mids?.mean
+                   ?? null;
 
       // Short strike based on selected level
       const shortK = regStrike === 'S1' ? p.s1 : regStrike === 'MidS' ? p.mid_s : p.s2;
