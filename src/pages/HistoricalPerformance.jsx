@@ -199,14 +199,14 @@ export default function HistoricalPerformance() {
   const [regStrike,      setRegStrike]   = useState('S1');   // register strike level
   const SPREAD_WIDTH = 5;
 
-  // ── VIX bucket helper ──────────────────────────────────────────────────────
+  // ── VIX bucket helper — labels must match api/historical.py _BUCKET_ORDER ──
   function vixBucket(v) {
     if (v == null) return null;
     if (v < 15)   return '< 15';
-    if (v < 20)   return '15-20';
-    if (v < 25)   return '20-25';
-    if (v < 30)   return '25-30';
-    return '> 30';
+    if (v < 20)   return '15–20';   // en-dash: 15–20
+    if (v < 25)   return '20–25';   // en-dash: 20–25
+    if (v < 30)   return '25–30';   // en-dash: 25–30
+    return '30+';
   }
 
   // ── Per-row P&L registry (chronological, then displayed reversed) ──────────
