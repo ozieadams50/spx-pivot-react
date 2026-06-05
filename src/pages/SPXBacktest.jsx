@@ -591,12 +591,13 @@ export default function SPXBacktest() {
                     `Avg loss: ${fmtDollar(s.avg_loss_pnl)}`,
                   ]} />
                 <Metric label="Profit Factor"
-                  value={s.profit_factor}
-                  color={s.profit_factor >= 1.5 ? 'text-emerald-400' : 'text-slate-300'}
+                  value={s.profit_factor == null ? '∞' : s.profit_factor}
+                  color={s.profit_factor == null ? 'text-emerald-400' : s.profit_factor >= 1.5 ? 'text-emerald-400' : 'text-slate-300'}
                   icon="factor"
                   tooltip={[
-                    `Profit factor: ${s.profit_factor}`,
+                    s.profit_factor == null ? 'Profit Factor: ∞ (no losing trades)' : `Profit factor: ${s.profit_factor}`,
                     'Gross profit ÷ gross loss',
+                    s.profit_factor == null ? '1x stop loss exits at breakeven — zero gross loss' :
                     s.profit_factor >= 2.0 ? 'Rating: Strong edge' :
                     s.profit_factor >= 1.5 ? 'Rating: Good edge' :
                     s.profit_factor >= 1.0 ? 'Rating: Marginal' : 'Rating: Negative edge',
