@@ -55,8 +55,8 @@ function AppRoutes() {
         {/* Admin — Market Sentiment */}
         <Route path="admin/commentary"         element={<Guard matrixKey="admin/market-sentiment/subscriber-commentary"><SubscriberCommentary /></Guard>} />
         <Route path="admin/sentiment"          element={<Guard matrixKey="admin/market-sentiment/set-market-sentiment"><SetMarketSentiment /></Guard>} />
-        <Route path="admin/sentiment-history"  element={<Guard matrixKey="admin/market-sentiment/sentiment-history"><SentimentHistory /></Guard>} />
-        <Route path="admin/commentary-history" element={<Guard matrixKey="admin/market-sentiment/commentary-history"><CommentaryHistory /></Guard>} />
+        <Route path="spx-pivots/sentiment-history"  element={<Guard matrixKey="apps/spx-pivots/sentiment-history"><SentimentHistory /></Guard>} />
+        <Route path="spx-pivots/commentary-history" element={<Guard matrixKey="apps/spx-pivots/commentary-history"><CommentaryHistory /></Guard>} />
 
         {/* Admin — User Mgmt */}
         <Route path="admin/users"     element={<Guard matrixKey="admin/user-mgmt/manage-users"><ManageUsers /></Guard>} />

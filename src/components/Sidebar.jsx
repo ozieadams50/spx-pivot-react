@@ -14,6 +14,8 @@ const FULL_NAV = [
           { title: 'Current Pivots',        path: '/spx-pivots',         matrixKey: 'apps/spx-pivots/current-pivots'         },
           { title: 'Historical Performance', path: '/spx-pivots/history', matrixKey: 'apps/spx-pivots/historical-performance' },
           { title: 'Chart View',             path: '/spx-pivots/charts',  matrixKey: 'apps/spx-pivots/chart-view'             },
+          { title: 'Sentiment History',      path: '/spx-pivots/sentiment-history',  matrixKey: 'apps/spx-pivots/sentiment-history'  },
+          { title: 'Commentary History',     path: '/spx-pivots/commentary-history', matrixKey: 'apps/spx-pivots/commentary-history' },
         ],
       },
       {
@@ -32,8 +34,6 @@ const FULL_NAV = [
         children: [
           { title: 'Subscriber Commentary', path: '/admin/commentary',         matrixKey: 'admin/market-sentiment/subscriber-commentary' },
           { title: 'Set Market Sentiment',  path: '/admin/sentiment',          matrixKey: 'admin/market-sentiment/set-market-sentiment'  },
-          { title: 'Sentiment History',     path: '/admin/sentiment-history',  matrixKey: 'admin/market-sentiment/sentiment-history'     },
-          { title: 'Commentary History',    path: '/admin/commentary-history', matrixKey: 'admin/market-sentiment/commentary-history'    },
         ],
       },
       {
