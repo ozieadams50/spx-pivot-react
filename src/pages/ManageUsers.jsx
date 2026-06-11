@@ -12,7 +12,9 @@ function normalizeUser(u) {
 }
 
 function toApiBody(form) {
-  return { ...form, role: ROLE_KEY[form.role] ?? form.role };
+  const body = { ...form, role: ROLE_KEY[form.role] ?? form.role };
+  if (!body.password) delete body.password;
+  return body;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -146,9 +148,22 @@ function ActiveBadge({ active }) {
 function EditModal({ user, onClose, onSave, onDelete, onToggleActive, currentRole, saving }) {
   const [form,       setForm]       = useState({ ...user });
   const [confirmDel, setConfirmDel] = useState(false);
+  const [newPwd,     setNewPwd]     = useState('');
+  const [confirmPwd, setConfirmPwd] = useState('');
+  const [pwdError,   setPwdError]   = useState('');
 
   function set(field) {
     return (val) => setForm((f) => ({ ...f, [field]: val }));
+  }
+
+  function handleSaveWithPwd(form) {
+    if (newPwd || confirmPwd) {
+      if (newPwd.length < 6) { setPwdError('Password must be at least 6 characters.'); return; }
+      if (newPwd !== confirmPwd) { setPwdError('Passwords do not match.'); return; }
+      onSave({ ...form, password: newPwd });
+    } else {
+      onSave(form);
+    }
   }
 
   return (
@@ -234,9 +249,22 @@ function EditModal({ user, onClose, onSave, onDelete, onToggleActive, currentRol
           </div>
 
           <div className="mt-6 border-t border-white/10 pt-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Reset Password</p>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="New Password">
+                <TextInput type="password" value={newPwd} onChange={(v) => { setNewPwd(v); setPwdError(''); }} placeholder="Leave blank to keep current" />
+              </Field>
+              <Field label="Confirm Password">
+                <TextInput type="password" value={confirmPwd} onChange={(v) => { setConfirmPwd(v); setPwdError(''); }} placeholder="Repeat new password" />
+              </Field>
+            </div>
+            {pwdError && <p className="mt-2 text-xs text-rose-400">{pwdError}</p>}
+          </div>
+
+          <div className="mt-6 border-t border-white/10 pt-5">
             <div className="flex gap-3">
               <button
-                onClick={() => onSave(form)}
+                onClick={() => handleSaveWithPwd(form)}
                 disabled={saving}
                 className="flex-1 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
               >

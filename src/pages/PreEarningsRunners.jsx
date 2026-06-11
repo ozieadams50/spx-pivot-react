@@ -6,6 +6,7 @@ import { GRADE_CONFIG, MODEL_CONFIG } from '../data/earningsConfig';
 const GRADES      = ['A+', 'A', 'B', 'C', 'D'];
 const GRADE_ORDER = { 'A+': 0, A: 1, B: 2, C: 3, D: 4 };
 const DAY_OPTS    = [{ label: '≤5d', value: 5 }, { label: '≤10d', value: 10 }, { label: '≤15d', value: 15 }, { label: 'All', value: null }];
+const EXP_MOVE_OPTS = [{ label: 'All', value: null }, { label: '≥5%', value: 5 }, { label: '≥10%', value: 10 }, { label: '≥15%', value: 15 }, { label: '≥20%', value: 20 }];
 
 function compareSignals(a, b, key, dir) {
   if (key === 'grade') {
@@ -61,7 +62,7 @@ function SignedPct({ value, label }) {
 
 // ── Signal card ───────────────────────────────────────────────────────────────
 
-function SignalCard({ signal, onClick }) {
+function SignalCard({ signal, optionsLoading, onClick }) {
   const cfg    = GRADE_CONFIG[signal.grade] ?? GRADE_CONFIG['D'];
   const urgent = (signal.days_to_earnings ?? 99) <= 5;
   return (
@@ -107,10 +108,15 @@ function SignalCard({ signal, onClick }) {
           </p>
         </div>
         <div className="text-center">
-          <p className="text-[10px] uppercase tracking-wide text-slate-500">Expiry</p>
-          <p className="mt-0.5 text-sm font-semibold font-mono text-slate-300">
-            {signal.dte != null ? `${signal.dte}d` : '—'}
+          <p className="text-[10px] uppercase tracking-wide text-slate-500">Exp Move</p>
+          <p className={`mt-0.5 text-sm font-semibold font-mono ${signal.expected_move_pct != null ? 'text-sky-300' : optionsLoading ? 'animate-pulse text-slate-700' : 'text-slate-600'}`}>
+            {signal.expected_move_pct != null ? `±${signal.expected_move_pct.toFixed(1)}%` : '—'}
           </p>
+          {signal.expected_move_usd != null && (
+            <p className="text-[10px] font-mono text-slate-500 mt-0.5">
+              ±${signal.expected_move_usd.toFixed(2)}
+            </p>
+          )}
         </div>
       </div>
     </button>
@@ -211,7 +217,7 @@ function SignalRow({ signal, optionsLoading, onClick }) {
 
 // ── Filter bar ────────────────────────────────────────────────────────────────
 
-function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, setMaxDays, total, filtered }) {
+function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, setMaxDays, minExpMove, setMinExpMove, total, filtered }) {
   return (
     <div className="mb-4 rounded-2xl border border-white/10 bg-[#0b1420] p-3 flex flex-wrap items-center gap-3">
       <div className="relative min-w-[140px]">
@@ -261,6 +267,23 @@ function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, se
         ))}
       </div>
 
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] uppercase tracking-widest text-slate-600 mr-1">Exp Move</span>
+        {EXP_MOVE_OPTS.map(({ label, value }) => (
+          <button
+            key={label}
+            onClick={() => setMinExpMove(value)}
+            className={`rounded-lg border px-2.5 py-0.5 text-xs font-semibold transition-all ${
+              minExpMove === value
+                ? 'border-sky-500/40 bg-sky-500/20 text-sky-300'
+                : 'border-white/10 text-slate-500 hover:text-white'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       {filtered < total && (
         <span className="ml-auto text-xs text-slate-500">
           <span className="font-semibold text-white">{filtered}</span> of {total}
@@ -285,6 +308,7 @@ export default function PreEarningsRunners() {
   const [maxDays,        setMaxDays]        = useState(null);
   const [sortKey,        setSortKey]        = useState('score');
   const [sortDir,        setSortDir]        = useState('desc');
+  const [minExpMove,     setMinExpMove]     = useState(null);
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -373,7 +397,8 @@ export default function PreEarningsRunners() {
     const filtered = deduped.filter((s) =>
       activeGrades.has(s.grade) &&
       (!tickerQ || s.ticker.includes(tickerQ.trim())) &&
-      (maxDays == null || (s.days_to_earnings != null && s.days_to_earnings <= maxDays))
+      (maxDays == null || (s.days_to_earnings != null && s.days_to_earnings <= maxDays)) &&
+      (minExpMove == null || (s.expected_move_pct != null && s.expected_move_pct >= minExpMove))
     );
     if (view === 'list') {
       return [...filtered].sort((a, b) => compareSignals(a, b, sortKey, sortDir));
@@ -501,6 +526,8 @@ export default function PreEarningsRunners() {
               toggleGrade={toggleGrade}
               maxDays={maxDays}
               setMaxDays={setMaxDays}
+              minExpMove={minExpMove}
+              setMinExpMove={setMinExpMove}
               total={deduped.length}
               filtered={displayed.length}
             />
@@ -523,6 +550,7 @@ export default function PreEarningsRunners() {
                       <SignalCard
                         key={`${s.ticker}-${s.model_type}`}
                         signal={s}
+                        optionsLoading={optionsLoading}
                         onClick={() => navigate(`/earnings/${s.ticker}`)}
                       />
                     ))}
