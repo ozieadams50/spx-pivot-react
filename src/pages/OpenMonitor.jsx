@@ -17,6 +17,8 @@ const CRON_JOBS = [
   { name: "SignalRecorder",   label: "SPX Signal Recorder",   icon: "🗂", schedule: "4:15 PM",        app: "spx_pivots" },
   { name: "GEX_DailyRun",     label: "GEX Daily Run",         icon: "⚡", schedule: "4:35 PM"        },
   { name: "SentimentMonthly", label: "Sentiment Monthly",     icon: "📈", schedule: "5:00 PM"        },
+  { name: "EarningsRecovery", label: "Earnings Recovery",    icon: "📈", schedule: "4:40 PM",        app: "pre_earnings" },
+  { name: "EarningsMomentum", label: "Earnings Momentum",    icon: "🚀", schedule: "4:45 PM",        app: "pre_earnings" },
 ];
 
 const LIGHT = {
@@ -44,7 +46,8 @@ function JobCard({ job, status }) {
     <div className={`rounded-2xl border p-4 ${s.border} ${s.bg}`}>
       <div className="flex items-start justify-between">
         <div className="text-xl">{dot(status.light)} {job.icon}</div>
-        {job.app === 'spx_pivots' && <span className="rounded bg-cyan-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-400">SPX</span>}
+        {job.app === 'spx_pivots'   && <span className="rounded bg-cyan-500/20   px-1.5 py-0.5 text-[10px] font-semibold text-cyan-400">SPX</span>}
+        {job.app === 'pre_earnings' && <span className="rounded bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-violet-400">QE</span>}
       </div>
       <p className="mt-2 text-sm font-bold text-white">{job.label}</p>
       <p className={`mt-0.5 text-xs font-medium ${s.text}`}>Scheduled: {job.schedule}</p>

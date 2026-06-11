@@ -11,6 +11,7 @@ import HistoricalPerformance from './pages/HistoricalPerformance';
 import SubscriberCommentary from './pages/SubscriberCommentary';
 import CommentaryHistory from './pages/CommentaryHistory';
 import SetMarketSentiment from './pages/SetMarketSentiment';
+import SetGexMoc from './pages/SetGexMoc';
 import SentimentHistory from './pages/SentimentHistory';
 import ManageUsers from './pages/ManageUsers';
 import AddUser from './pages/AddUser';
@@ -26,6 +27,10 @@ import ManageRoles from './pages/ManageRoles';
 import AddRole from './pages/AddRole';
 import ManageAccess from './pages/ManageAccess';
 import Login from './pages/Login';
+import PreEarningsRunners          from './pages/PreEarningsRunners';
+import PreEarningsTicker           from './pages/PreEarningsTicker';
+import EarningsCalendar            from './pages/EarningsCalendar';
+import EarningsHistoricalPerformance from './pages/EarningsHistoricalPerformance';
 
 function AuthGuard({ children }) {
   const { loggedIn } = useAuth();
@@ -50,13 +55,20 @@ function AppRoutes() {
         <Route path="spx-pivots"         element={<SPXPivots />} />
         <Route path="spx-backtest"       element={<Guard matrixKey="apps/spx-backtest/run"><SPXBacktest /></Guard>} />
         <Route path="spx-pivots/history" element={<Guard matrixKey="apps/spx-pivots/history"><HistoricalPerformance /></Guard>} />
+
+        {/* Pre-Earnings Runners */}
+        <Route path="earnings"           element={<Guard matrixKey="apps/pre-earnings/summary"><PreEarningsRunners /></Guard>} />
+        <Route path="earnings/calendar"    element={<Guard matrixKey="apps/pre-earnings/calendar"><EarningsCalendar /></Guard>} />
+        <Route path="earnings/historical" element={<Guard matrixKey="apps/pre-earnings/historical-performance"><EarningsHistoricalPerformance /></Guard>} />
+        <Route path="earnings/:ticker"    element={<Guard matrixKey="apps/pre-earnings"><PreEarningsTicker /></Guard>} />
         <Route path="spx-pivots/charts"  element={<Guard matrixKey="apps/spx-pivots/chart-view"><ChartView /></Guard>} />
 
         {/* Admin — Market Sentiment */}
         <Route path="admin/commentary"         element={<Guard matrixKey="admin/market-sentiment/subscriber-commentary"><SubscriberCommentary /></Guard>} />
         <Route path="admin/sentiment"          element={<Guard matrixKey="admin/market-sentiment/set-market-sentiment"><SetMarketSentiment /></Guard>} />
-        <Route path="admin/sentiment-history"  element={<Guard matrixKey="admin/market-sentiment/sentiment-history"><SentimentHistory /></Guard>} />
-        <Route path="admin/commentary-history" element={<Guard matrixKey="admin/market-sentiment/commentary-history"><CommentaryHistory /></Guard>} />
+        <Route path="admin/gex-moc"            element={<Guard matrixKey="admin/market-sentiment/set-gex-moc"><SetGexMoc /></Guard>} />
+        <Route path="spx-pivots/sentiment-history"  element={<Guard matrixKey="apps/spx-pivots/sentiment-history"><SentimentHistory /></Guard>} />
+        <Route path="spx-pivots/commentary-history" element={<Guard matrixKey="apps/spx-pivots/commentary-history"><CommentaryHistory /></Guard>} />
 
         {/* Admin — User Mgmt */}
         <Route path="admin/users"     element={<Guard matrixKey="admin/user-mgmt/manage-users"><ManageUsers /></Guard>} />

@@ -48,7 +48,7 @@ export default function RegisterApp() {
         method: 'POST',
         body: JSON.stringify({ appName: appName.trim(), appKey: appKey.trim(), description: description.trim() }),
       });
-      navigate('/admin/apps/manage-apps');
+      navigate('/admin/apps');
     } catch (err) {
       setError(err.message ?? 'Failed to register app.');
     } finally {
@@ -83,7 +83,7 @@ export default function RegisterApp() {
               className="flex-1 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50">
               {saving ? 'Registering...' : 'Register App'}
             </button>
-            <button onClick={() => navigate('/admin/apps/manage-apps')}
+            <button onClick={() => navigate('/admin/apps')}
               className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/10">
               Cancel
             </button>

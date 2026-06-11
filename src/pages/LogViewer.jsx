@@ -17,6 +17,9 @@ const CRON_JOBS = [
   { name: "SignalRecorder",   label: "SPX Signal Recorder",   icon: "🗂", app: "spx_pivots" },
   { name: "GEX_DailyRun",     label: "GEX Daily Run",         icon: "⚡" },
   { name: "SentimentMonthly", label: "Sentiment Monthly",     icon: "📈" },
+  { name: "MOC_Stream",       label: "MOC Imbalance Stream", icon: "💧" },
+  { name: "EarningsRecovery", label: "Earnings Recovery",    icon: "📈", app: "pre_earnings" },
+  { name: "EarningsMomentum", label: "Earnings Momentum",    icon: "🚀", app: "pre_earnings" },
 ];
 
 const LIGHT_BADGE = {

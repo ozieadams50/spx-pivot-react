@@ -76,12 +76,16 @@ function StaleBanner({ mode }) {
 // ── API → component shape ─────────────────────────────────────────────────────
 
 function transformPivotData(api, mode) {
-  const { periodOpen, r1, r2, s1, s2, sentiment, expiry, periodStart, spreads, isStale } = api;
+  const { periodOpen, r1, r2, s1, s2, sentiment, expiry, periodStart, spreads, isStale,
+          gexRatio, spxMoc, mag7Moc } = api;
   const expiryFmt = fmtDate(expiry);
   const modeLabel = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }[mode];
 
   return {
     isStale:      !!isStale,
+    gexRatio:     gexRatio ?? null,
+    spxMoc:       spxMoc   ?? null,
+    mag7Moc:      mag7Moc  ?? null,
     title:        `SPX ${modeLabel} Pivot`,
     caption:      buildCaption(mode, periodStart),
     primaryPivot: fmtNumber(periodOpen),
@@ -185,13 +189,39 @@ export default function SPXPivots() {
           <h1 className="text-3xl font-bold text-white sm:text-4xl">SPX Option Trader</h1>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-black/30 px-8 py-5 text-right">
-          <p className="mb-1 text-xs uppercase tracking-[0.2em] text-slate-500">Market Sentiment</p>
-          {loading ? (
-            <div className="h-10 w-40 animate-pulse rounded-xl bg-white/10" />
-          ) : (
-            <p className={`text-3xl font-bold sm:text-4xl ${sentimentClass}`}>{data?.sentiment ?? '—'}</p>
+        <div className="flex flex-wrap items-stretch gap-3">
+          {/* GEX badge — daily context only */}
+          {tradeMode === 'Daily Trade' && (loading || data?.gexRatio != null) && (
+            <div className={`rounded-3xl border bg-black/30 px-6 py-5 text-center ${
+              !loading && data?.gexRatio != null
+                ? data.gexRatio >= 0.5
+                  ? 'border-emerald-500/30'
+                  : 'border-rose-500/30'
+                : 'border-white/10'
+            }`}>
+              <p className="mb-1 text-xs uppercase tracking-[0.2em] text-slate-500">GEX</p>
+              {loading ? (
+                <div className="h-8 w-24 animate-pulse rounded-xl bg-white/10" />
+              ) : (
+                <>
+                  <p className={`text-2xl font-bold ${data.gexRatio >= 0.5 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {data.gexRatio >= 0.5 ? 'Positive' : 'Negative'}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">{data.gexRatio.toFixed(2)}</p>
+                </>
+              )}
+            </div>
           )}
+
+          {/* Market Sentiment */}
+          <div className="rounded-3xl border border-white/10 bg-black/30 px-8 py-5 text-right">
+            <p className="mb-1 text-xs uppercase tracking-[0.2em] text-slate-500">Market Sentiment</p>
+            {loading ? (
+              <div className="h-10 w-40 animate-pulse rounded-xl bg-white/10" />
+            ) : (
+              <p className={`text-3xl font-bold sm:text-4xl ${sentimentClass}`}>{data?.sentiment ?? '—'}</p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -246,6 +276,23 @@ export default function SPXPivots() {
                 </>
               )}
             </div>
+
+            {/* MOC imbalance chip — daily context only */}
+            {tradeMode === 'Daily Trade' && !loading && data?.spxMoc != null && (
+              <div className={`inline-flex items-center gap-2 self-start rounded-2xl border px-4 py-2 text-sm font-semibold lg:self-auto ${
+                data.spxMoc > 0
+                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                  : 'border-rose-500/30 bg-rose-500/10 text-rose-300'
+              }`}>
+                <span>{data.spxMoc > 0 ? '🟢' : '🔴'}</span>
+                <span>
+                  MOC {data.spxMoc > 0 ? 'BUY' : 'SELL'}{' '}
+                  <span className="font-mono">
+                    {data.spxMoc > 0 ? '+' : ''}{data.spxMoc.toLocaleString()}
+                  </span>
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

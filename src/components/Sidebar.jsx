@@ -14,6 +14,17 @@ const FULL_NAV = [
           { title: 'Current Pivots',        path: '/spx-pivots',         matrixKey: 'apps/spx-pivots/current-pivots'         },
           { title: 'Historical Performance', path: '/spx-pivots/history', matrixKey: 'apps/spx-pivots/historical-performance' },
           { title: 'Chart View',             path: '/spx-pivots/charts',  matrixKey: 'apps/spx-pivots/chart-view'             },
+          { title: 'Sentiment History',      path: '/spx-pivots/sentiment-history',  matrixKey: 'apps/spx-pivots/sentiment-history'  },
+          { title: 'Commentary History',     path: '/spx-pivots/commentary-history', matrixKey: 'apps/spx-pivots/commentary-history' },
+        ],
+      },
+      {
+        title: 'Pre-Earnings Runners', matrixKey: 'apps/pre-earnings',
+        children: [
+          { title: 'Summary',     path: '/earnings',            matrixKey: 'apps/pre-earnings/summary'     },
+          { title: 'All Signals', path: '/earnings?grade=all',  matrixKey: 'apps/pre-earnings/all-signals' },
+          { title: 'Calendar',              path: '/earnings/calendar',    matrixKey: 'apps/pre-earnings/calendar'                },
+          { title: 'Historical Performance', path: '/earnings/historical', matrixKey: 'apps/pre-earnings/historical-performance' },
         ],
       },
       {
@@ -32,8 +43,7 @@ const FULL_NAV = [
         children: [
           { title: 'Subscriber Commentary', path: '/admin/commentary',         matrixKey: 'admin/market-sentiment/subscriber-commentary' },
           { title: 'Set Market Sentiment',  path: '/admin/sentiment',          matrixKey: 'admin/market-sentiment/set-market-sentiment'  },
-          { title: 'Sentiment History',     path: '/admin/sentiment-history',  matrixKey: 'admin/market-sentiment/sentiment-history'     },
-          { title: 'Commentary History',    path: '/admin/commentary-history', matrixKey: 'admin/market-sentiment/commentary-history'    },
+          { title: 'Set GEX & MOC',         path: '/admin/gex-moc',            matrixKey: 'admin/market-sentiment/set-gex-moc'           },
         ],
       },
       {
@@ -82,16 +92,20 @@ function filterNav(items, role, matrix) {
 }
 
 function LeafItem({ title, path }) {
+  const location = useLocation();
+  const [linkPath, linkSearch] = path.includes('?') ? path.split('?') : [path, null];
+  const active = linkSearch
+    ? location.pathname === linkPath && location.search.includes(linkSearch)
+    : location.pathname === linkPath && !location.search;
+
   return (
     <NavLink
       to={path}
-      className={({ isActive }) =>
-        `block rounded-lg px-3 py-2 text-sm transition-colors ${
-          isActive
-            ? 'bg-cyan-500/15 text-cyan-300'
-            : 'text-slate-500 hover:bg-cyan-500/10 hover:text-cyan-300'
-        }`
-      }
+      className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
+        active
+          ? 'bg-cyan-500/15 text-cyan-300'
+          : 'text-slate-500 hover:bg-cyan-500/10 hover:text-cyan-300'
+      }`}
     >
       {title}
     </NavLink>
