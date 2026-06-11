@@ -332,6 +332,8 @@ export default function EarningsHistoricalPerformance() {
                   <Th col="earnings_date"   label="Earn Date"    {...thProps} />
                   <Th col="entry_date"      label="Entry Date"   {...thProps} />
                   <Th col="entry_price"     label="Entry $"      {...thProps} />
+                  <Th col="exit_price"      label="Exit $"       {...thProps} className="border-l border-white/5" />
+                  <Th col="actual_runup_pct" label="Exit %"      {...thProps} />
                   <Th col="pre_earn_high"   label="Pre-Earn Hi"  {...thProps} className="border-l border-white/5" />
                   <Th col="pre_earn_high_date" label="Hi Date"   {...thProps} />
                   <Th col="pre_earn_high_pct"  label="Hi %"      {...thProps} />
@@ -366,6 +368,12 @@ export default function EarningsHistoricalPerformance() {
                     <td className="px-3 py-2.5 text-xs text-slate-300">{fmtDate(row.earnings_date)}</td>
                     <td className="px-3 py-2.5 text-xs text-slate-400">{fmtDate(row.entry_date)}</td>
                     <td className="px-3 py-2.5 font-mono text-xs text-slate-300 tabular-nums">{fmtPrice(row.entry_price)}</td>
+
+                    {/* Standard exit block */}
+                    <td className="border-l border-white/5 px-3 py-2.5 font-mono text-xs text-slate-300 tabular-nums">
+                      {fmtPrice(row.exit_price)}
+                    </td>
+                    <td className="px-3 py-2.5"><PctCell value={row.actual_runup_pct} /></td>
 
                     {/* Pre-earnings high block */}
                     <td className="border-l border-white/5 px-3 py-2.5 font-mono text-xs text-slate-300 tabular-nums">
