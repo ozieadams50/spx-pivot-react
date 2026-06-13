@@ -10,6 +10,12 @@ const MODE_MAP = {
   'Daily Trade':   'daily',
 };
 
+const HIST_WIN_KEY = {
+  Aggressive:   'close_s1_pct',
+  Moderate:     'close_mids_pct',
+  Conservative: 'close_s2_pct',
+};
+
 const BADGE_STYLES = {
   Aggressive:   'bg-rose-500/20 text-rose-300 border-rose-500/30',
   Moderate:     'bg-sky-500/20 text-sky-300 border-sky-500/30',
@@ -52,7 +58,40 @@ function buildCaption(mode, periodStart) {
   return `Month as of ${label}`;
 }
 
-// ── Stale banner ──────────────────────────────────────────────────────────────
+// ── Time helpers ──────────────────────────────────────────────────────────────
+
+function isPreMarketET() {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    weekday: 'short', hour: 'numeric', minute: 'numeric', hour12: false,
+  }).formatToParts(now);
+  const weekday = parts.find((p) => p.type === 'weekday')?.value;
+  const hour    = parseInt(parts.find((p) => p.type === 'hour')?.value   ?? '0', 10);
+  const minute  = parseInt(parts.find((p) => p.type === 'minute')?.value ?? '0', 10);
+  const isWeekday   = !['Sat', 'Sun'].includes(weekday);
+  const beforeOpen  = hour < 9 || (hour === 9 && minute < 31);
+  return isWeekday && beforeOpen;
+}
+
+// ── Stale banners ─────────────────────────────────────────────────────────────
+
+function PreMarketBanner({ mode }) {
+  const label = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }[mode];
+  return (
+    <div className="mb-4 flex items-start gap-3 rounded-2xl border border-yellow-500/40 bg-yellow-500/10 px-5 py-4">
+      <span className="mt-0.5 text-lg leading-none">🕐</span>
+      <div>
+        <p className="text-sm font-semibold text-yellow-300">
+          {label} pivots are updated once the market opens (9:31 AM ET)
+        </p>
+        <p className="mt-1 text-xs text-yellow-400/70">
+          These are pivots from the prior trading day. Fresh data will be available shortly after market open.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function StaleBanner({ mode }) {
   const label = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }[mode];
@@ -98,9 +137,9 @@ function transformPivotData(api, mode) {
       { label: 'S2 Support',    value: fmtCurrency(s2), tone: 'text-green-400',   key: 's2' },
     ],
     spreads: [
-      { risk: 'Aggressive',   level: 'S1 (Support 1)',   pivot: fmtNumber(spreads.Aggressive.level),   short: spreads.Aggressive.short,   long: spreads.Aggressive.long },
+      { risk: 'Aggressive',   level: 'S1',               pivot: fmtNumber(spreads.Aggressive.level),   short: spreads.Aggressive.short,   long: spreads.Aggressive.long },
       { risk: 'Moderate',     level: 'Mid-S',            pivot: fmtNumber(spreads.Moderate.level),     short: spreads.Moderate.short,     long: spreads.Moderate.long   },
-      { risk: 'Conservative', level: 'S2 (Support 2)',   pivot: fmtNumber(spreads.Conservative.level), short: spreads.Conservative.short, long: spreads.Conservative.long },
+      { risk: 'Conservative', level: 'S2',               pivot: fmtNumber(spreads.Conservative.level), short: spreads.Conservative.short, long: spreads.Conservative.long },
     ],
     execCards: {
       Aggressive: {
@@ -138,6 +177,8 @@ export default function SPXPivots() {
   const [selectedStrategy, setSelectedStrategy] = useState('Moderate');
   const [showModal,        setShowModal]        = useState(false);
   const [pivotData,        setPivotData]        = useState(null);
+  const [premiums,         setPremiums]         = useState(null);
+  const [histStats,        setHistStats]        = useState(null);
   const [loading,          setLoading]          = useState(true);
   const [error,            setError]            = useState(null);
 
@@ -165,6 +206,25 @@ export default function SPXPivots() {
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
   }, [tradeMode, fetchPivots]);
+
+  // Fetch historical premium estimates + quant summary (non-blocking — used in table & modal)
+  useEffect(() => {
+    const mode   = MODE_MAP[tradeMode];
+    const today  = new Date().toISOString().slice(0, 10);
+    const premParams = new URLSearchParams({
+      ticker: 'I:SPX', period: mode, spread_width: '5',
+      start_date: '2015-01-01', end_date: today,
+    });
+    const quantParams = new URLSearchParams({
+      ticker: 'I:SPX', period: mode, summary_only: 'true',
+      start_date: '2015-01-01', end_date: today,
+      sma_filter: 'spx_above_20ma',
+    });
+    setPremiums(null);
+    setHistStats(null);
+    apiFetch(`/historical/premium-estimate?${premParams}`).then(setPremiums).catch(() => {});
+    apiFetch(`/historical/quant?${quantParams}`).then(d => setHistStats(d?.summary ?? null)).catch(() => {});
+  }, [tradeMode]);
 
   // Auto-refresh every 60s while data is stale so the banner clears automatically
   // once the Pivot Guardian corrects the issue
@@ -249,8 +309,12 @@ export default function SPXPivots() {
         </div>
       )}
 
-      {/* Stale data warning — shown per active pivot type only */}
-      {!loading && data?.isStale && <StaleBanner mode={MODE_MAP[tradeMode]} />}
+      {/* Pre-market info or stale warning — shown per active pivot type only */}
+      {!loading && data?.isStale && (
+        isPreMarketET()
+          ? <PreMarketBanner mode={MODE_MAP[tradeMode]} />
+          : <StaleBanner mode={MODE_MAP[tradeMode]} />
+      )}
 
       {/* Main pivot card */}
       <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[#0b1420] shadow-2xl">
@@ -350,8 +414,8 @@ export default function SPXPivots() {
               </div>
               <button
                 onClick={() => setShowModal(true)}
-                disabled={loading || !data || data.isStale}
-                title={data?.isStale ? 'Pivot data is stale — trading disabled until corrected' : undefined}
+                disabled={loading || !data || (data.isStale && !isPreMarketET())}
+                title={data?.isStale && !isPreMarketET() ? 'Pivot data is stale — trading disabled until corrected' : undefined}
                 className="self-start rounded-2xl border border-cyan-500/30 bg-cyan-500/10 px-5 py-3 text-sm font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed lg:self-auto"
               >
                 ⓘ How to Trade
@@ -362,18 +426,19 @@ export default function SPXPivots() {
               <table className="min-w-full border-collapse overflow-hidden rounded-3xl border border-white/10">
                 <thead className="bg-white/5 text-xs uppercase tracking-[0.2em] text-slate-400">
                   <tr>
-                    <th className="px-4 py-4 text-left">Risk</th>
-                    <th className="px-4 py-4 text-left">Level</th>
-                    <th className="px-4 py-4 text-right">Pivot</th>
-                    <th className="px-4 py-4 text-right">Short Put</th>
-                    <th className="px-4 py-4 text-right">Long Put</th>
+                    <th className="px-4 py-4 text-center">Risk</th>
+                    <th className="px-4 py-4 text-center">Level</th>
+                    <th className="px-4 py-4 text-center">Pivot</th>
+                    <th className="px-4 py-4 text-center">Short Put</th>
+                    <th className="px-4 py-4 text-center">Long Put</th>
+                    <th className="px-4 py-4 text-center">Hist Win %</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading
                     ? Array.from({ length: 3 }).map((_, i) => (
                         <tr key={i} className="border-t border-white/5">
-                          {Array.from({ length: 5 }).map((__, j) => (
+                          {Array.from({ length: 6 }).map((__, j) => (
                             <td key={j} className="px-4 py-4">
                               <div className="h-4 animate-pulse rounded bg-white/10" />
                             </td>
@@ -388,15 +453,20 @@ export default function SPXPivots() {
                             selectedStrategy === row.risk ? 'bg-white/[0.03]' : ''
                           }`}
                         >
-                          <td className="px-4 py-4">
+                          <td className="px-4 py-4 text-center">
                             <div className={`inline-flex rounded-xl border px-3 py-1 text-sm font-semibold ${BADGE_STYLES[row.risk]}`}>
                               {row.risk}
                             </div>
                           </td>
-                          <td className="px-4 py-4 text-slate-300">{row.level}</td>
-                          <td className="px-4 py-4 text-right font-mono">{row.pivot}</td>
-                          <td className="px-4 py-4 text-right font-mono font-semibold text-white">{row.short}</td>
-                          <td className="px-4 py-4 text-right font-mono text-slate-400">{row.long}</td>
+                          <td className="px-4 py-4 text-center text-slate-300">{row.level}</td>
+                          <td className="px-4 py-4 text-center font-mono">{row.pivot}</td>
+                          <td className="px-4 py-4 text-center font-mono font-semibold text-white">{row.short}</td>
+                          <td className="px-4 py-4 text-center font-mono text-slate-400">{row.long}</td>
+                          <td className="px-4 py-4 text-center font-mono font-semibold text-emerald-400">
+                            {histStats
+                              ? `${(100 - histStats[HIST_WIN_KEY[row.risk]]).toFixed(1)}%`
+                              : '—'}
+                          </td>
                         </tr>
                       ))}
                 </tbody>
@@ -412,6 +482,7 @@ export default function SPXPivots() {
           setSelectedStrategy={setSelectedStrategy}
           execCards={data.execCards}
           activeStrategy={activeExec}
+          premiums={premiums}
           onClose={() => setShowModal(false)}
         />
       )}

@@ -137,7 +137,7 @@ export default function AddUser() {
           role:       ROLE_KEY[form.role] ?? 'subscriber',
         }),
       });
-      navigate('/admin/user-mgmt/manage-users');
+      navigate('/admin/users');
     } catch (err) {
       setError(err.message ?? 'Failed to create user.');
     } finally {
@@ -239,7 +239,7 @@ export default function AddUser() {
               {saving ? 'Creating…' : 'Create User'}
             </button>
             <button
-              onClick={() => navigate('/admin/user-mgmt/manage-users')}
+              onClick={() => navigate('/admin/users')}
               className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/10"
             >
               Cancel

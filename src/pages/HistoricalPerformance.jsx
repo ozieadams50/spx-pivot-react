@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { apiFetch } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 // ── Metric card with tooltip ──────────────────────────────────────────────────
 
@@ -187,12 +188,58 @@ function PremiumTable({ title, subtitle, color, columns, data, overall }) {
 }
 
 export default function HistoricalPerformance() {
-  const [form,        setForm]        = useState({ ...DEFAULTS });
-  const [results,     setResults]     = useState(null);
-  const [premiums,    setPremiums]    = useState(null);
-  const [loading,     setLoading]     = useState(false);
-  const [error,       setError]       = useState('');
-  const [showInverse, setShowInverse] = useState(false);
+  const { role }                       = useAuth();
+  const canSeePremiums                 = role === 'admin' || role === 'superuser';
+  const [form,           setForm]        = useState({ ...DEFAULTS });
+  const [results,        setResults]     = useState(null);
+  const [premiums,       setPremiums]    = useState(null);
+  const [loading,        setLoading]     = useState(false);
+  const [error,          setError]       = useState('');
+  const [showInverse,    setShowInverse] = useState(false);
+  const [regStrike,      setRegStrike]   = useState('S1');   // register strike level
+  const SPREAD_WIDTH = 5;
+
+  // ── VIX bucket helper — labels must match api/historical.py _BUCKET_ORDER ──
+  function vixBucket(v) {
+    if (v == null) return null;
+    if (v < 15)   return '< 15';
+    if (v < 20)   return '15–20';   // en-dash: 15–20
+    if (v < 25)   return '20–25';   // en-dash: 20–25
+    if (v < 30)   return '25–30';   // en-dash: 25–30
+    return '30+';
+  }
+
+  // ── Per-row P&L registry (chronological, then displayed reversed) ──────────
+  const registry = useMemo(() => {
+    if (!results?.periods) return [];
+    let running = 0;
+    return results.periods.map(p => {
+      // Credit = bull_put_mids mean for that day's VIX bucket; fall back to overall avg
+      const bucket  = vixBucket(p.vix);
+      const bktData = premiums?.by_vix_bucket?.find(b => b.vix_range === bucket);
+      const credit  = bktData?.spreads?.bull_put_mids?.mean
+                   ?? premiums?.overall?.spreads?.bull_put_mids?.mean
+                   ?? null;
+
+      // Short strike based on selected level
+      const shortK = regStrike === 'S1' ? p.s1 : regStrike === 'MidS' ? p.mid_s : p.s2;
+      const longK  = shortK - SPREAD_WIDTH;
+
+      let pnl = null;
+      if (credit != null && shortK != null) {
+        if (p.close >= shortK) {
+          pnl = credit * 100;                                  // full win
+        } else if (p.close >= longK) {
+          pnl = (credit - (shortK - p.close)) * 100;          // partial loss
+        } else {
+          pnl = (credit - SPREAD_WIDTH) * 100;                 // max loss
+        }
+        pnl = Math.round(pnl * 100) / 100;
+      }
+      running = credit != null ? Math.round((running + (pnl ?? 0)) * 100) / 100 : running;
+      return { pnl, cumulative: credit != null ? running : null, credit, bucket };
+    });
+  }, [results, premiums, regStrike]);
 
   const set = k => v => setForm(f => ({ ...f, [k]: v }));
 
@@ -210,7 +257,9 @@ export default function HistoricalPerformance() {
 
       const [data, prem] = await Promise.all([
         apiFetch(`/historical/quant?${quantParams}`),
-        apiFetch(`/historical/premium-estimate?${premParams}`).catch(() => null),
+        canSeePremiums
+          ? apiFetch(`/historical/premium-estimate?${premParams}`).catch(() => null)
+          : Promise.resolve(null),
       ]);
       setResults(data);
       setPremiums(prem);
@@ -512,8 +561,8 @@ export default function HistoricalPerformance() {
                 );
               })()}
 
-              {/* ── Premium estimates ────────────────────────────────────── */}
-              {premiums && premiums.by_vix_bucket.length > 0 && (
+              {/* ── Premium estimates — Admin / Super User only ──────────── */}
+              {canSeePremiums && premiums && premiums.by_vix_bucket.length > 0 && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-2.5">
                     <span className="h-2 w-2 flex-shrink-0 rounded-full bg-violet-400" />
@@ -552,15 +601,34 @@ export default function HistoricalPerformance() {
 
               {/* ── Period detail table ───────────────────────────────────── */}
               <div className="rounded-2xl border border-white/10 bg-[#0d1f2d]">
-                <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
                   <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
                     Period Detail — {results.periods.length.toLocaleString()} {form.period} periods
                   </p>
+                  <div className="flex items-center gap-3">
+                    {/* Register strike selector */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-slate-500 uppercase tracking-wider">Register:</span>
+                      {['S1','MidS','S2'].map(s => (
+                        <button key={s} type="button" onClick={() => setRegStrike(s)}
+                          className={`rounded px-2 py-0.5 text-[10px] font-semibold transition ${
+                            regStrike === s
+                              ? 'bg-emerald-500/20 text-emerald-300'
+                              : 'text-slate-500 hover:text-slate-300'
+                          }`}>
+                          {s === 'MidS' ? 'Mid-S' : s}
+                        </button>
+                      ))}
+                      <span className="text-[10px] text-slate-600">· $5 spread · Mid-S VIX credit</span>
+                    </div>
+                  </div>
                   <button
                     onClick={() => {
-                      const cols = ['Date','Period Open','R2','Mid-R','R1','S1','Mid-S','S2','Open','High','Low','Close','T>R1','C>R1','T>MR','C>MR','T>R2','C>R2','T<S1','C<S1','T<MS','C<MS','T<S2','C<S2'];
-                      const rows = results.periods.map(p => [
-                        p.date, p.period_open, p.r2, p.mid_r, p.r1, p.s1, p.mid_s, p.s2,
+                      const cols = ['Date','VIX','P&L','Running P&L','Period Open','R2','Mid-R','R1','S1','Mid-S','S2','Open','High','Low','Close','T>R1','C>R1','T>MR','C>MR','T>R2','C>R2','T<S1','C<S1','T<MS','C<MS','T<S2','C<S2'];
+                      const rows = results.periods.map((p, idx) => [
+                        p.date, p.vix ?? '',
+                        registry[idx]?.pnl ?? '', registry[idx]?.cumulative ?? '',
+                        p.period_open, p.r2, p.mid_r, p.r1, p.s1, p.mid_s, p.s2,
                         p.open, p.high, p.low, p.close,
                         p.touch_r1?1:0, p.close_r1?1:0, p.touch_midr?1:0, p.close_midr?1:0,
                         p.touch_r2?1:0, p.close_r2?1:0,
@@ -583,6 +651,8 @@ export default function HistoricalPerformance() {
                     <thead>
                       <tr className="border-b border-white/5 text-[10px] uppercase tracking-widest text-slate-600">
                         <th className="px-3 py-2 text-left">Date</th>
+                        <th className="px-3 py-2 text-right text-violet-400/80">P&amp;L</th>
+                        <th className="px-3 py-2 text-right text-violet-400/80">Running</th>
                         <th className="px-3 py-2 text-right">Open</th>
                         <th className="px-3 py-2 text-right text-amber-500/70">R2</th>
                         <th className="px-3 py-2 text-right text-orange-500/70">Mid-R</th>
@@ -598,6 +668,8 @@ export default function HistoricalPerformance() {
                     </thead>
                     <tbody>
                       {[...results.periods].reverse().map((p, i) => {
+                        const chronoIdx = results.periods.length - 1 - i;
+                        const reg = registry[chronoIdx];
                         const events = Object.entries(EVENT_BADGE).filter(([k]) => p[k]);
                         const hasResistance = p.close_r1 || p.close_r2;
                         const hasSupport    = p.close_s1 || p.close_s2;
@@ -607,6 +679,19 @@ export default function HistoricalPerformance() {
                         return (
                           <tr key={i} className={`border-b border-white/[0.04] transition-colors hover:bg-white/[0.02] ${rowBg}`}>
                             <td className="px-3 py-1.5 font-mono text-slate-300">{p.date}</td>
+                            {/* ── P&L register columns ── */}
+                            <td className={`px-3 py-1.5 text-right font-mono font-semibold ${
+                              reg?.pnl == null ? 'text-slate-600' :
+                              reg.pnl > 0 ? 'text-emerald-400' : reg.pnl < 0 ? 'text-rose-400' : 'text-slate-400'
+                            }`}>
+                              {reg?.pnl == null ? '—' : `${reg.pnl >= 0 ? '+' : ''}$${reg.pnl.toFixed(0)}`}
+                            </td>
+                            <td className={`px-3 py-1.5 text-right font-mono font-bold ${
+                              reg?.cumulative == null ? 'text-slate-600' :
+                              reg.cumulative > 0 ? 'text-emerald-300' : reg.cumulative < 0 ? 'text-rose-300' : 'text-slate-400'
+                            }`}>
+                              {reg?.cumulative == null ? '—' : `${reg.cumulative >= 0 ? '+' : ''}$${reg.cumulative.toFixed(0)}`}
+                            </td>
                             <td className="px-3 py-1.5 text-right font-mono text-slate-400">{p.period_open}</td>
                             <td className="px-3 py-1.5 text-right font-mono text-amber-400/70">{p.r2}</td>
                             <td className="px-3 py-1.5 text-right font-mono text-orange-400/70">{p.mid_r}</td>

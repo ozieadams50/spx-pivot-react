@@ -216,9 +216,9 @@ const ICONS = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6L9 12.75l4.306-4.307a11.95 11.95 0 015.814 5.519l2.74 1.22m0 0l-3.182.818m3.182-.818L17.25 14" />
     </svg>
   ),
-  sharpe: (
+  annual: (
     <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" stroke="currentColor" strokeWidth="1.5" opacity="0.7">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h2l2-6 3 12 2-8 2 4 2-2h3" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-3.182-.818m3.182.818L17.25 6" />
     </svg>
   ),
 };
@@ -280,6 +280,41 @@ function Lbl({ children }) {
 
 const inputCls = 'w-full rounded-lg border border-white/10 bg-[#061018] px-2 py-1.5 text-sm text-white outline-none focus:border-cyan-500/50';
 
+// Free-key numeric input (no spinner arrows) with range validation on blur
+function NumInput({ value, onChange, min, max, step = 1, isFloat = false, className = '' }) {
+  const [raw, setRaw] = useState(String(value));
+  const [invalid, setInvalid] = useState(false);
+
+  const handleChange = e => {
+    setRaw(e.target.value);
+    setInvalid(false);
+  };
+
+  const handleBlur = () => {
+    const parsed = isFloat ? parseFloat(raw) : parseInt(raw, 10);
+    if (isNaN(parsed) || parsed < min || parsed > max) {
+      setRaw(String(value));
+      setInvalid(true);
+      setTimeout(() => setInvalid(false), 1500);
+    } else {
+      const snapped = isFloat ? parsed : parsed;
+      setRaw(String(snapped));
+      onChange(snapped);
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      inputMode={isFloat ? 'decimal' : 'numeric'}
+      value={raw}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      className={`${inputCls} ${invalid ? 'border-rose-500/60' : ''} ${className}`}
+    />
+  );
+}
+
 // ── EXIT COLORS ───────────────────────────────────────────────────────────────
 
 const EXIT_COLORS = {
@@ -291,13 +326,17 @@ const EXIT_COLORS = {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+const MIN_DATE   = '2015-01-01';
+const MIN_DATE_LABEL = '01/01/2015';
+const TODAY = new Date().toISOString().slice(0, 10);
+
 const DEFAULTS = {
-  start_date: '2020-01-01', end_date: '2024-12-31',
+  start_date: '2015-01-01', end_date: TODAY,
   mode: 'weekly', strike_level: 'S1', spread_width: 5,
   profit_target_pct: 0.50, stop_loss_pct: 2.00,
   vix_min: 0, vix_max: 80, contracts: 1,
   min_credit: 0.50,
-  ema_filter: 'none', entry_days: ['Any'],
+  sma_filter: 'none', entry_days: ['Any'],
 };
 
 export default function SPXBacktest() {
@@ -310,6 +349,10 @@ export default function SPXBacktest() {
   const set = key => val => setForm(f => ({ ...f, [key]: val }));
 
   async function runBacktest() {
+    if (form.start_date < MIN_DATE) {
+      setError(`${MIN_DATE_LABEL} is our earliest available data. Please choose a start date on or after that.`);
+      return;
+    }
     setLoading(true); setError(''); setResults(null);
     try {
       const data = await apiFetch('/backtest/spx', { method: 'POST', body: JSON.stringify(form) });
@@ -360,7 +403,13 @@ export default function SPXBacktest() {
 
         {/* ── Left: Inputs ─────────────────────────────────────────────── */}
         <div className="col-span-3 rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
-          <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">Strategy Inputs</p>
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Strategy Inputs</p>
+            <button type="button" onClick={() => setForm({ ...DEFAULTS })}
+              className="rounded-lg border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-slate-400 transition hover:bg-white/10 hover:text-slate-200">
+              Reset
+            </button>
+          </div>
 
           <div className="space-y-3">
 
@@ -368,11 +417,20 @@ export default function SPXBacktest() {
             <div>
               <Lbl>Date Range</Lbl>
               <div className="grid grid-cols-2 gap-1.5">
-                <input type="date" value={form.start_date}
-                  onChange={e => set('start_date')(e.target.value)} className={inputCls} />
-                <input type="date" value={form.end_date}
-                  onChange={e => set('end_date')(e.target.value)} className={inputCls} />
+                <input type="date" value={form.start_date} min={MIN_DATE}
+                  onChange={e => set('start_date')(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
+                  className={inputCls} />
+                <input type="date" value={form.end_date} min={MIN_DATE}
+                  onChange={e => set('end_date')(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
+                  className={inputCls} />
               </div>
+              {form.start_date < MIN_DATE && (
+                <p className="mt-1 text-[10px] text-amber-400">
+                  {MIN_DATE_LABEL} is our earliest available data.
+                </p>
+              )}
             </div>
 
             {/* Mode */}
@@ -408,18 +466,14 @@ export default function SPXBacktest() {
               <Lbl>Min Credit Per Spread</Lbl>
               <div className="flex items-center gap-1.5">
                 <span className="text-xs text-slate-500">$</span>
-                <input type="number" value={form.min_credit} min={0} max={10} step={0.10}
-                  onChange={e => set('min_credit')(parseFloat(e.target.value) || 0)}
-                  className={inputCls} />
+                <NumInput value={form.min_credit} onChange={set('min_credit')} min={0} max={20} isFloat />
               </div>
             </div>
 
             {/* Contracts */}
             <div>
               <Lbl>Number of Contracts</Lbl>
-              <input type="number" value={form.contracts} min={1} max={100} step={1}
-                onChange={e => set('contracts')(parseInt(e.target.value) || 1)}
-                className={inputCls} />
+              <NumInput value={form.contracts} onChange={set('contracts')} min={1} max={100} />
             </div>
 
             {/* VIX range */}
@@ -431,15 +485,11 @@ export default function SPXBacktest() {
               <div className="grid grid-cols-2 gap-1.5">
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] text-slate-500 w-6">Min</span>
-                  <input type="number" value={form.vix_min} min={0} max={79} step={1}
-                    onChange={e => set('vix_min')(Number(e.target.value))}
-                    className={inputCls} />
+                  <NumInput value={form.vix_min} onChange={set('vix_min')} min={0} max={149} />
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] text-slate-500 w-6">Max</span>
-                  <input type="number" value={form.vix_max} min={1} max={150} step={1}
-                    onChange={e => set('vix_max')(Number(e.target.value))}
-                    className={inputCls} />
+                  <NumInput value={form.vix_max} onChange={set('vix_max')} min={1} max={150} />
                 </div>
               </div>
             </div>
@@ -454,20 +504,22 @@ export default function SPXBacktest() {
             {/* Stop loss */}
             <div>
               <Lbl>Stop Loss</Lbl>
-              <Seg options={[{v:1.0,l:'1×'},{v:2.0,l:'2×'},{v:3.0,l:'3×'}]}
+              <Seg options={[{v:0,l:'None'},{v:1.0,l:'1×'},{v:2.0,l:'2×'},{v:3.0,l:'3×'}]}
                 value={form.stop_loss_pct} onChange={set('stop_loss_pct')} />
-              <p className="mt-0.5 text-[9px] text-slate-600">Multiples of credit received</p>
+              <p className="mt-0.5 text-[9px] text-slate-600">
+                {form.stop_loss_pct === 0 ? 'No stop loss — hold to expiry or profit target' : 'Multiples of credit received'}
+              </p>
             </div>
 
-            {/* EMA filter */}
+            {/* SMA filter */}
             <div>
-              <Lbl>EMA Filter</Lbl>
-              <select value={form.ema_filter} onChange={e => set('ema_filter')(e.target.value)}
+              <Lbl>SMA Filter</Lbl>
+              <select value={form.sma_filter} onChange={e => set('sma_filter')(e.target.value)}
                 className={inputCls}>
                 <option value="none">None (all conditions)</option>
-                <option value="above_20">SPX above 20 EMA</option>
-                <option value="above_50">SPX above 50 EMA</option>
-                <option value="below_20">SPX below 20 EMA</option>
+                <option value="above_20">SPX above 20-day SMA</option>
+                <option value="above_50">SPX above 50-day SMA</option>
+                <option value="below_20">SPX below 20-day SMA</option>
               </select>
             </div>
 
@@ -539,12 +591,13 @@ export default function SPXBacktest() {
                     `Avg loss: ${fmtDollar(s.avg_loss_pnl)}`,
                   ]} />
                 <Metric label="Profit Factor"
-                  value={s.profit_factor}
-                  color={s.profit_factor >= 1.5 ? 'text-emerald-400' : 'text-slate-300'}
+                  value={s.profit_factor == null ? '∞' : s.profit_factor}
+                  color={s.profit_factor == null ? 'text-emerald-400' : s.profit_factor >= 1.5 ? 'text-emerald-400' : 'text-slate-300'}
                   icon="factor"
                   tooltip={[
-                    `Profit factor: ${s.profit_factor}`,
+                    s.profit_factor == null ? 'Profit Factor: ∞ (no losing trades)' : `Profit factor: ${s.profit_factor}`,
                     'Gross profit ÷ gross loss',
+                    s.profit_factor == null ? '1x stop loss exits at breakeven — zero gross loss' :
                     s.profit_factor >= 2.0 ? 'Rating: Strong edge' :
                     s.profit_factor >= 1.5 ? 'Rating: Good edge' :
                     s.profit_factor >= 1.0 ? 'Rating: Marginal' : 'Rating: Negative edge',
@@ -570,17 +623,17 @@ export default function SPXBacktest() {
                     'Largest peak-to-trough',
                     'equity decline in the period',
                   ]} />
-                <Metric label="Sharpe Ratio"
-                  value={s.sharpe_ratio}
-                  color={s.sharpe_ratio >= 1.5 ? 'text-white' : 'text-slate-300'}
-                  badge={s.sharpe_ratio >= 1.5 ? 'Excellent' : s.sharpe_ratio >= 1.0 ? 'Good' : null}
-                  icon="sharpe"
+                <Metric label="Ann. Return on Capital"
+                  value={`${s.annualized_return}%`}
+                  color={s.annualized_return >= 10 ? 'text-emerald-400' : s.annualized_return >= 0 ? 'text-amber-400' : 'text-rose-400'}
+                  badge={s.annualized_return >= 20 ? 'Exceptional' : s.annualized_return >= 10 ? 'Strong' : null}
+                  icon="annual"
                   tooltip={[
-                    `Sharpe ratio: ${s.sharpe_ratio}`,
-                    'Annualized return ÷ std deviation',
-                    s.sharpe_ratio >= 2.0 ? 'Rating: Excellent (>2.0)' :
-                    s.sharpe_ratio >= 1.5 ? 'Rating: Very good (>1.5)' :
-                    s.sharpe_ratio >= 1.0 ? 'Rating: Good (>1.0)' : 'Rating: Below average',
+                    `Annualized Return: ${s.annualized_return}%`,
+                    'Total P&L ÷ years ÷ avg capital at risk',
+                    `Avg capital at risk: $${s.avg_capital_at_risk?.toFixed(0)} / trade`,
+                    'Capital at risk = (spread width − credit) × $100',
+                    'Benchmark: S&P 500 long-term avg ≈ 10%',
                   ]} />
               </div>
 
