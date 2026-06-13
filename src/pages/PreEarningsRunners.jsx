@@ -354,6 +354,7 @@ export default function PreEarningsRunners() {
   const [sortKey,          setSortKey]          = useState('score');
   const [sortDir,          setSortDir]          = useState('desc');
   const [minExpMove,       setMinExpMove]       = useState(null);
+  const [sectorFilter,     setSectorFilter]     = useState([]);
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -447,19 +448,30 @@ export default function PreEarningsRunners() {
     return [...map.values()];
   }, [enriched]);
 
+  const allSectors = useMemo(() =>
+    [...new Set(deduped.map((s) => s.sector).filter(Boolean))].sort(),
+    [deduped]
+  );
+
+  const toggleSector = (s) =>
+    setSectorFilter((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+    );
+
   const displayed = useMemo(() => {
     const filtered = deduped.filter((s) =>
       activeGrades.has(s.grade) &&
       (!tickerQ || s.ticker.includes(tickerQ.trim())) &&
       (maxDays == null || (s.days_to_earnings != null && s.days_to_earnings <= maxDays)) &&
       (minExpMove == null || (s.expected_move_pct != null && s.expected_move_pct >= minExpMove)) &&
-      (!highShortOnly || (s.short_float_pct != null && s.short_float_pct > 20))
+      (!highShortOnly || (s.short_float_pct != null && s.short_float_pct > 20)) &&
+      (!sectorFilter.length || sectorFilter.includes(s.sector))
     );
     if (view === 'list') {
       return [...filtered].sort((a, b) => compareSignals(a, b, sortKey, sortDir));
     }
     return filtered;
-  }, [enriched, activeGrades, tickerQ, maxDays, minExpMove, highShortOnly, view, sortKey, sortDir]);
+  }, [enriched, deduped, activeGrades, tickerQ, maxDays, minExpMove, highShortOnly, sectorFilter, view, sortKey, sortDir]);
 
   const recentNew = useMemo(() => {
     const cutoff = Date.now() - 3 * 24 * 60 * 60 * 1000;
@@ -614,6 +626,34 @@ export default function PreEarningsRunners() {
               total={deduped.length}
               filtered={displayed.length}
             />
+          )}
+
+          {/* Sector filter */}
+          {!loading && allSectors.length > 0 && (
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="text-[10px] uppercase tracking-widest text-slate-600 mr-1">Sector</span>
+              {allSectors.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => toggleSector(s)}
+                  className={`rounded-lg border px-2.5 py-0.5 text-xs font-semibold transition-all ${
+                    sectorFilter.includes(s)
+                      ? 'border-violet-500/40 bg-violet-500/20 text-violet-300'
+                      : 'border-white/10 text-slate-500 hover:text-white'
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+              {sectorFilter.length > 0 && (
+                <button
+                  onClick={() => setSectorFilter([])}
+                  className="ml-1 rounded-lg border border-white/10 px-2.5 py-0.5 text-xs text-slate-600 hover:text-slate-300 transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           )}
 
           {/* Card view */}
