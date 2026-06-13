@@ -1,5 +1,5 @@
 const KEY     = 'access_matrix';
-const VERSION = 6;
+const VERSION = 7;
 
 // Flat list of every navigable item — used by both Sidebar and ManageAccess
 export const MENU_ITEMS = [
@@ -16,6 +16,7 @@ export const MENU_ITEMS = [
   { key: 'apps/pre-earnings',                      label: 'Pre-Earnings Runners',  level: 1 },
   { key: 'apps/pre-earnings/summary',              label: 'Summary',               level: 2 },
   { key: 'apps/pre-earnings/all-signals',          label: 'All Signals',           level: 2 },
+  { key: 'apps/pre-earnings/sector-tracker',       label: 'Sector Tracker',        level: 2 },
   { key: 'apps/pre-earnings/calendar',             label: 'Calendar',              level: 2 },
   { key: 'apps/pre-earnings/historical-performance', label: 'Historical Performance', level: 2 },
   { key: 'admin',                                           label: 'Admin',                   level: 0 },
@@ -52,6 +53,7 @@ export const DEFAULT_MATRIX = {
   'apps/pre-earnings':                              { subscriber: true,  admin: true,  superuser: true  },
   'apps/pre-earnings/summary':                      { subscriber: true,  admin: true,  superuser: true  },
   'apps/pre-earnings/all-signals':                  { subscriber: true,  admin: true,  superuser: true  },
+  'apps/pre-earnings/sector-tracker':               { subscriber: true,  admin: true,  superuser: true  },
   'apps/pre-earnings/calendar':                     { subscriber: true,  admin: true,  superuser: true  },
   'apps/pre-earnings/historical-performance':       { subscriber: true,  admin: true,  superuser: true  },
   'admin':                                          { subscriber: false, admin: true,  superuser: true  },

@@ -31,6 +31,7 @@ import PreEarningsRunners          from './pages/PreEarningsRunners';
 import PreEarningsTicker           from './pages/PreEarningsTicker';
 import EarningsCalendar            from './pages/EarningsCalendar';
 import EarningsHistoricalPerformance from './pages/EarningsHistoricalPerformance';
+import SectorTracker                 from './pages/SectorTracker';
 
 function AuthGuard({ children }) {
   const { loggedIn } = useAuth();
@@ -58,6 +59,7 @@ function AppRoutes() {
 
         {/* Pre-Earnings Runners */}
         <Route path="earnings"           element={<Guard matrixKey="apps/pre-earnings/summary"><PreEarningsRunners /></Guard>} />
+        <Route path="earnings/sectors"     element={<Guard matrixKey="apps/pre-earnings/sector-tracker"><SectorTracker /></Guard>} />
         <Route path="earnings/calendar"    element={<Guard matrixKey="apps/pre-earnings/calendar"><EarningsCalendar /></Guard>} />
         <Route path="earnings/historical" element={<Guard matrixKey="apps/pre-earnings/historical-performance"><EarningsHistoricalPerformance /></Guard>} />
         <Route path="earnings/:ticker"    element={<Guard matrixKey="apps/pre-earnings"><PreEarningsTicker /></Guard>} />

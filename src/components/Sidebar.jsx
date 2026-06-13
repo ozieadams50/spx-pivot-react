@@ -22,8 +22,9 @@ const FULL_NAV = [
         title: 'Pre-Earnings Runners', matrixKey: 'apps/pre-earnings',
         children: [
           { title: 'Summary',     path: '/earnings',            matrixKey: 'apps/pre-earnings/summary'     },
-          { title: 'All Signals', path: '/earnings?grade=all',  matrixKey: 'apps/pre-earnings/all-signals' },
-          { title: 'Calendar',              path: '/earnings/calendar',    matrixKey: 'apps/pre-earnings/calendar'                },
+          { title: 'All Signals',    path: '/earnings?grade=all',  matrixKey: 'apps/pre-earnings/all-signals'     },
+          { title: 'Sector Tracker', path: '/earnings/sectors',   matrixKey: 'apps/pre-earnings/sector-tracker'  },
+          { title: 'Calendar',       path: '/earnings/calendar',  matrixKey: 'apps/pre-earnings/calendar'        },
           { title: 'Historical Performance', path: '/earnings/historical', matrixKey: 'apps/pre-earnings/historical-performance' },
         ],
       },
