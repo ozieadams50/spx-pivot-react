@@ -34,26 +34,48 @@ const YEAR_FMT    = new Intl.DateTimeFormat('en-US', { year: 'numeric' });
 
 // ── TickerCard ────────────────────────────────────────────────────────────────
 
+const OUTCOME_CARD = {
+  WIN:  'border-emerald-500/40 bg-emerald-500/10',
+  LOSS: 'border-rose-500/40 bg-rose-500/10',
+};
+
 function TickerCard({ signal, onClick }) {
   const [imgErr, setImgErr] = useState(false);
   const [tip,    setTip]    = useState(false);
-  const cfg = GRADE_CONFIG[signal.grade] ?? GRADE_CONFIG['D'];
+  const isPast = signal.outcome !== 'PENDING';
+  const cfg    = GRADE_CONFIG[signal.grade] ?? GRADE_CONFIG['D'];
+  const cardCls = isPast
+    ? (OUTCOME_CARD[signal.outcome] ?? 'border-white/10 bg-white/5')
+    : `${cfg.border} bg-gradient-to-b from-[#0d1f2d] to-[#08111c]`;
 
   return (
     <div className="relative">
       {tip && (
         <div className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-slate-900 px-3 py-1.5 text-xs shadow-xl">
           <p className="font-semibold text-white">{signal.ticker}</p>
+          {signal.company_name && <p className="text-slate-300 text-[10px]">{signal.company_name}</p>}
           {signal.sector && <p className="text-slate-400">{signal.sector}</p>}
           <p className="text-slate-500">{signal.earnings_quarter}</p>
+          {isPast && (
+            <p className={`font-bold ${signal.outcome === 'WIN' ? 'text-emerald-400' : 'text-rose-400'}`}>
+              {signal.outcome}
+            </p>
+          )}
         </div>
       )}
       <button
         onClick={onClick}
         onMouseEnter={() => setTip(true)}
         onMouseLeave={() => setTip(false)}
-        className={`group flex flex-col items-center gap-1 rounded-2xl border p-1.5 transition-all duration-150 hover:scale-105 hover:shadow-lg ${cfg.border} bg-gradient-to-b from-[#0d1f2d] to-[#08111c]`}
+        className={`group relative flex flex-col items-center gap-1 rounded-2xl border p-1.5 transition-all duration-150 hover:scale-105 hover:shadow-lg ${cardCls} ${isPast ? 'opacity-70 hover:opacity-100' : ''}`}
       >
+        {isPast && (
+          <span className={`absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-black ${
+            signal.outcome === 'WIN' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+          }`}>
+            {signal.outcome === 'WIN' ? '✓' : '✗'}
+          </span>
+        )}
         {imgErr ? (
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 border border-white/10">
             <span className="text-[10px] font-black text-slate-300">{signal.ticker.slice(0, 4)}</span>
@@ -62,11 +84,11 @@ function TickerCard({ signal, onClick }) {
           <img
             src={`https://assets.parqet.com/logos/symbol/${signal.ticker}?variant=round`}
             alt={signal.ticker}
-            className="h-12 w-12 rounded-xl object-contain bg-white/5"
+            className={`h-12 w-12 rounded-xl object-contain bg-white/5 ${isPast ? 'grayscale-[30%]' : ''}`}
             onError={() => setImgErr(true)}
           />
         )}
-        <span className="w-14 truncate text-center text-[10px] font-semibold text-slate-300">
+        <span className={`w-14 truncate text-center text-[10px] font-semibold ${isPast ? 'text-slate-400' : 'text-slate-300'}`}>
           {signal.ticker}
         </span>
       </button>
@@ -133,7 +155,11 @@ function DayColumn({ date, dayIndex, signals, isToday, navigate }) {
             <TickerCard
               key={s.ticker}
               signal={s}
-              onClick={() => navigate(`/earnings/${s.ticker}`)}
+              onClick={() =>
+                s.outcome !== 'PENDING'
+                  ? navigate(`/earnings/${s.ticker}?earningsDate=${s.earnings_date}`)
+                  : navigate(`/earnings/${s.ticker}`)
+              }
             />
           ))
         )}
@@ -160,16 +186,26 @@ function SortTh({ label, sk, sortKey, sortDir, onSort, className = '' }) {
 // ── CalendarListRow ───────────────────────────────────────────────────────────
 
 function CalendarListRow({ signal, navigate }) {
-  const cfg = GRADE_CONFIG[signal.grade] ?? GRADE_CONFIG['D'];
-  const urgent = signal.days_to_earnings != null && signal.days_to_earnings <= 5;
+  const cfg    = GRADE_CONFIG[signal.grade] ?? GRADE_CONFIG['D'];
+  const isPast = signal.outcome !== 'PENDING';
+  const urgent = !isPast && signal.days_to_earnings != null && signal.days_to_earnings <= 5;
 
   return (
     <tr
-      onClick={() => navigate(`/earnings/${signal.ticker}`)}
-      className="cursor-pointer border-b border-white/5 transition-colors hover:bg-white/5"
+      onClick={() =>
+        isPast
+          ? navigate(`/earnings/${signal.ticker}?earningsDate=${signal.earnings_date}`)
+          : navigate(`/earnings/${signal.ticker}`)
+      }
+      className={`cursor-pointer border-b border-white/5 transition-colors hover:bg-white/5 ${isPast ? 'opacity-60 hover:opacity-100' : ''}`}
     >
       <td className="py-3 pl-4 pr-3">
-        <span className="font-bold text-white text-sm">{signal.ticker}</span>
+        <div>
+          <span className="font-bold text-white text-sm">{signal.ticker}</span>
+          {signal.company_name && (
+            <p className="text-[10px] text-slate-500 leading-tight">{signal.company_name}</p>
+          )}
+        </div>
       </td>
       <td className="px-3 py-3 text-center">
         <span className={`inline-flex items-center rounded-xl border px-2.5 py-0.5 text-xs font-bold ${cfg.badge}`}>
@@ -181,7 +217,7 @@ function CalendarListRow({ signal, navigate }) {
       </td>
       <td className="px-3 py-3 text-center text-sm text-slate-300 whitespace-nowrap">
         {signal.earnings_date}
-        {signal.days_to_earnings != null && (
+        {!isPast && signal.days_to_earnings != null && (
           <span className={`ml-1.5 text-[10px] font-semibold ${urgent ? 'text-amber-400' : 'text-slate-600'}`}>
             {urgent ? `⚡ ${signal.days_to_earnings}d` : `(${signal.days_to_earnings}d)`}
           </span>
@@ -190,8 +226,21 @@ function CalendarListRow({ signal, navigate }) {
       <td className="px-3 py-3 text-center text-sm text-slate-300 whitespace-nowrap">
         {signal.entry_date ?? <span className="text-slate-600">—</span>}
       </td>
-      <td className="px-3 py-3 pr-4 text-center text-sm text-slate-400">
+      <td className="px-3 py-3 text-center text-sm text-slate-400">
         {signal.sector ?? '—'}
+      </td>
+      <td className="px-3 py-3 pr-4 text-center">
+        {isPast ? (
+          <span className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-xs font-bold ${
+            signal.outcome === 'WIN'
+              ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-400'
+              : 'border-rose-500/30 bg-rose-500/15 text-rose-400'
+          }`}>
+            {signal.outcome}
+          </span>
+        ) : (
+          <span className="text-xs text-slate-600">—</span>
+        )}
       </td>
     </tr>
   );
@@ -216,7 +265,7 @@ export default function EarningsCalendar() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    apiFetch(`/earnings/signals?model=${model}&upcoming_only=true`)
+    apiFetch(`/earnings/signals?model=${model}&upcoming_only=false`)
       .then((data) => {
         const map = new Map();
         for (const s of data) {
@@ -446,7 +495,8 @@ export default function EarningsCalendar() {
                   <SortTh label="Score"    sk="score"         {...shProps} className="px-3 text-center" />
                   <SortTh label="Earnings" sk="earnings_date" {...shProps} className="px-3 text-center" />
                   <SortTh label="Entry"    sk="entry_date"    {...shProps} className="px-3 text-center" />
-                  <SortTh label="Sector"   sk="sector"        {...shProps} className="px-3 pr-4 text-center" />
+                  <SortTh label="Sector"   sk="sector"        {...shProps} className="px-3 text-center" />
+                  <SortTh label="Result"   sk="outcome"       {...shProps} className="px-3 pr-4 text-center" />
                 </tr>
               </thead>
               <tbody>

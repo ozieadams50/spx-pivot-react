@@ -180,15 +180,16 @@ function SummaryStrip({ data }) {
 
 export default function EarningsHistoricalPerformance() {
   const navigate = useNavigate();
-  const [data,      setData]      = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState(null);
-  const [model,     setModel]     = useState('Both');
-  const [gradeFilter, setGradeFilter] = useState([]);
-  const [tickerQ,   setTickerQ]   = useState('');
-  const [sortKey,   setSortKey]   = useState('earnings_date');
-  const [sortDir,   setSortDir]   = useState('desc');
-  const [ranUpOnly, setRanUpOnly] = useState(false);
+  const [data,         setData]         = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState(null);
+  const [model,        setModel]        = useState('Both');
+  const [gradeFilter,  setGradeFilter]  = useState([]);
+  const [sectorFilter, setSectorFilter] = useState([]);
+  const [tickerQ,      setTickerQ]      = useState('');
+  const [sortKey,      setSortKey]      = useState('earnings_date');
+  const [sortDir,      setSortDir]      = useState('desc');
+  const [ranUpOnly,    setRanUpOnly]    = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -198,6 +199,11 @@ export default function EarningsHistoricalPerformance() {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, [model]);
+
+  const allSectors = useMemo(
+    () => [...new Set(data.map(r => r.sector).filter(Boolean))].sort(),
+    [data],
+  );
 
   const filtered = useMemo(() => {
     // Deduplicate by ticker: prefer Recovery; if same model keep highest score
@@ -211,11 +217,12 @@ export default function EarningsHistoricalPerformance() {
       if (prefer) seen.set(key, r);
     }
     let rows = Array.from(seen.values());
-    if (gradeFilter.length > 0) rows = rows.filter(r => gradeFilter.includes(r.grade));
+    if (gradeFilter.length > 0)  rows = rows.filter(r => gradeFilter.includes(r.grade));
+    if (sectorFilter.length > 0) rows = rows.filter(r => sectorFilter.includes(r.sector));
     if (tickerQ.trim())          rows = rows.filter(r => r.ticker.toUpperCase().includes(tickerQ.trim().toUpperCase()));
     if (ranUpOnly)               rows = rows.filter(r => r.pre_earn_ran_up === true);
     return [...rows].sort((a, b) => compare(a, b, sortKey, sortDir));
-  }, [data, gradeFilter, tickerQ, ranUpOnly, sortKey, sortDir]);
+  }, [data, gradeFilter, sectorFilter, tickerQ, ranUpOnly, sortKey, sortDir]);
 
   function toggleSort(col) {
     if (sortKey === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -225,6 +232,12 @@ export default function EarningsHistoricalPerformance() {
   function toggleGrade(g) {
     setGradeFilter(prev =>
       prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]
+    );
+  }
+
+  function toggleSector(s) {
+    setSectorFilter(prev =>
+      prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]
     );
   }
 
@@ -301,6 +314,34 @@ export default function EarningsHistoricalPerformance() {
 
           <span className="ml-auto text-xs text-slate-600">{filtered.length} signals</span>
         </div>
+
+        {/* Sector filter */}
+        {allSectors.length > 0 && (
+          <div className="mb-5 flex flex-wrap items-center gap-2">
+            <span className="text-[10px] uppercase tracking-widest text-slate-600 mr-1">Sector</span>
+            {sectorFilter.length > 0 && (
+              <button
+                onClick={() => setSectorFilter([])}
+                className="rounded-lg border border-white/10 px-2 py-0.5 text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                Clear
+              </button>
+            )}
+            {allSectors.map(s => (
+              <button
+                key={s}
+                onClick={() => toggleSector(s)}
+                className={`rounded-xl border px-2.5 py-1 text-xs font-medium transition-all ${
+                  sectorFilter.includes(s)
+                    ? 'border-violet-500/40 bg-violet-500/20 text-violet-300'
+                    : 'border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Summary */}
         {!loading && !error && filtered.length > 0 && (

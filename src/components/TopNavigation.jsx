@@ -37,7 +37,7 @@ const ROLE_BADGE  = {
   superuser:  'bg-violet-500/15 text-violet-300',
 };
 
-export default function TopNavigation({ title, subtitle }) {
+export default function TopNavigation({ title, subtitle, onMobileMenuOpen }) {
   const { role, setRole, logout, user: profile } = useAuth();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen]   = useState(false);
@@ -79,13 +79,24 @@ export default function TopNavigation({ title, subtitle }) {
   return (
     <div className="sticky top-0 z-30 border-b border-white/10 bg-[#08111c]/95 backdrop-blur-xl">
       <div className="flex items-center justify-between px-4 py-4 lg:px-8">
-        <div>
-          <h1 className="text-lg font-semibold text-white sm:text-xl">
-            {title || 'SPX Options Trading Dashboard'}
-          </h1>
-          <p className="text-xs text-slate-500">
-            {subtitle || 'Institutional Market Intelligence Platform'}
-          </p>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onMobileMenuOpen}
+            className="lg:hidden rounded-xl border border-white/10 bg-white/5 p-2.5 text-slate-400 hover:bg-white/10 hover:text-white"
+            aria-label="Open navigation menu"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <div>
+            <h1 className="text-lg font-semibold text-white sm:text-xl">
+              {title || 'SPX Options Trading Dashboard'}
+            </h1>
+            <p className="text-xs text-slate-500">
+              {subtitle || 'Institutional Market Intelligence Platform'}
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">

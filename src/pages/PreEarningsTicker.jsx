@@ -277,6 +277,9 @@ export default function PreEarningsTicker() {
                   <GradeBadge grade={signal.grade} />
                   <ModelBadge model={signal.model_type} />
                 </div>
+                {signal.company_name && (
+                  <p className="text-base font-semibold text-slate-300 mb-0.5">{signal.company_name}</p>
+                )}
                 <p className="text-sm text-slate-500">{signal.sector ?? ''}</p>
               </div>
               <div className="text-right shrink-0">

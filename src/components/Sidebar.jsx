@@ -91,7 +91,7 @@ function filterNav(items, role, matrix) {
   }, []);
 }
 
-function LeafItem({ title, path }) {
+function LeafItem({ title, path, onClose }) {
   const location = useLocation();
   const [linkPath, linkSearch] = path.includes('?') ? path.split('?') : [path, null];
   const active = linkSearch
@@ -101,6 +101,7 @@ function LeafItem({ title, path }) {
   return (
     <NavLink
       to={path}
+      onClick={onClose}
       className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
         active
           ? 'bg-cyan-500/15 text-cyan-300'
@@ -112,7 +113,7 @@ function LeafItem({ title, path }) {
   );
 }
 
-function GroupItem({ group }) {
+function GroupItem({ group, onClose }) {
   const location  = useLocation();
   const hasActive = group.children?.some((c) => c.path ? location.pathname === c.path : false);
   const [open, setOpen] = useState(hasActive || true);
@@ -130,9 +131,9 @@ function GroupItem({ group }) {
         <div className="ml-3 mt-1 space-y-0.5 border-l border-white/5 pl-3">
           {group.children.map((child) =>
             child.path ? (
-              <LeafItem key={child.title} title={child.title} path={child.path} />
+              <LeafItem key={child.title} title={child.title} path={child.path} onClose={onClose} />
             ) : (
-              <GroupItem key={child.title} group={child} />
+              <GroupItem key={child.title} group={child} onClose={onClose} />
             )
           )}
         </div>
@@ -141,11 +142,72 @@ function GroupItem({ group }) {
   );
 }
 
-export default function Sidebar({ collapsed, onToggle }) {
+function MobileNav({ nav, onClose }) {
+  return (
+    <>
+      <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={onClose} />
+      <div className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-white/10 bg-[#08111c] lg:hidden">
+        <div className="flex items-center justify-between border-b border-white/10 p-5">
+          <h2 className="text-lg font-bold text-white">SPX Control Center</h2>
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-white/10 p-2 text-slate-400 hover:bg-white/5 hover:text-white"
+            aria-label="Close navigation menu"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <nav className="flex-1 overflow-y-auto p-4 pb-8">
+          {nav.map((item) => {
+            if (item.path) {
+              return (
+                <div key={item.title} className="mb-2">
+                  <NavLink
+                    to={item.path}
+                    onClick={onClose}
+                    className={({ isActive }) =>
+                      `block rounded-2xl px-4 py-3 font-semibold transition-colors ${
+                        isActive ? 'bg-cyan-500/15 text-cyan-300' : 'text-white hover:bg-white/5'
+                      }`
+                    }
+                  >
+                    {item.title}
+                  </NavLink>
+                </div>
+              );
+            }
+            return (
+              <div key={item.title} className="mb-4">
+                <div className="mb-1 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-slate-600">
+                  {item.title}
+                </div>
+                <div className="ml-1">
+                  {item.children.map((sub) =>
+                    sub.path ? (
+                      <LeafItem key={sub.title} title={sub.title} path={sub.path} onClose={onClose} />
+                    ) : (
+                      <GroupItem key={sub.title} group={sub} onClose={onClose} />
+                    )
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </nav>
+      </div>
+    </>
+  );
+}
+
+export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
   const { role, accessMatrix }  = useAuth();
   const nav                     = filterNav(FULL_NAV, role, accessMatrix);
 
   return (
+    <>
+    {mobileOpen && <MobileNav nav={nav} onClose={onMobileClose} />}
     <aside
       className={`hidden flex-col border-r border-white/10 bg-[#08111c] transition-all duration-300 lg:flex ${
         collapsed ? 'w-16' : 'w-[280px]'
@@ -214,5 +276,6 @@ export default function Sidebar({ collapsed, onToggle }) {
         </nav>
       )}
     </aside>
+    </>
   );
 }

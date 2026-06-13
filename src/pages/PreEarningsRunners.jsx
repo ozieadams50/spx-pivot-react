@@ -44,6 +44,23 @@ function ModelBadge({ model }) {
   );
 }
 
+function NewBadge() {
+  return (
+    <span className="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+      NEW
+    </span>
+  );
+}
+
+function ShortBadge({ pct }) {
+  if (pct == null || pct <= 20) return null;
+  return (
+    <span className="inline-flex items-center rounded-full border border-orange-500/40 bg-orange-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-orange-400">
+      Short {pct.toFixed(0)}%
+    </span>
+  );
+}
+
 function SignedPct({ value, label }) {
   const color =
     value == null ? 'text-slate-500'
@@ -72,11 +89,15 @@ function SignalCard({ signal, optionsLoading, onClick }) {
     >
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
-          <p className="text-xl font-bold text-white group-hover:text-cyan-100 transition-colors">{signal.ticker}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-xl font-bold text-white group-hover:text-cyan-100 transition-colors">{signal.ticker}</p>
+            {signal.is_new && <NewBadge />}
+          </div>
           <p className="mt-0.5 text-xs text-slate-600 truncate max-w-[120px]">{signal.sector ?? ''}</p>
         </div>
         <div className="flex flex-col items-end gap-1.5 shrink-0">
           <GradeBadge grade={signal.grade} />
+          <ShortBadge pct={signal.short_float_pct} />
         </div>
       </div>
       <div className="mb-3 flex items-baseline gap-1.5">
@@ -178,8 +199,11 @@ function SignalRow({ signal, optionsLoading, onClick }) {
   return (
     <tr onClick={onClick} className="cursor-pointer border-b border-white/5 transition-colors hover:bg-white/5">
       <td className="py-2.5 pl-4 pr-3">
-        <span className="font-bold text-white">{signal.ticker}</span>
-        {signal.sector && <span className="ml-2 text-[10px] text-slate-600 hidden sm:inline">{signal.sector}</span>}
+        <div className="flex items-center gap-1.5">
+          <span className="font-bold text-white">{signal.ticker}</span>
+          {signal.is_new && <NewBadge />}
+        </div>
+        {signal.sector && <span className="text-[10px] text-slate-600 hidden sm:block">{signal.sector}</span>}
       </td>
       <td className="px-3 py-2.5 text-center"><GradeBadge grade={signal.grade} /></td>
       <td className="px-3 py-2.5 text-center font-mono text-sm text-white">{signal.score.toFixed(0)}</td>
@@ -206,10 +230,18 @@ function SignalRow({ signal, optionsLoading, onClick }) {
       <td className="px-3 py-2.5 text-center text-sm font-mono">
         {num(signal.spot_price, (v) => `$${v.toFixed(2)}`)}
       </td>
-      <td className="px-3 py-2.5 pr-4 text-center text-sm font-mono text-slate-300">
+      <td className="px-3 py-2.5 text-center text-sm font-mono text-slate-300">
         {signal.dte != null
           ? signal.dte
           : <span className={optionsLoading ? 'animate-pulse text-slate-700' : 'text-slate-600'}>—</span>}
+      </td>
+      <td className="px-3 py-2.5 pr-4 text-center text-sm font-mono">
+        {signal.short_float_pct == null
+          ? <span className="text-slate-600">—</span>
+          : <span className={signal.short_float_pct > 20 ? 'font-bold text-orange-400' : 'text-slate-300'}>
+              {signal.short_float_pct.toFixed(1)}%
+            </span>
+        }
       </td>
     </tr>
   );
@@ -217,7 +249,7 @@ function SignalRow({ signal, optionsLoading, onClick }) {
 
 // ── Filter bar ────────────────────────────────────────────────────────────────
 
-function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, setMaxDays, minExpMove, setMinExpMove, total, filtered }) {
+function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, setMaxDays, minExpMove, setMinExpMove, highShortOnly, setHighShortOnly, total, filtered }) {
   return (
     <div className="mb-4 rounded-2xl border border-white/10 bg-[#0b1420] p-3 flex flex-wrap items-center gap-3">
       <div className="relative min-w-[140px]">
@@ -284,6 +316,17 @@ function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, se
         ))}
       </div>
 
+      <button
+        onClick={() => setHighShortOnly(!highShortOnly)}
+        className={`rounded-lg border px-2.5 py-0.5 text-xs font-semibold transition-all ${
+          highShortOnly
+            ? 'border-orange-500/50 bg-orange-500/20 text-orange-300'
+            : 'border-white/10 text-slate-500 hover:text-white'
+        }`}
+      >
+        Short &gt;20%
+      </button>
+
       {filtered < total && (
         <span className="ml-auto text-xs text-slate-500">
           <span className="font-semibold text-white">{filtered}</span> of {total}
@@ -296,19 +339,21 @@ function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, se
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function PreEarningsRunners() {
-  const [signals,        setSignals]        = useState([]);
-  const [loading,        setLoading]        = useState(true);
-  const [error,          setError]          = useState(null);
-  const [model,          setModel]          = useState('Both');
-  const [view,           setView]           = useState('card');
-  const [optionsMap,     setOptionsMap]     = useState({});
-  const [optionsLoading, setOptionsLoading] = useState(false);
-  const [tickerQ,        setTickerQ]        = useState('');
-  const [activeGrades,   setActiveGrades]   = useState(new Set(GRADES));
-  const [maxDays,        setMaxDays]        = useState(null);
-  const [sortKey,        setSortKey]        = useState('score');
-  const [sortDir,        setSortDir]        = useState('desc');
-  const [minExpMove,     setMinExpMove]     = useState(null);
+  const [signals,          setSignals]          = useState([]);
+  const [loading,          setLoading]          = useState(true);
+  const [error,            setError]            = useState(null);
+  const [model,            setModel]            = useState('Both');
+  const [view,             setView]             = useState('card');
+  const [optionsMap,       setOptionsMap]       = useState({});
+  const [optionsLoading,   setOptionsLoading]   = useState(false);
+  const [shortFloatMap,    setShortFloatMap]    = useState({});
+  const [tickerQ,          setTickerQ]          = useState('');
+  const [activeGrades,     setActiveGrades]     = useState(new Set(GRADES));
+  const [maxDays,          setMaxDays]          = useState(null);
+  const [highShortOnly,    setHighShortOnly]    = useState(false);
+  const [sortKey,          setSortKey]          = useState('score');
+  const [sortDir,          setSortDir]          = useState('desc');
+  const [minExpMove,       setMinExpMove]       = useState(null);
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -346,6 +391,14 @@ export default function PreEarningsRunners() {
       .finally(() => setOptionsLoading(false));
   }, [signals]);
 
+  // Fetch short float data (cached hourly on server)
+  useEffect(() => {
+    if (signals.length === 0) return;
+    apiFetch('/earnings/short-interest')
+      .then((data) => setShortFloatMap(data))
+      .catch(() => {});
+  }, [signals]);
+
   const handleSort = (key) => {
     if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
     else { setSortKey(key); setSortDir('desc'); }
@@ -367,16 +420,17 @@ export default function PreEarningsRunners() {
   });
   const uniqueTickers = new Set(signals.map((s) => s.ticker)).size;
 
-  // Merge options data + compute DTE from expiry_date
+  // Merge options + short float data
   const enriched = useMemo(() =>
     signals.map((s) => {
       const opts = optionsMap[s.ticker] ?? {};
       const dte  = opts.expiry_date
         ? Math.max(0, Math.round((new Date(opts.expiry_date) - new Date()) / 86400000))
         : null;
-      return { ...s, ...opts, dte };
+      const short_float_pct = shortFloatMap[s.ticker] ?? null;
+      return { ...s, ...opts, dte, short_float_pct };
     }),
-    [signals, optionsMap],
+    [signals, optionsMap, shortFloatMap],
   );
 
   // One entry per ticker — prefer Momentum; if same model keep highest score
@@ -398,13 +452,21 @@ export default function PreEarningsRunners() {
       activeGrades.has(s.grade) &&
       (!tickerQ || s.ticker.includes(tickerQ.trim())) &&
       (maxDays == null || (s.days_to_earnings != null && s.days_to_earnings <= maxDays)) &&
-      (minExpMove == null || (s.expected_move_pct != null && s.expected_move_pct >= minExpMove))
+      (minExpMove == null || (s.expected_move_pct != null && s.expected_move_pct >= minExpMove)) &&
+      (!highShortOnly || (s.short_float_pct != null && s.short_float_pct > 20))
     );
     if (view === 'list') {
       return [...filtered].sort((a, b) => compareSignals(a, b, sortKey, sortDir));
     }
     return filtered;
-  }, [enriched, activeGrades, tickerQ, maxDays, view, sortKey, sortDir]);
+  }, [enriched, activeGrades, tickerQ, maxDays, minExpMove, highShortOnly, view, sortKey, sortDir]);
+
+  const recentNew = useMemo(() => {
+    const cutoff = Date.now() - 3 * 24 * 60 * 60 * 1000;
+    return deduped.filter((s) =>
+      s.is_new && s.added_date && new Date(s.added_date).getTime() >= cutoff
+    );
+  }, [deduped]);
 
   const shProps = { sortKey, sortDir, onSort: handleSort };
 
@@ -485,6 +547,25 @@ export default function PreEarningsRunners() {
                   />
                 ))}
           </div>
+
+          {!loading && recentNew.length > 0 && (
+            <div className="mt-8">
+              <div className="mb-3 flex items-center gap-3">
+                <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">New Additions</h2>
+                <span className="text-[10px] text-slate-600">Added in the last 3 days</span>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {recentNew.map((s) => (
+                  <SignalCard
+                    key={s.ticker}
+                    signal={s}
+                    optionsLoading={optionsLoading}
+                    onClick={() => navigate(`/earnings/${s.ticker}`)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
 
@@ -528,6 +609,8 @@ export default function PreEarningsRunners() {
               setMaxDays={setMaxDays}
               minExpMove={minExpMove}
               setMinExpMove={setMinExpMove}
+              highShortOnly={highShortOnly}
+              setHighShortOnly={setHighShortOnly}
               total={deduped.length}
               filtered={displayed.length}
             />
@@ -584,7 +667,8 @@ export default function PreEarningsRunners() {
                         <SortTh label="Exp Move $" sk="expected_move_usd"{...shProps} className="px-3 text-center" />
                         <SortTh label="IV"        sk="iv"                {...shProps} className="px-3 text-center" />
                         <SortTh label="Spot"      sk="spot_price"        {...shProps} className="px-3 text-center" />
-                        <SortTh label="Closest Expiry" sk="dte"          {...shProps} className="px-3 pr-4 text-center" />
+                        <SortTh label="Closest Expiry" sk="dte"            {...shProps} className="px-3 text-center" />
+                        <SortTh label="Short Float %"  sk="short_float_pct" {...shProps} className="px-3 pr-4 text-center" />
                       </tr>
                     </thead>
                     <tbody>
