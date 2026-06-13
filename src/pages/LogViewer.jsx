@@ -16,8 +16,9 @@ const CRON_JOBS = [
   { name: "FadeEOD",          label: "Fade EOD Recorder",     icon: "📝", schedule: "4:15 PM"                       },
   { name: "SignalRecorder",   label: "SPX Signal Recorder",   icon: "🗂", schedule: "4:15 PM",        app: "spx_pivots" },
   { name: "GEX_DailyRun",     label: "GEX Daily Run",         icon: "⚡", schedule: "4:35 PM"                       },
-  { name: "EarningsRecovery", label: "Earnings Recovery",     icon: "📈", schedule: "4:40 PM",        app: "pre_earnings" },
-  { name: "EarningsMomentum", label: "Earnings Momentum",     icon: "🚀", schedule: "4:45 PM",        app: "pre_earnings" },
+  { name: "EarningsRecovery",    label: "Earnings Recovery",    icon: "📈", schedule: "4:40 PM",   app: "pre_earnings" },
+  { name: "EarningsMomentum",   label: "Earnings Momentum",   icon: "🚀", schedule: "4:45 PM",   app: "pre_earnings" },
+  { name: "SectorHoldings",     label: "Sector Holdings",     icon: "🗺️", schedule: "6:00 AM",   app: "pre_earnings" },
   { name: "SentimentMonthly", label: "Sentiment Monthly",     icon: "📈", schedule: "5:00 PM"                       },
   { name: "MOC_Stream",       label: "MOC Imbalance Stream",  icon: "💧", schedule: "9:30-4:00 PM"                  },
 ];
