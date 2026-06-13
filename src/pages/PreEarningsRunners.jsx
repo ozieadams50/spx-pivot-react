@@ -93,7 +93,10 @@ function SignalCard({ signal, optionsLoading, onClick }) {
             <p className="text-xl font-bold text-white group-hover:text-cyan-100 transition-colors">{signal.ticker}</p>
             {signal.is_new && <NewBadge />}
           </div>
-          <p className="mt-0.5 text-xs text-slate-600 truncate max-w-[120px]">{signal.sector ?? ''}</p>
+          {signal.company_name && (
+            <p className="mt-0.5 text-xs font-medium text-slate-400 truncate max-w-[140px]">{signal.company_name}</p>
+          )}
+          <p className="mt-0.5 text-[10px] text-slate-600 truncate max-w-[120px]">{signal.sector ?? ''}</p>
         </div>
         <div className="flex flex-col items-end gap-1.5 shrink-0">
           <GradeBadge grade={signal.grade} />
@@ -203,6 +206,7 @@ function SignalRow({ signal, optionsLoading, onClick }) {
           <span className="font-bold text-white">{signal.ticker}</span>
           {signal.is_new && <NewBadge />}
         </div>
+        {signal.company_name && <span className="text-xs text-slate-400 hidden sm:block">{signal.company_name}</span>}
         {signal.sector && <span className="text-[10px] text-slate-600 hidden sm:block">{signal.sector}</span>}
       </td>
       <td className="px-3 py-2.5 text-center"><GradeBadge grade={signal.grade} /></td>
