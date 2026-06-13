@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 
 // ── Color helpers ─────────────────────────────────────────────────────────────
@@ -71,12 +72,16 @@ function SectorBar({ d, rank, maxAbs, onSelect }) {
 
 // ── Heat map tile ─────────────────────────────────────────────────────────────
 
-function HeatTile({ h, period }) {
+function HeatTile({ h, period, onClick }) {
   const pct = period === '30d' ? h.perf_1m : h.perf_5d;
+  const Tag = onClick ? 'button' : 'div';
   return (
-    <div
-      title={`${h.ticker}${h.name ? ` — ${h.name}` : ''}\n30d: ${signedFmt(h.perf_1m)}  5d: ${signedFmt(h.perf_5d)}${h.weight != null ? `\nWeight: ${h.weight.toFixed(2)}%` : ''}`}
-      className={`relative rounded-xl p-2.5 transition-transform hover:scale-110 hover:z-10 cursor-default ${
+    <Tag
+      onClick={onClick}
+      title={`${h.ticker}${h.name ? ` — ${h.name}` : ''}\n30d: ${signedFmt(h.perf_1m)}  5d: ${signedFmt(h.perf_5d)}${h.weight != null ? `\nWeight: ${h.weight.toFixed(2)}%` : ''}${onClick ? '\nClick to view Pre-Earnings detail' : ''}`}
+      className={`relative w-full text-left rounded-xl p-2.5 transition-all hover:scale-110 hover:z-10 ${
+        onClick ? 'cursor-pointer hover:brightness-125 hover:ring-2 hover:ring-white/30' : 'cursor-default'
+      } ${
         h.in_signals ? 'ring-2 ring-violet-400 ring-offset-1 ring-offset-[#08111c]' : ''
       }`}
       style={{ backgroundColor: perfBg(pct) }}
@@ -91,7 +96,7 @@ function HeatTile({ h, period }) {
       {h.weight != null && (
         <p className="mt-0.5 text-[9px] text-white/45">{h.weight.toFixed(1)}%</p>
       )}
-    </div>
+    </Tag>
   );
 }
 
@@ -127,6 +132,7 @@ function HeatMap({ etf, onBack }) {
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
   const [period,  setPeriod]  = useState('30d');
+  const navigate = useNavigate();
 
   useEffect(() => {
     setLoading(true);
@@ -209,7 +215,12 @@ function HeatMap({ etf, onBack }) {
           <Legend />
           <div className="grid grid-cols-5 sm:grid-cols-7 lg:grid-cols-10 xl:grid-cols-12 gap-2">
             {data.holdings.map((h) => (
-              <HeatTile key={h.ticker} h={h} period={period} />
+              <HeatTile
+                key={h.ticker}
+                h={h}
+                period={period}
+                onClick={h.in_signals ? () => navigate(`/earnings/${h.ticker}`) : undefined}
+              />
             ))}
           </div>
           <p className="mt-4 text-[10px] text-slate-700">
