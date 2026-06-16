@@ -65,6 +65,11 @@ function SectorBar({ d, rank, maxAbs, onSelect }) {
       <span className={`w-16 shrink-0 text-right font-mono text-sm font-bold ${pos ? 'text-emerald-400' : 'text-rose-400'}`}>
         {signedFmt(d.perf_1m)}
       </span>
+      {d.weight != null && (
+        <span className="w-12 shrink-0 text-right font-mono text-xs text-slate-500">
+          {d.weight.toFixed(1)}%
+        </span>
+      )}
       <span className="shrink-0 text-slate-600 transition-colors group-hover:text-violet-400">›</span>
     </button>
   );
@@ -235,10 +240,11 @@ function HeatMap({ etf, onBack }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function SectorTracker() {
-  const [perf,       setPerf]       = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState(null);
+  const [perf,        setPerf]        = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState(null);
   const [selectedEtf, setSelectedEtf] = useState(null);
+  const [sortKey,     setSortKey]     = useState('return');
 
   useEffect(() => {
     apiFetch('/sectors/performance')
@@ -246,6 +252,18 @@ export default function SectorTracker() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
+
+  const sorted = useMemo(() => {
+    if (sortKey === 'weight') {
+      return [...perf].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0));
+    }
+    return [...perf].sort((a, b) => {
+      if (a.perf_1m == null && b.perf_1m == null) return 0;
+      if (a.perf_1m == null) return 1;
+      if (b.perf_1m == null) return -1;
+      return b.perf_1m - a.perf_1m;
+    });
+  }, [perf, sortKey]);
 
   const maxAbs = useMemo(
     () => Math.max(1, ...perf.map((d) => Math.abs(d.perf_1m ?? 0))),
@@ -279,9 +297,24 @@ export default function SectorTracker() {
         <>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-              Sectors by 30-Day Return
+              {sortKey === 'weight' ? 'Sectors by S&P 500 Weight' : 'Sectors by 30-Day Return'}
             </h2>
-            <span className="text-xs text-slate-600">Top 3 highlighted · click to view holdings →</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-600">Top 3 highlighted · click to view holdings →</span>
+              <div className="flex rounded-xl border border-white/10 bg-black/30 p-0.5 text-xs font-semibold">
+                {[['return', 'Return'], ['weight', 'Weight']].map(([val, label]) => (
+                  <button
+                    key={val}
+                    onClick={() => setSortKey(val)}
+                    className={`rounded-lg px-3 py-1.5 transition-all ${
+                      sortKey === val ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {loading ? (
@@ -292,7 +325,7 @@ export default function SectorTracker() {
             </div>
           ) : (
             <div className="space-y-2">
-              {perf.map((d, i) => (
+              {sorted.map((d, i) => (
                 <SectorBar
                   key={d.etf_ticker}
                   d={d}

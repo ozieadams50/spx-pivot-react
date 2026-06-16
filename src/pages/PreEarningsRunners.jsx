@@ -133,12 +133,12 @@ function SignalCard({ signal, optionsLoading, onClick }) {
         </div>
         <div className="text-center">
           <p className="text-[10px] uppercase tracking-wide text-slate-500">Exp Move</p>
-          <p className={`mt-0.5 text-sm font-semibold font-mono ${signal.expected_move_pct != null ? 'text-sky-300' : optionsLoading ? 'animate-pulse text-slate-700' : 'text-slate-600'}`}>
-            {signal.expected_move_pct != null ? `±${signal.expected_move_pct.toFixed(1)}%` : '—'}
+          <p className={`mt-0.5 text-sm font-semibold font-mono ${signal.expected_move_usd != null ? 'text-sky-300' : optionsLoading ? 'animate-pulse text-slate-700' : 'text-slate-600'}`}>
+            {signal.expected_move_usd != null ? `$${signal.expected_move_usd.toFixed(2)}` : '—'}
           </p>
-          {signal.expected_move_usd != null && (
+          {signal.expected_move_pct != null && (
             <p className="text-[10px] font-mono text-slate-500 mt-0.5">
-              ±${signal.expected_move_usd.toFixed(2)}
+              ±{signal.expected_move_pct.toFixed(1)}%
             </p>
           )}
         </div>
