@@ -137,6 +137,7 @@ function HeatMap({ etf, onBack }) {
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
   const [period,  setPeriod]  = useState('30d');
+  const [sortKey, setSortKey] = useState('weight');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -152,6 +153,21 @@ function HeatMap({ etf, onBack }) {
     () => data?.holdings?.filter((h) => h.in_signals).length ?? 0,
     [data],
   );
+
+  const sorted = useMemo(() => {
+    if (!data?.holdings) return [];
+    return [...data.holdings].sort((a, b) => {
+      if (sortKey === 'weight') {
+        return (b.weight ?? -1) - (a.weight ?? -1);
+      }
+      const av = period === '30d' ? a.perf_1m : a.perf_5d;
+      const bv = period === '30d' ? b.perf_1m : b.perf_5d;
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      return bv - av;
+    });
+  }, [data, sortKey, period]);
 
   return (
     <div>
@@ -179,19 +195,34 @@ function HeatMap({ etf, onBack }) {
           </>
         )}
 
-        {/* Period toggle */}
-        <div className="ml-auto flex rounded-xl border border-white/10 bg-black/30 p-0.5 text-xs font-semibold">
-          {[['30d', '30 Day'], ['5d', '5 Day']].map(([val, label]) => (
-            <button
-              key={val}
-              onClick={() => setPeriod(val)}
-              className={`rounded-lg px-4 py-1.5 transition-all ${
-                period === val ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        {/* Sort + Period toggles */}
+        <div className="ml-auto flex items-center gap-2">
+          <div className="flex rounded-xl border border-white/10 bg-black/30 p-0.5 text-xs font-semibold">
+            {[['weight', 'Weight'], ['return', 'Return']].map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => setSortKey(val)}
+                className={`rounded-lg px-3 py-1.5 transition-all ${
+                  sortKey === val ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="flex rounded-xl border border-white/10 bg-black/30 p-0.5 text-xs font-semibold">
+            {[['30d', '30 Day'], ['5d', '5 Day']].map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => setPeriod(val)}
+                className={`rounded-lg px-4 py-1.5 transition-all ${
+                  period === val ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -219,7 +250,7 @@ function HeatMap({ etf, onBack }) {
         <>
           <Legend />
           <div className="grid grid-cols-5 sm:grid-cols-7 lg:grid-cols-10 xl:grid-cols-12 gap-2">
-            {data.holdings.map((h) => (
+            {sorted.map((h) => (
               <HeatTile
                 key={h.ticker}
                 h={h}
