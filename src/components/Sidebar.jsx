@@ -124,7 +124,7 @@ function LeafItem({ title, path, onClose }) {
 function GroupItem({ group, onClose }) {
   const location  = useLocation();
   const hasActive = group.children?.some((c) => c.path ? location.pathname === c.path : false);
-  const [open, setOpen] = useState(hasActive || true);
+  const [open, setOpen] = useState(hasActive);
 
   return (
     <div className="mb-2">
