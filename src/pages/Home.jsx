@@ -30,7 +30,7 @@ export default function Home() {
         steps={[
           { text: 'Pre-Earnings Runners is the core product. The system scans every stock daily, finds ones that historically go up before their earnings announcement, and ranks the best opportunities. If you\'re new, click it and go straight to Hot Picks — that\'s today\'s top-ranked list.', targetId: 'pg-pre-earnings-card' },
           { text: 'SPX Pivots gives you today\'s key S&P 500 price levels and a ready-to-use Bull Put Spread trade recommendation — updated daily with current market sentiment factored in. Start here for SPX options trades.', targetId: 'pg-spx-pivots-card' },
-          { text: 'EOD-MOC Signal activates at 3:50 PM ET. Based on dealer gamma exposure and market-on-close imbalance flow, it tells you whether to trade and recommends a 0DTE debit spread with specific strikes. Check it in the final 10 minutes of the trading day.', targetId: 'pg-eod-moc-card' },
+          { text: 'EOD-MOC Signal activates at 3:50 PM ET. The system evaluates market conditions to determine if there\'s a directional edge into the close, then delivers a specific SPX options spread recommendation with exact strikes. Check it in the final minutes of the trading day.', targetId: 'pg-eod-moc-card' },
           { text: 'SPX Backtester lets you test any Bull Put Spread strategy against years of historical data before risking real money. Adjust the parameters, run the simulation, and check the win rate and profit factor before committing to a setup.', targetId: 'pg-spx-backtest-card' },
         ]}
       />

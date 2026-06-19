@@ -483,11 +483,11 @@ export default function EodMocSignal() {
         guideKey="eod-moc"
         accent="amber"
         title="How the EOD-MOC Signal works"
-        description="This page delivers a directional trade signal in the final 10 minutes of each trading day. Here's the flow."
+        description="This page delivers a directional trade signal in the final minutes of each trading day."
         steps={[
-          { text: 'At 3:50 PM ET, the system checks dealer gamma exposure (GEX). If GEX is negative, market makers are short gamma and directional moves into the close are amplified — it\'s a Trade Day. If GEX is positive, dealers will absorb moves and there\'s no edge — No Trade Day.' },
-          { text: 'On Trade Days, a 5-minute countdown begins. At 3:55 PM, the Market-on-Close (MOC) imbalance direction is confirmed. A large buy imbalance signals a bullish close; a large sell imbalance signals a bearish close.' },
-          { text: 'Based on the MOC direction, the system recommends a 5-wide 0DTE SPX net debit spread — Call spread if bullish, Put spread if bearish — with the long leg at the strike nearest the current SPX price.' },
+          { text: 'At 3:50 PM ET, the system evaluates current market conditions to determine whether today qualifies as a Trade Day or a No Trade Day.' },
+          { text: 'On Trade Days, a brief countdown begins while the system confirms the directional bias heading into the close.' },
+          { text: 'Once confirmed, a specific SPX options spread recommendation is displayed with exact strikes and direction.' },
         ]}
       />
 
