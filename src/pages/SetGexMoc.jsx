@@ -3,6 +3,127 @@ import { apiFetch } from '../lib/api';
 
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 
+
+function FJComparisonSection({ date }) {
+  const [fj, setFj] = useState({ fj_spx_350: '', fj_mag7_350: '', fj_spx_355: '', fj_mag7_355: '' });
+  const [polygon, setPolygon] = useState(null);
+  const [fjSaving, setFjSaving] = useState(false);
+  const [fjSuccess, setFjSuccess] = useState('');
+  const [fjError, setFjError] = useState('');
+
+  useEffect(() => {
+    setFjSuccess(''); setFjError('');
+    setFj({ fj_spx_350: '', fj_mag7_350: '', fj_spx_355: '', fj_mag7_355: '' });
+    setPolygon(null);
+    apiFetch(`/moc-comparison?date=${date}`)
+      .then((data) => {
+        if (data.polygon_spx_350 != null || data.polygon_spx_355 != null) setPolygon(data);
+        else if (data.fj_spx_350 != null || data.fj_spx_355 != null) setPolygon(data);
+        if (data.fj_spx_350 != null) setFj(prev => ({ ...prev, fj_spx_350: String(data.fj_spx_350) }));
+        if (data.fj_mag7_350 != null) setFj(prev => ({ ...prev, fj_mag7_350: String(data.fj_mag7_350) }));
+        if (data.fj_spx_355 != null) setFj(prev => ({ ...prev, fj_spx_355: String(data.fj_spx_355) }));
+        if (data.fj_mag7_355 != null) setFj(prev => ({ ...prev, fj_mag7_355: String(data.fj_mag7_355) }));
+      })
+      .catch(() => {});
+  }, [date]);
+
+  async function saveFj() {
+    setFjSaving(true); setFjError(''); setFjSuccess('');
+    const body = { date };
+    if (fj.fj_spx_350.trim())  body.fj_spx_350  = parseInt(fj.fj_spx_350, 10);
+    if (fj.fj_mag7_350.trim()) body.fj_mag7_350 = parseInt(fj.fj_mag7_350, 10);
+    if (fj.fj_spx_355.trim())  body.fj_spx_355  = parseInt(fj.fj_spx_355, 10);
+    if (fj.fj_mag7_355.trim()) body.fj_mag7_355 = parseInt(fj.fj_mag7_355, 10);
+    try {
+      const result = await apiFetch('/moc-comparison/financialjuice', { method: 'POST', body: JSON.stringify(body) });
+      setPolygon(result);
+      setFjSuccess('FinancialJuice values saved.');
+    } catch (err) {
+      setFjError(err.message ?? 'Failed to save.');
+    } finally {
+      setFjSaving(false);
+    }
+  }
+
+  const fmt = (v) => v != null ? `${v > 0 ? '+' : ''}${Number(v).toLocaleString()}` : '—';
+  const clr = (v) => v != null ? (v > 0 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]') : 'text-[var(--c-text-dimmed)]';
+
+  return (
+    <div className="mt-5 max-w-2xl rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-6 shadow-lg">
+      <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">MOC Source Comparison</p>
+      <p className="mb-4 text-xs text-[var(--c-text-muted)]">Enter FinancialJuice MOC values at 3:50 and 3:55 PM. Polygon values are captured automatically.</p>
+
+      <div className="mb-4 grid grid-cols-2 gap-4">
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-[var(--c-text-secondary)]">FJ SPX @ 3:50</label>
+          <input type="number" value={fj.fj_spx_350} onChange={(e) => setFj(p => ({ ...p, fj_spx_350: e.target.value }))}
+            placeholder="e.g. -1800"
+            className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-4 py-2 text-sm text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-[var(--c-text-secondary)]">FJ Mag7 @ 3:50</label>
+          <input type="number" value={fj.fj_mag7_350} onChange={(e) => setFj(p => ({ ...p, fj_mag7_350: e.target.value }))}
+            placeholder="optional"
+            className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-4 py-2 text-sm text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-[var(--c-text-secondary)]">FJ SPX @ 3:55</label>
+          <input type="number" value={fj.fj_spx_355} onChange={(e) => setFj(p => ({ ...p, fj_spx_355: e.target.value }))}
+            placeholder="e.g. -2100"
+            className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-4 py-2 text-sm text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-[var(--c-text-secondary)]">FJ Mag7 @ 3:55</label>
+          <input type="number" value={fj.fj_mag7_355} onChange={(e) => setFj(p => ({ ...p, fj_mag7_355: e.target.value }))}
+            placeholder="optional"
+            className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-4 py-2 text-sm text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
+        </div>
+      </div>
+
+      {fjError   && <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-[var(--c-rose-strong)]">{fjError}</div>}
+      {fjSuccess && <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-[var(--c-emerald-strong)]">{fjSuccess}</div>}
+
+      <button onClick={saveFj} disabled={fjSaving}
+        className="w-full rounded-xl bg-[var(--c-btn-bg)] px-4 py-2.5 text-sm font-semibold text-[var(--c-btn-text)] transition hover:bg-[var(--c-btn-hover)] disabled:cursor-not-allowed disabled:opacity-50">
+        {fjSaving ? 'Saving...' : 'Save FinancialJuice Values'}
+      </button>
+
+      {polygon && (
+        <div className="mt-4 overflow-hidden rounded-xl border border-[var(--c-border)]">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[var(--c-border)] text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
+                <th className="px-4 py-2.5 text-left">Source</th>
+                <th className="px-4 py-2.5 text-right">SPX @ 3:50</th>
+                <th className="px-4 py-2.5 text-right">Mag7 @ 3:50</th>
+                <th className="px-4 py-2.5 text-right">SPX @ 3:55</th>
+                <th className="px-4 py-2.5 text-right">Mag7 @ 3:55</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-[var(--c-border-subtle)]">
+                <td className="px-4 py-2.5 font-medium text-[var(--c-text-primary)]">Polygon</td>
+                <td className={`px-4 py-2.5 text-right font-mono font-medium ${clr(polygon.polygon_spx_350)}`}>{fmt(polygon.polygon_spx_350)}</td>
+                <td className={`px-4 py-2.5 text-right font-mono font-medium ${clr(polygon.polygon_mag7_350)}`}>{fmt(polygon.polygon_mag7_350)}</td>
+                <td className={`px-4 py-2.5 text-right font-mono font-medium ${clr(polygon.polygon_spx_355)}`}>{fmt(polygon.polygon_spx_355)}</td>
+                <td className={`px-4 py-2.5 text-right font-mono font-medium ${clr(polygon.polygon_mag7_355)}`}>{fmt(polygon.polygon_mag7_355)}</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-2.5 font-medium text-[var(--c-text-primary)]">FinancialJuice</td>
+                <td className={`px-4 py-2.5 text-right font-mono font-medium ${clr(polygon.fj_spx_350)}`}>{fmt(polygon.fj_spx_350)}</td>
+                <td className={`px-4 py-2.5 text-right font-mono font-medium ${clr(polygon.fj_mag7_350)}`}>{fmt(polygon.fj_mag7_350)}</td>
+                <td className={`px-4 py-2.5 text-right font-mono font-medium ${clr(polygon.fj_spx_355)}`}>{fmt(polygon.fj_spx_355)}</td>
+                <td className={`px-4 py-2.5 text-right font-mono font-medium ${clr(polygon.fj_mag7_355)}`}>{fmt(polygon.fj_mag7_355)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 export default function SetGexMoc() {
   const [date,     setDate]     = useState(todayISO());
   const [gexRatio, setGexRatio] = useState('');
@@ -152,6 +273,8 @@ export default function SetGexMoc() {
           {saving ? 'Saving...' : 'Save GEX & MOC'}
         </button>
       </div>
+
+      <FJComparisonSection date={date} />
     </div>
   );
 }

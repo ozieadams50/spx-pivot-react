@@ -52,6 +52,7 @@ const FULL_NAV = [
           { title: 'Subscriber Commentary', path: '/admin/commentary',         matrixKey: 'admin/market-sentiment/subscriber-commentary' },
           { title: 'Set Market Sentiment',  path: '/admin/sentiment',          matrixKey: 'admin/market-sentiment/set-market-sentiment'  },
           { title: 'Set GEX & MOC',         path: '/admin/gex-moc',            matrixKey: 'admin/market-sentiment/set-gex-moc'           },
+          { title: 'MOC Comparison',       path: '/admin/moc-comparison',     matrixKey: 'admin/market-sentiment/moc-comparison'         },
         ],
       },
       {

@@ -35,6 +35,7 @@ import EarningsHistoricalPerformance from './pages/EarningsHistoricalPerformance
 import SectorTracker                 from './pages/SectorTracker';
 import HotPicksPage                  from './pages/HotPicksPage';
 import EodMocSignal                  from './pages/EodMocSignal';
+import MocComparisonHistory          from './pages/MocComparisonHistory';
 
 function AuthGuard({ children }) {
   const { loggedIn } = useAuth();
@@ -76,6 +77,7 @@ function AppRoutes() {
         <Route path="admin/commentary"         element={<Guard matrixKey="admin/market-sentiment/subscriber-commentary"><SubscriberCommentary /></Guard>} />
         <Route path="admin/sentiment"          element={<Guard matrixKey="admin/market-sentiment/set-market-sentiment"><SetMarketSentiment /></Guard>} />
         <Route path="admin/gex-moc"            element={<Guard matrixKey="admin/market-sentiment/set-gex-moc"><SetGexMoc /></Guard>} />
+        <Route path="admin/moc-comparison"   element={<Guard matrixKey="admin/market-sentiment/moc-comparison"><MocComparisonHistory /></Guard>} />
         <Route path="spx-pivots/sentiment-history"  element={<Guard matrixKey="apps/spx-pivots/sentiment-history"><SentimentHistory /></Guard>} />
         <Route path="spx-pivots/commentary-history" element={<Guard matrixKey="apps/spx-pivots/commentary-history"><CommentaryHistory /></Guard>} />
 

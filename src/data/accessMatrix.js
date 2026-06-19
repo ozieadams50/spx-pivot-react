@@ -1,5 +1,5 @@
 const KEY     = 'access_matrix';
-const VERSION = 9;
+const VERSION = 10;
 
 // Flat list of every navigable item — used by both Sidebar and ManageAccess
 export const MENU_ITEMS = [
@@ -27,6 +27,7 @@ export const MENU_ITEMS = [
   { key: 'admin/market-sentiment/subscriber-commentary',    label: 'Subscriber Commentary',   level: 2 },
   { key: 'admin/market-sentiment/set-market-sentiment',     label: 'Set Market Sentiment',    level: 2 },
   { key: 'admin/market-sentiment/set-gex-moc',             label: 'Set GEX & MOC',           level: 2 },
+  { key: 'admin/market-sentiment/moc-comparison',          label: 'MOC Comparison',          level: 2 },
   { key: 'admin/user-mgmt',                                 label: 'User Mgmt',               level: 1 },
   { key: 'admin/user-mgmt/manage-users',                    label: 'Manage Users',            level: 2 },
   { key: 'admin/user-mgmt/add-user',                        label: 'Add User',                level: 2 },
@@ -67,6 +68,7 @@ export const DEFAULT_MATRIX = {
   'admin/market-sentiment/subscriber-commentary':   { subscriber: false, admin: true,  superuser: true  },
   'admin/market-sentiment/set-market-sentiment':    { subscriber: false, admin: true,  superuser: true  },
   'admin/market-sentiment/set-gex-moc':             { subscriber: false, admin: true,  superuser: true  },
+  'admin/market-sentiment/moc-comparison':          { subscriber: false, admin: true,  superuser: true  },
   'admin/user-mgmt':                                { subscriber: false, admin: true,  superuser: true  },
   'admin/user-mgmt/manage-users':                   { subscriber: false, admin: true,  superuser: true  },
   'admin/user-mgmt/add-user':                       { subscriber: false, admin: true,  superuser: true  },
