@@ -1,13 +1,13 @@
 export const GRADE_CONFIG = {
-  'A+': { gradient: 'from-cyan-500/20 to-cyan-500/5',     border: 'border-cyan-500/30',   badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',     dot: 'bg-cyan-400'    },
-  'A':  { gradient: 'from-sky-500/20 to-sky-500/5',       border: 'border-sky-500/30',    badge: 'bg-sky-500/20 text-sky-300 border-sky-500/30',         dot: 'bg-sky-400'     },
-  'B':  { gradient: 'from-violet-500/20 to-violet-500/5', border: 'border-violet-500/30', badge: 'bg-violet-500/20 text-violet-300 border-violet-500/30', dot: 'bg-violet-400'  },
-  'C':  { gradient: 'from-amber-500/20 to-amber-500/5',   border: 'border-amber-500/30',  badge: 'bg-amber-500/20 text-amber-300 border-amber-500/30',   dot: 'bg-amber-400'   },
-  'D':  { gradient: 'from-rose-500/20 to-rose-500/5',     border: 'border-rose-500/30',   badge: 'bg-rose-500/20 text-rose-300 border-rose-500/30',       dot: 'bg-rose-400'    },
+  'A+': { gradient: 'from-cyan-500/20 to-cyan-500/5',     border: 'border-cyan-500/30',   badge: 'bg-cyan-500/20 text-[var(--c-cyan)] border-cyan-500/30',     dot: 'bg-cyan-400'    },
+  'A':  { gradient: 'from-sky-500/20 to-sky-500/5',       border: 'border-sky-500/30',    badge: 'bg-sky-500/20 text-[var(--c-sky)] border-sky-500/30',         dot: 'bg-sky-400'     },
+  'B':  { gradient: 'from-violet-500/20 to-violet-500/5', border: 'border-violet-500/30', badge: 'bg-violet-500/20 text-[var(--c-violet)] border-violet-500/30', dot: 'bg-violet-400'  },
+  'C':  { gradient: 'from-amber-500/20 to-amber-500/5',   border: 'border-amber-500/30',  badge: 'bg-amber-500/20 text-[var(--c-amber)] border-amber-500/30',   dot: 'bg-amber-400'   },
+  'D':  { gradient: 'from-rose-500/20 to-rose-500/5',     border: 'border-rose-500/30',   badge: 'bg-rose-500/20 text-[var(--c-rose-strong)] border-rose-500/30',       dot: 'bg-rose-400'    },
 };
 
 export const MODEL_CONFIG = {
-  Recovery: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25',
+  Recovery: 'bg-emerald-500/15 text-[var(--c-emerald-strong)] border-emerald-500/25',
   Momentum: 'bg-purple-500/15 text-purple-300 border-purple-500/25',
 };
 

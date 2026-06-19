@@ -7,15 +7,15 @@ function Toggle({ label, description, checked, onChange }) {
       type="button"
       onClick={() => onChange(!checked)}
       className={`flex w-full items-start gap-3 rounded-xl border p-4 text-left transition ${
-        checked ? 'border-cyan-500/50 bg-cyan-500/10' : 'border-white/10 bg-white/5 hover:border-cyan-500/30'
+        checked ? 'border-cyan-500/50 bg-cyan-500/10' : 'border-[var(--c-border)] bg-[var(--c-hover)] hover:border-cyan-500/30'
       }`}
     >
       <span className="relative mt-0.5 inline-block h-5 w-9 shrink-0 rounded-full bg-slate-700 transition">
         <span className={`absolute top-1 h-3 w-3 rounded-full bg-white transition-all ${checked ? 'left-5 bg-cyan-300' : 'left-1'}`} />
       </span>
       <div>
-        <p className={`text-sm font-medium ${checked ? 'text-cyan-300' : 'text-slate-300'}`}>{label}</p>
-        {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
+        <p className={`text-sm font-medium ${checked ? 'text-[var(--c-cyan)]' : 'text-[var(--c-text-secondary)]'}`}>{label}</p>
+        {description && <p className="mt-0.5 text-xs text-[var(--c-text-dimmed)]">{description}</p>}
       </div>
     </button>
   );
@@ -102,16 +102,16 @@ export default function NotificationChannels() {
   return (
     <div className="p-6 md:p-8 space-y-6">
       <div className="mb-2">
-        <h1 className="text-2xl font-bold text-white">Notification Channels</h1>
-        <p className="mt-1 text-sm text-slate-400">Choose how you receive trade alerts and pivot updates.</p>
+        <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">Notification Channels</h1>
+        <p className="mt-1 text-sm text-[var(--c-text-muted)]">Choose how you receive trade alerts and pivot updates.</p>
       </div>
 
       {/* ── Delivery channels ── */}
-      <div className="max-w-2xl rounded-2xl border border-white/10 bg-[#0d1f2d] p-6 shadow-lg">
-        <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">Delivery Channels</p>
+      <div className="max-w-2xl rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-6 shadow-lg">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">Delivery Channels</p>
         {loading ? (
           <div className="space-y-3">
-            {[1, 2].map((i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-white/5" />)}
+            {[1, 2].map((i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-[var(--c-hover)]" />)}
           </div>
         ) : (
           <div className="space-y-3">
@@ -129,21 +129,21 @@ export default function NotificationChannels() {
             />
           </div>
         )}
-        {error   && <div className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">{error}</div>}
-        {success && <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">Notification preferences saved.</div>}
+        {error   && <div className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-[var(--c-rose-strong)]">{error}</div>}
+        {success && <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-[var(--c-emerald-strong)]">Notification preferences saved.</div>}
         <button
           onClick={handleSave}
           disabled={saving || loading}
-          className="mt-5 w-full rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-5 w-full rounded-xl bg-[var(--c-btn-bg)] px-4 py-2.5 text-sm font-semibold text-[var(--c-btn-text)] transition hover:bg-[var(--c-btn-hover)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? 'Saving…' : 'Save Preferences'}
         </button>
       </div>
 
       {/* ── Pivot subscriptions ── */}
-      <div className="max-w-2xl rounded-2xl border border-white/10 bg-[#0d1f2d] p-6 shadow-lg">
-        <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-slate-500">Pivot Update Subscriptions</p>
-        <p className="mb-4 text-xs text-slate-400">
+      <div className="max-w-2xl rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-6 shadow-lg">
+        <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">Pivot Update Subscriptions</p>
+        <p className="mb-4 text-xs text-[var(--c-text-muted)]">
           Select which pivot timeframes you want to be notified about. You will receive a notification
           each time a pivot is written — and an urgent alert if a stale pivot is corrected by the
           Pivot Guardian. Email delivery uses the toggle above; ntfy topics are listed below.
@@ -151,7 +151,7 @@ export default function NotificationChannels() {
 
         {pivotLoading ? (
           <div className="space-y-3">
-            {[1, 2, 3].map((i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-white/5" />)}
+            {[1, 2, 3].map((i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-[var(--c-hover)]" />)}
           </div>
         ) : (
           <div className="space-y-3">
@@ -169,20 +169,20 @@ export default function NotificationChannels() {
 
         {/* ntfy topic reference */}
         {!pivotLoading && (
-          <div className="mt-5 overflow-hidden rounded-xl border border-white/10">
-            <div className="border-b border-white/10 px-4 py-2.5">
-              <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">ntfy Topics to Subscribe</p>
+          <div className="mt-5 overflow-hidden rounded-xl border border-[var(--c-border)]">
+            <div className="border-b border-[var(--c-border)] px-4 py-2.5">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">ntfy Topics to Subscribe</p>
             </div>
             <table className="w-full text-xs">
               <tbody>
                 {PIVOT_TYPES.map(({ key, label, ntfyTopic }) => (
-                  <tr key={key} className={`border-b border-white/5 last:border-0 ${pivotSubs[key] ? 'bg-cyan-500/5' : ''}`}>
-                    <td className="px-4 py-3 font-mono text-cyan-400">{ntfyTopic}</td>
-                    <td className="px-4 py-3 text-slate-400">{label}</td>
+                  <tr key={key} className={`border-b border-[var(--c-border-subtle)] last:border-0 ${pivotSubs[key] ? 'bg-cyan-500/5' : ''}`}>
+                    <td className="px-4 py-3 font-mono text-[var(--c-cyan-strong)]">{ntfyTopic}</td>
+                    <td className="px-4 py-3 text-[var(--c-text-muted)]">{label}</td>
                     <td className="px-4 py-3 text-right">
                       {pivotSubs[key]
-                        ? <span className="rounded-lg bg-cyan-500/20 px-2 py-0.5 text-cyan-300">Subscribed ✓</span>
-                        : <span className="rounded-lg bg-white/5 px-2 py-0.5 text-slate-500">Off</span>}
+                        ? <span className="rounded-lg bg-cyan-500/20 px-2 py-0.5 text-[var(--c-cyan)]">Subscribed ✓</span>
+                        : <span className="rounded-lg bg-[var(--c-hover)] px-2 py-0.5 text-[var(--c-text-dimmed)]">Off</span>}
                     </td>
                   </tr>
                 ))}
@@ -191,12 +191,12 @@ export default function NotificationChannels() {
           </div>
         )}
 
-        {pivotError   && <div className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">{pivotError}</div>}
-        {pivotSuccess && <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">Pivot subscriptions saved.</div>}
+        {pivotError   && <div className="mt-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-[var(--c-rose-strong)]">{pivotError}</div>}
+        {pivotSuccess && <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-[var(--c-emerald-strong)]">Pivot subscriptions saved.</div>}
         <button
           onClick={handlePivotSave}
           disabled={pivotSaving || pivotLoading}
-          className="mt-5 w-full rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-5 w-full rounded-xl bg-[var(--c-btn-bg)] px-4 py-2.5 text-sm font-semibold text-[var(--c-btn-text)] transition hover:bg-[var(--c-btn-hover)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pivotSaving ? 'Saving…' : 'Save Pivot Subscriptions'}
         </button>

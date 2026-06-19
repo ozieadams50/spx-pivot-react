@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import { GRADE_CONFIG, MODEL_CONFIG } from '../data/earningsConfig';
+import { useAuth } from '../context/AuthContext';
+import PageGuide from '../components/PageGuide';
 
 const GRADE_ORDER = { 'A+': 0, A: 1, B: 2, C: 3, D: 4 };
 const GRADES      = ['A+', 'A', 'B', 'C', 'D'];
@@ -52,12 +54,12 @@ function ModelBadge({ model }) {
 function OutcomeBadge({ outcome }) {
   const cls =
     outcome === 'WIN'
-      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+      ? 'bg-emerald-500/20 text-[var(--c-emerald-strong)] border-emerald-500/30'
       : outcome === 'LOSS'
-      ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+      ? 'bg-rose-500/20 text-[var(--c-rose-strong)] border-rose-500/30'
       : outcome === 'PENDING'
-      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-      : 'bg-slate-500/20 text-slate-400 border-slate-500/30';
+      ? 'bg-amber-500/20 text-[var(--c-amber)] border-amber-500/30'
+      : 'bg-slate-500/20 text-[var(--c-text-muted)] border-slate-500/30';
   return (
     <span className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-xs font-bold ${cls}`}>
       {outcome}
@@ -65,28 +67,28 @@ function OutcomeBadge({ outcome }) {
   );
 }
 
-// A signal is "display pending" when price data hasn't been fetched yet
 function displayOutcome(row) {
-  return row.pre_earn_high == null ? 'PENDING' : row.outcome;
+  if (row.pre_earn_high == null) return 'PENDING';
+  return row.outcome;
 }
 
 function PctCell({ value }) {
   const color =
-    value == null ? 'text-slate-500'
-    : value > 0   ? 'text-emerald-400'
-    : value < 0   ? 'text-rose-400'
-    :               'text-slate-400';
+    value == null ? 'text-[var(--c-text-dimmed)]'
+    : value > 0   ? 'text-[var(--c-emerald)]'
+    : value < 0   ? 'text-[var(--c-rose)]'
+    :               'text-[var(--c-text-muted)]';
   return <span className={`font-mono font-semibold tabular-nums ${color}`}>{fmtPct(value)}</span>;
 }
 
 function RanUpCell({ value }) {
-  if (value == null) return <span className="text-slate-600">—</span>;
+  if (value == null) return <span className="text-[var(--c-text-faint)]">—</span>;
   return value ? (
-    <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-300 border border-emerald-500/25">
+    <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-[var(--c-emerald-strong)] border border-emerald-500/25">
       ✓ Yes
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-2 py-0.5 text-xs font-semibold text-rose-400 border border-rose-500/20">
+    <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 px-2 py-0.5 text-xs font-semibold text-[var(--c-rose)] border border-rose-500/20">
       ✗ No
     </span>
   );
@@ -121,11 +123,11 @@ function Th({ label, col, sortKey, sortDir, onSort, className = '' }) {
   const active = sortKey === col;
   return (
     <th
-      className={`cursor-pointer select-none whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-slate-300 transition-colors ${className}`}
+      className={`cursor-pointer select-none whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-[var(--c-text-dimmed)] hover:text-[var(--c-text-secondary)] transition-colors ${className}`}
       onClick={() => onSort(col)}
     >
       {label}
-      {active && <span className="ml-1 text-cyan-400">{sortDir === 'asc' ? '↑' : '↓'}</span>}
+      {active && <span className="ml-1 text-[var(--c-cyan-strong)]">{sortDir === 'asc' ? '↑' : '↓'}</span>}
     </th>
   );
 }
@@ -153,52 +155,67 @@ function SummaryStrip({ data }) {
     return valid.reduce((s, r) => s + r.pre_earn_high_pct, 0) / valid.length;
   })();
 
-  const stat = (label, value, color = 'text-white') => (
+  const stat = (label, value, color = 'text-[var(--c-text-primary)]') => (
     <div className="flex flex-col items-center gap-0.5 px-4">
-      <span className="text-[10px] uppercase tracking-widest text-slate-500">{label}</span>
+      <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-dimmed)]">{label}</span>
       <span className={`text-lg font-bold ${color}`}>{value ?? '—'}</span>
     </div>
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-x-0 divide-x divide-white/10 rounded-2xl border border-white/10 bg-[#0b1420] py-3">
+    <div className="flex flex-wrap items-center gap-x-0 divide-x divide-white/10 rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-card)] py-3">
       {stat('Signals', total)}
-      {stat('Wins', wins, 'text-emerald-400')}
-      {stat('Losses', losses, 'text-rose-400')}
-      {stat('Pending', pending, 'text-amber-400')}
-      {stat('Win Rate', winRate != null ? `${winRate}%` : null, winRate == null ? 'text-white' : winRate >= 50 ? 'text-emerald-400' : 'text-rose-400')}
+      {stat('Wins', wins, 'text-[var(--c-emerald)]')}
+      {stat('Losses', losses, 'text-[var(--c-rose)]')}
+      {stat('Pending', pending, 'text-[var(--c-amber-strong)]')}
+      {stat('Win Rate', winRate != null ? `${winRate}%` : null, winRate == null ? 'text-[var(--c-text-primary)]' : winRate >= 50 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]')}
       {stat('Pre-Earn Ran Up', ranUp)}
       {stat('Avg Pre-Earn Hi%', avgHighPct != null ? fmtPct(avgHighPct) : null,
-        avgHighPct == null ? 'text-white' : avgHighPct > 0 ? 'text-emerald-400' : 'text-rose-400')}
+        avgHighPct == null ? 'text-[var(--c-text-primary)]' : avgHighPct > 0 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]')}
       {stat('Avg 10D Post%', avgPostPct != null ? fmtPct(avgPostPct) : null,
-        avgPostPct == null ? 'text-white' : avgPostPct > 0 ? 'text-emerald-400' : 'text-rose-400')}
+        avgPostPct == null ? 'text-[var(--c-text-primary)]' : avgPostPct > 0 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]')}
     </div>
   );
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+const SYSTEM_LAUNCH_DATE = '2026-06-01';
+
 export default function EarningsHistoricalPerformance() {
   const navigate = useNavigate();
+  const { role } = useAuth();
+  const canShowAll = role === 'admin' || role === 'superuser';
+
   const [data,         setData]         = useState([]);
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState(null);
   const [model,        setModel]        = useState('Both');
+  const [showAll,      setShowAll]      = useState(false);
   const [gradeFilter,  setGradeFilter]  = useState([]);
   const [sectorFilter, setSectorFilter] = useState([]);
   const [tickerQ,      setTickerQ]      = useState('');
   const [sortKey,      setSortKey]      = useState('earnings_date');
   const [sortDir,      setSortDir]      = useState('desc');
   const [ranUpOnly,    setRanUpOnly]    = useState(false);
+  const [hotPickSet,   setHotPickSet]   = useState(new Set());
 
   useEffect(() => {
     setLoading(true);
     setError(null);
-    apiFetch(`/earnings/historical?model=${model}`)
+    const since = (canShowAll && showAll) ? '' : SYSTEM_LAUNCH_DATE;
+    const sinceParam = since ? `&since=${since}` : '&since=';
+    apiFetch(`/earnings/historical?model=${model}${sinceParam}`)
       .then(setData)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [model]);
+  }, [model, showAll, canShowAll]);
+
+  useEffect(() => {
+    apiFetch('/earnings/hot-pick-tickers')
+      .then(tickers => setHotPickSet(new Set(tickers)))
+      .catch(() => {});
+  }, []);
 
   const allSectors = useMemo(
     () => [...new Set(data.map(r => r.sector).filter(Boolean))].sort(),
@@ -244,27 +261,59 @@ export default function EarningsHistoricalPerformance() {
   const thProps = { sortKey, sortDir, onSort: toggleSort };
 
   return (
-    <div className="min-h-screen bg-[#060e18] px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[var(--c-bg-page)] px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-screen-2xl">
 
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white">Historical Performance</h1>
-          <p className="mt-1 text-sm text-slate-500">Pre-Earnings Runners — completed signals with price outcomes</p>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">Historical Performance</h1>
+            <p className="mt-1 text-sm text-[var(--c-text-dimmed)]">
+              Pre-Earnings Runners —{' '}
+              {canShowAll && showAll
+                ? 'all historical signals'
+                : 'signals since system launch (Jun 1, 2026)'}
+            </p>
+          </div>
+          {canShowAll && (
+            <button
+              onClick={() => setShowAll(v => !v)}
+              className={`mt-1 flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold transition-colors ${
+                showAll
+                  ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
+                  : 'border-[var(--c-border)] bg-[var(--c-bg-card)] text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'
+              }`}
+            >
+              <span className={`h-2 w-2 rounded-full ${showAll ? 'bg-violet-400' : 'bg-slate-600'}`} />
+              {showAll ? 'All History' : 'System Data Only'}
+            </button>
+          )}
         </div>
 
+        <PageGuide
+          guideKey="historical-performance"
+          accent="violet"
+          title="The honest scorecard — see exactly how past signals performed."
+          description="Every signal this system has generated is tracked here with the real outcome. Use this page to build confidence in the strategy before risking real money, and to understand which conditions produce the best results."
+          steps={[
+            { text: 'Use the grade buttons and model filter to narrow down the results. A+ and A grades have historically shown the highest win rates. Filtering to a single grade lets you see how reliable that tier has been over time.', targetId: 'pg-hist-filters' },
+            { text: 'The summary bar shows your Win Rate, total signals, and average pre-earnings high % across all filtered results. This is the headline number — check it first to get a quick read on how the selected group performed.', targetId: 'pg-hist-summary' },
+            { text: 'In the table, pay attention to the "Ran Up?" column — even LOSS signals often reached a high before pulling back. This shows there was a real opportunity window, even if the standard exit (2 days before earnings) missed it.', targetId: 'pg-hist-table' },
+          ]}
+        />
+
         {/* Controls */}
-        <div className="mb-5 flex flex-wrap items-center gap-3">
+        <div id="pg-hist-filters" className="mb-5 flex flex-wrap items-center gap-3">
           {/* Model */}
-          <div className="flex rounded-xl border border-white/10 bg-[#0b1420] p-0.5">
+          <div className="flex rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-0.5">
             {['Both', 'Recovery', 'Momentum'].map(m => (
               <button
                 key={m}
                 onClick={() => setModel(m)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
                   model === m
-                    ? 'bg-cyan-500/20 text-cyan-300'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-cyan-500/20 text-[var(--c-cyan)]'
+                    : 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'
                 }`}
               >
                 {m}
@@ -282,7 +331,7 @@ export default function EarningsHistoricalPerformance() {
                   key={g}
                   onClick={() => toggleGrade(g)}
                   className={`rounded-lg border px-2.5 py-1 text-xs font-bold transition-all ${
-                    active ? cfg.badge : 'border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'
+                    active ? cfg.badge : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:border-white/20 hover:text-[var(--c-text-secondary)]'
                   }`}
                 >
                   {g}
@@ -297,7 +346,7 @@ export default function EarningsHistoricalPerformance() {
             placeholder="Ticker…"
             value={tickerQ}
             onChange={e => setTickerQ(e.target.value)}
-            className="w-28 rounded-xl border border-white/10 bg-[#0b1420] px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:border-cyan-500/50 focus:outline-none"
+            className="w-28 rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-card)] px-3 py-1.5 text-xs text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] focus:border-cyan-500/50 focus:outline-none"
           />
 
           {/* Ran-up filter */}
@@ -305,24 +354,24 @@ export default function EarningsHistoricalPerformance() {
             onClick={() => setRanUpOnly(v => !v)}
             className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
               ranUpOnly
-                ? 'border-emerald-500/30 bg-emerald-500/20 text-emerald-300'
-                : 'border-white/10 text-slate-400 hover:text-white'
+                ? 'border-emerald-500/30 bg-emerald-500/20 text-[var(--c-emerald-strong)]'
+                : 'border-[var(--c-border)] text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'
             }`}
           >
             Pre-Earn Ran Up
           </button>
 
-          <span className="ml-auto text-xs text-slate-600">{filtered.length} signals</span>
+          <span className="ml-auto text-xs text-[var(--c-text-faint)]">{filtered.length} signals</span>
         </div>
 
         {/* Sector filter */}
         {allSectors.length > 0 && (
           <div className="mb-5 flex flex-wrap items-center gap-2">
-            <span className="text-[10px] uppercase tracking-widest text-slate-600 mr-1">Sector</span>
+            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)] mr-1">Sector</span>
             {sectorFilter.length > 0 && (
               <button
                 onClick={() => setSectorFilter([])}
-                className="rounded-lg border border-white/10 px-2 py-0.5 text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
+                className="rounded-lg border border-[var(--c-border)] px-2 py-0.5 text-[10px] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-secondary)] transition-colors"
               >
                 Clear
               </button>
@@ -333,8 +382,8 @@ export default function EarningsHistoricalPerformance() {
                 onClick={() => toggleSector(s)}
                 className={`rounded-xl border px-2.5 py-1 text-xs font-medium transition-all ${
                   sectorFilter.includes(s)
-                    ? 'border-violet-500/40 bg-violet-500/20 text-violet-300'
-                    : 'border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'
+                    ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
+                    : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:border-white/20 hover:text-[var(--c-text-secondary)]'
                 }`}
               >
                 {s}
@@ -345,100 +394,109 @@ export default function EarningsHistoricalPerformance() {
 
         {/* Summary */}
         {!loading && !error && filtered.length > 0 && (
-          <div className="mb-5">
+          <div id="pg-hist-summary" className="mb-5">
             <SummaryStrip data={filtered} />
           </div>
         )}
 
         {/* Table */}
+        <div id="pg-hist-table">
         {loading ? (
           <div className="flex items-center justify-center py-24">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
           </div>
         ) : error ? (
-          <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-4 text-sm text-rose-300">{error}</div>
+          <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-4 text-sm text-[var(--c-rose-strong)]">{error}</div>
         ) : filtered.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-[#0b1420] px-6 py-12 text-center text-sm text-slate-500">
+          <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-card)] px-6 py-12 text-center text-sm text-[var(--c-text-dimmed)]">
             No historical signals found.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-white/10">
+          <div className="overflow-x-auto rounded-2xl border border-[var(--c-border)]">
             <table className="min-w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-white/10 bg-[#0b1420]">
-                  <Th col="ticker"          label="Ticker"       {...thProps} />
-                  <Th col="grade"           label="Grade"        {...thProps} />
-                  <Th col="model_type"      label="Model"        {...thProps} />
-                  <Th col="score"           label="Score"        {...thProps} />
-                  <Th col="earnings_date"   label="Earn Date"    {...thProps} />
-                  <Th col="entry_date"      label="Entry Date"   {...thProps} />
-                  <Th col="entry_price"     label="Entry $"      {...thProps} />
-                  <Th col="exit_price"      label="Exit $"       {...thProps} className="border-l border-white/5" />
-                  <Th col="actual_runup_pct" label="Exit %"      {...thProps} />
-                  <Th col="pre_earn_high"   label="Pre-Earn Hi"  {...thProps} className="border-l border-white/5" />
-                  <Th col="pre_earn_high_date" label="Hi Date"   {...thProps} />
-                  <Th col="pre_earn_high_pct"  label="Hi %"      {...thProps} />
-                  <Th col="pre_earn_ran_up" label="Ran Up?"      {...thProps} />
-                  <Th col="earn_day_price"  label="Earn Day $"   {...thProps} className="border-l border-white/5" />
-                  <Th col="earn_day_pct"    label="Earn Day %"   {...thProps} />
-                  <Th col="post10_price"    label="10D Post $"   {...thProps} className="border-l border-white/5" />
-                  <Th col="post10_date"     label="10D Date"     {...thProps} />
-                  <Th col="post10_pct"      label="10D Post %"   {...thProps} />
-                  <Th col="outcome"         label="Outcome"      {...thProps} className="border-l border-white/5" />
+                <tr className="border-b border-[var(--c-border)] bg-[var(--c-bg-card)]">
+                  <Th col="ticker"             label="Ticker"        {...thProps} />
+                  <th className="px-2 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-[var(--c-text-dimmed)]"></th>
+                  <Th col="grade"              label="Grade"         {...thProps} />
+                  <Th col="model_type"         label="Model"         {...thProps} />
+                  <Th col="score"              label="Score"         {...thProps} />
+                  <Th col="earnings_date"      label="Earn Date"     {...thProps} />
+                  <Th col="entry_date"         label="Entry Date"    {...thProps} />
+                  <Th col="entry_price"        label="Entry $"       {...thProps} />
+                  <Th col="pre_earn_high"      label="Pre-Earn Hi"   {...thProps} className="border-l border-[var(--c-border-subtle)]" />
+                  <Th col="pre_earn_high_pct"  label="Pre-Earn Hi %" {...thProps} />
+                  <Th col="pre_earn_high_date" label="Pre-Earn Hi Date" {...thProps} />
+                  <Th col="pre_earn_ran_up"    label="Ran Up?"       {...thProps} />
+                  <Th col="exit_price"         label="Exit $"        {...thProps} className="border-l border-[var(--c-border-subtle)]" />
+                  <Th col="actual_runup_pct"   label="Exit %"        {...thProps} />
+                  <Th col="earn_day_price"     label="Earn Day $"    {...thProps} className="border-l border-[var(--c-border-subtle)]" />
+                  <Th col="earn_day_pct"       label="Earn Day %"    {...thProps} />
+                  <Th col="post10_price"       label="10D Post $"    {...thProps} className="border-l border-[var(--c-border-subtle)]" />
+                  <Th col="post10_date"        label="10D Date"      {...thProps} />
+                  <Th col="post10_pct"         label="10D Post %"    {...thProps} />
+                  <Th col="outcome"            label="Outcome"       {...thProps} className="border-l border-[var(--c-border-subtle)]" />
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((row, i) => (
                   <tr
                     key={`${row.ticker}-${row.earnings_date}-${row.model_type}`}
-                    className={`border-b border-white/5 transition-colors hover:bg-white/[0.03] ${
-                      i % 2 === 0 ? 'bg-[#060e18]' : 'bg-[#080f1a]'
+                    className={`border-b border-[var(--c-border-subtle)] transition-colors hover:bg-[var(--c-hover-faint)] ${
+                      i % 2 === 0 ? 'bg-[var(--c-bg-page)]' : 'bg-[var(--c-bg-alt)]'
                     }`}
                   >
                     <td className="px-3 py-2.5">
                       <button
                         onClick={() => navigate(`/earnings/${row.ticker}?earningsDate=${row.earnings_date}`)}
-                        className="font-bold text-white hover:text-cyan-300 transition-colors underline-offset-2 hover:underline"
+                        className="font-bold text-[var(--c-text-primary)] hover:text-[var(--c-cyan)] transition-colors underline-offset-2 hover:underline"
                       >
                         {row.ticker}
                       </button>
                     </td>
+                    <td className="px-2 py-2.5">
+                      {hotPickSet.has(row.ticker) && (
+                        <span title="Was a Hot Pick" className="inline-flex items-center rounded-md border border-amber-500/40 bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-bold text-[var(--c-amber-strong)]">
+                          HP
+                        </span>
+                      )}
+                    </td>
                     <td className="px-3 py-2.5"><GradeBadge grade={row.grade} /></td>
                     <td className="px-3 py-2.5"><ModelBadge model={row.model_type} /></td>
-                    <td className="px-3 py-2.5 font-mono text-xs text-slate-300 tabular-nums">{row.score.toFixed(1)}</td>
-                    <td className="px-3 py-2.5 text-xs text-slate-300">{fmtDate(row.earnings_date)}</td>
-                    <td className="px-3 py-2.5 text-xs text-slate-400">{fmtDate(row.entry_date)}</td>
-                    <td className="px-3 py-2.5 font-mono text-xs text-slate-300 tabular-nums">{fmtPrice(row.entry_price)}</td>
+                    <td className="px-3 py-2.5 font-mono text-xs text-[var(--c-text-secondary)] tabular-nums">{row.score.toFixed(1)}</td>
+                    <td className="px-3 py-2.5 text-xs text-[var(--c-text-secondary)]">{fmtDate(row.earnings_date)}</td>
+                    <td className="px-3 py-2.5 text-xs text-[var(--c-text-muted)]">{fmtDate(row.entry_date)}</td>
+                    <td className="px-3 py-2.5 font-mono text-xs text-[var(--c-text-secondary)] tabular-nums">{fmtPrice(row.entry_price)}</td>
 
-                    {/* Standard exit block */}
-                    <td className="border-l border-white/5 px-3 py-2.5 font-mono text-xs text-slate-300 tabular-nums">
+                    {/* Pre-earnings high block */}
+                    <td className="border-l border-[var(--c-border-subtle)] px-3 py-2.5 font-mono text-xs text-[var(--c-text-secondary)] tabular-nums">
+                      {fmtPrice(row.pre_earn_high)}
+                    </td>
+                    <td className="px-3 py-2.5"><PctCell value={row.pre_earn_high_pct} /></td>
+                    <td className="px-3 py-2.5 text-xs text-[var(--c-text-muted)]">{fmtDate(row.pre_earn_high_date)}</td>
+                    <td className="px-3 py-2.5"><RanUpCell value={row.pre_earn_ran_up} /></td>
+
+                    {/* Exit block */}
+                    <td className="border-l border-[var(--c-border-subtle)] px-3 py-2.5 font-mono text-xs text-[var(--c-text-secondary)] tabular-nums">
                       {fmtPrice(row.exit_price)}
                     </td>
                     <td className="px-3 py-2.5"><PctCell value={row.actual_runup_pct} /></td>
 
-                    {/* Pre-earnings high block */}
-                    <td className="border-l border-white/5 px-3 py-2.5 font-mono text-xs text-slate-300 tabular-nums">
-                      {fmtPrice(row.pre_earn_high)}
-                    </td>
-                    <td className="px-3 py-2.5 text-xs text-slate-400">{fmtDate(row.pre_earn_high_date)}</td>
-                    <td className="px-3 py-2.5"><PctCell value={row.pre_earn_high_pct} /></td>
-                    <td className="px-3 py-2.5"><RanUpCell value={row.pre_earn_ran_up} /></td>
-
                     {/* Earnings day block */}
-                    <td className="border-l border-white/5 px-3 py-2.5 font-mono text-xs text-slate-300 tabular-nums">
+                    <td className="border-l border-[var(--c-border-subtle)] px-3 py-2.5 font-mono text-xs text-[var(--c-text-secondary)] tabular-nums">
                       {fmtPrice(row.earn_day_price)}
                     </td>
                     <td className="px-3 py-2.5"><PctCell value={row.earn_day_pct} /></td>
 
                     {/* 10-day post block */}
-                    <td className="border-l border-white/5 px-3 py-2.5 font-mono text-xs text-slate-300 tabular-nums">
+                    <td className="border-l border-[var(--c-border-subtle)] px-3 py-2.5 font-mono text-xs text-[var(--c-text-secondary)] tabular-nums">
                       {fmtPrice(row.post10_price)}
                     </td>
-                    <td className="px-3 py-2.5 text-xs text-slate-400">{fmtDate(row.post10_date)}</td>
+                    <td className="px-3 py-2.5 text-xs text-[var(--c-text-muted)]">{fmtDate(row.post10_date)}</td>
                     <td className="px-3 py-2.5"><PctCell value={row.post10_pct} /></td>
 
                     {/* Outcome */}
-                    <td className="border-l border-white/5 px-3 py-2.5">
+                    <td className="border-l border-[var(--c-border-subtle)] px-3 py-2.5">
                       <OutcomeBadge outcome={displayOutcome(row)} />
                     </td>
                   </tr>
@@ -447,6 +505,7 @@ export default function EarningsHistoricalPerformance() {
             </table>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

@@ -100,14 +100,14 @@ export function AuthProvider({ children }) {
         <div className="fixed bottom-4 left-1/2 z-[9999] -translate-x-1/2 flex items-center gap-3
                         rounded-2xl border border-amber-500/40 bg-amber-500/10 px-5 py-3 shadow-2xl
                         backdrop-blur-sm">
-          <span className="text-amber-400">⚠</span>
-          <p className="text-sm text-amber-200">
+          <span className="text-[var(--c-amber-strong)]">⚠</span>
+          <p className="text-sm text-[var(--c-amber)]">
             Your session will expire in <strong>5 minutes</strong> due to inactivity.
           </p>
           <button
             onClick={resetTimer}
             className="ml-2 rounded-lg bg-amber-500/20 px-3 py-1 text-xs font-semibold
-                       text-amber-300 transition hover:bg-amber-500/30">
+                       text-[var(--c-amber)] transition hover:bg-amber-500/30">
             Stay Logged In
           </button>
         </div>

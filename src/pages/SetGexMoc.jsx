@@ -62,79 +62,93 @@ export default function SetGexMoc() {
   return (
     <div className="p-6 md:p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Set GEX &amp; MOC</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Enter today's Gamma Exposure ratio and Market on Close imbalance. These appear on the Current Pivots page when Daily Trade is selected.
+        <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">Set GEX &amp; MOC</h1>
+        <p className="mt-1 text-sm text-[var(--c-text-muted)]">
+          Enter today's Gamma Exposure ratio and Market on Close imbalance. These drive the EOD-MOC Signal page.
         </p>
       </div>
 
-      <div className="max-w-2xl rounded-2xl border border-white/10 bg-[#0d1f2d] p-6 shadow-lg">
+      <div className="mb-5 max-w-2xl rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-5">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--c-cyan-strong)]">Daily Workflow</p>
+        <div className="space-y-2 text-sm text-[var(--c-text-secondary)]">
+          <div className="flex gap-3">
+            <span className="shrink-0 font-semibold text-[var(--c-text-primary)]">Before 3:50 PM</span>
+            <span>Enter the <span className="font-medium text-[var(--c-text-primary)]">GEX Ratio</span> from GEXStream.com. Values below 0.50 = Negative (Trade Day), 0.50 or above = Positive (No Trade).</span>
+          </div>
+          <div className="flex gap-3">
+            <span className="shrink-0 font-semibold text-[var(--c-text-primary)]">At/after 3:55 PM</span>
+            <span>Enter the <span className="font-medium text-[var(--c-text-primary)]">SPX MOC</span> and <span className="font-medium text-[var(--c-text-primary)]">Mag7 MOC</span> from FinancialJuice.com. Positive = Buy side, Negative = Sell side.</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-2xl rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-6 shadow-lg">
 
         <div className="mb-5">
-          <label className="mb-1.5 block text-xs font-medium text-slate-300">Date</label>
+          <label className="mb-1.5 block text-xs font-medium text-[var(--c-text-secondary)]">Date</label>
           <input type="date" value={date} max={todayISO()} min="2025-01-01"
             onChange={(e) => setDate(e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-[#061018] px-4 py-2 text-sm text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
+            className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-4 py-2 text-sm text-[var(--c-text-primary)] outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
         </div>
 
         <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-300">
-              GEX Ratio <span className="text-slate-500">(0.00 – 1.00)</span>
+            <label className="mb-1.5 block text-xs font-medium text-[var(--c-text-secondary)]">
+              GEX Ratio <span className="text-[var(--c-text-dimmed)]">(0.00 – 1.00)</span>
             </label>
             <input type="number" value={gexRatio} min="0" max="1" step="0.01"
               onChange={(e) => setGexRatio(e.target.value)}
               placeholder="e.g. 0.02"
-              className="w-full rounded-xl border border-white/10 bg-[#061018] px-4 py-2 text-sm text-white placeholder-slate-600 outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
+              className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-4 py-2 text-sm text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
             {gexDir && (
-              <p className={`mt-1 text-xs font-medium ${gexDir === 'Positive' ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <p className={`mt-1 text-xs font-medium ${gexDir === 'Positive' ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]'}`}>
                 → {gexDir}
               </p>
             )}
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-300">SPX MOC</label>
+            <label className="mb-1.5 block text-xs font-medium text-[var(--c-text-secondary)]">SPX MOC</label>
             <input type="number" value={spxMoc} step="1"
               onChange={(e) => setSpxMoc(e.target.value)}
               placeholder="e.g. -472"
-              className="w-full rounded-xl border border-white/10 bg-[#061018] px-4 py-2 text-sm text-white placeholder-slate-600 outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
+              className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-4 py-2 text-sm text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
             {!isNaN(spxVal) && spxMoc.trim() !== '' && (
-              <p className={`mt-1 text-xs font-medium ${spxVal > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <p className={`mt-1 text-xs font-medium ${spxVal > 0 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]'}`}>
                 → {spxVal > 0 ? 'BUY' : 'SELL'} {spxVal > 0 ? '+' : ''}{spxVal.toLocaleString()}
               </p>
             )}
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-300">
-              Mag7 MOC <span className="text-slate-500">(optional)</span>
+            <label className="mb-1.5 block text-xs font-medium text-[var(--c-text-secondary)]">
+              Mag7 MOC <span className="text-[var(--c-text-dimmed)]">(optional)</span>
             </label>
             <input type="number" value={mag7Moc} step="1"
               onChange={(e) => setMag7Moc(e.target.value)}
               placeholder="optional"
-              className="w-full rounded-xl border border-white/10 bg-[#061018] px-4 py-2 text-sm text-white placeholder-slate-600 outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
+              className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-4 py-2 text-sm text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
           </div>
         </div>
 
         {current && current.gex_ratio != null && (
-          <div className="mb-4 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm">
-            <span className="text-slate-400">Currently stored:</span>
-            <span className={`font-medium ${current.gex_ratio >= 0.5 ? 'text-emerald-400' : 'text-rose-400'}`}>
+          <div className="mb-4 flex items-center gap-3 rounded-xl border border-[var(--c-border)] bg-[var(--c-hover)] px-4 py-2.5 text-sm">
+            <span className="text-[var(--c-text-muted)]">Currently stored:</span>
+            <span className={`font-medium ${current.gex_ratio >= 0.5 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]'}`}>
               GEX {current.gex_ratio >= 0.5 ? 'Positive' : 'Negative'} ({current.gex_ratio.toFixed(2)})
             </span>
-            <span className="text-slate-500">·</span>
-            <span className={`font-medium ${current.spx_moc > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <span className="text-[var(--c-text-dimmed)]">·</span>
+            <span className={`font-medium ${current.spx_moc > 0 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]'}`}>
               MOC {current.spx_moc > 0 ? 'BUY' : 'SELL'} {current.spx_moc > 0 ? '+' : ''}{current.spx_moc?.toLocaleString()}
             </span>
           </div>
         )}
 
-        {error   && <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">{error}</div>}
-        {success && <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">{success}</div>}
+        {error   && <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-[var(--c-rose-strong)]">{error}</div>}
+        {success && <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-[var(--c-emerald-strong)]">{success}</div>}
 
         <button onClick={handleSubmit} disabled={saving}
-          className="w-full rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50">
+          className="w-full rounded-xl bg-[var(--c-btn-bg)] px-4 py-2.5 text-sm font-semibold text-[var(--c-btn-text)] transition hover:bg-[var(--c-btn-hover)] disabled:cursor-not-allowed disabled:opacity-50">
           {saving ? 'Saving...' : 'Save GEX & MOC'}
         </button>
       </div>

@@ -25,7 +25,14 @@ const FULL_NAV = [
           { title: 'All Signals',    path: '/earnings?grade=all',  matrixKey: 'apps/pre-earnings/all-signals'     },
           { title: 'Sector Tracker', path: '/earnings/sectors',   matrixKey: 'apps/pre-earnings/sector-tracker'  },
           { title: 'Calendar',       path: '/earnings/calendar',  matrixKey: 'apps/pre-earnings/calendar'        },
-          { title: 'Historical Performance', path: '/earnings/historical', matrixKey: 'apps/pre-earnings/historical-performance' },
+          { title: 'Historical Performance', path: '/earnings/historical',  matrixKey: 'apps/pre-earnings/historical-performance' },
+          { title: 'Hot Picks',              path: '/earnings/hot-picks',   matrixKey: 'apps/pre-earnings/hot-picks'              },
+        ],
+      },
+      {
+        title: 'EOD-MOC Signal', matrixKey: 'apps/eod-moc',
+        children: [
+          { title: 'Signal', path: '/eod-moc', matrixKey: 'apps/eod-moc/signal' },
         ],
       },
       {
@@ -105,8 +112,8 @@ function LeafItem({ title, path, onClose }) {
       onClick={onClose}
       className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
         active
-          ? 'bg-cyan-500/15 text-cyan-300'
-          : 'text-slate-500 hover:bg-cyan-500/10 hover:text-cyan-300'
+          ? 'bg-cyan-500/15 text-[var(--c-cyan)]'
+          : 'text-[var(--c-text-dimmed)] hover:bg-cyan-500/10 hover:text-[var(--c-cyan)]'
       }`}
     >
       {title}
@@ -123,13 +130,13 @@ function GroupItem({ group, onClose }) {
     <div className="mb-2">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-300 hover:bg-white/5"
+        className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm text-[var(--c-text-secondary)] hover:bg-[var(--c-hover)]"
       >
         <span>{group.title}</span>
         <span className={`text-xs transition-transform ${open ? 'rotate-90' : ''}`}>›</span>
       </button>
       {open && (
-        <div className="ml-3 mt-1 space-y-0.5 border-l border-white/5 pl-3">
+        <div className="ml-3 mt-1 space-y-0.5 border-l border-[var(--c-border-subtle)] pl-3">
           {group.children.map((child) =>
             child.path ? (
               <LeafItem key={child.title} title={child.title} path={child.path} onClose={onClose} />
@@ -146,13 +153,13 @@ function GroupItem({ group, onClose }) {
 function MobileNav({ nav, onClose }) {
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={onClose} />
-      <div className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-white/10 bg-[#08111c] lg:hidden">
-        <div className="flex items-center justify-between border-b border-white/10 p-5">
-          <h2 className="text-lg font-bold text-white">SPX Control Center</h2>
+      <div className="fixed inset-0 z-40 bg-[var(--c-bg-modal-overlay)] lg:hidden" onClick={onClose} />
+      <div className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-[var(--c-border)] bg-[var(--c-bg-nav)] lg:hidden">
+        <div className="flex items-center justify-between border-b border-[var(--c-border)] p-5">
+          <h2 className="text-lg font-bold text-[var(--c-text-primary)]">SPX Control Center</h2>
           <button
             onClick={onClose}
-            className="rounded-xl border border-white/10 p-2 text-slate-400 hover:bg-white/5 hover:text-white"
+            className="rounded-xl border border-[var(--c-border)] p-2 text-[var(--c-text-muted)] hover:bg-[var(--c-hover)] hover:text-[var(--c-text-primary)]"
             aria-label="Close navigation menu"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -170,7 +177,7 @@ function MobileNav({ nav, onClose }) {
                     onClick={onClose}
                     className={({ isActive }) =>
                       `block rounded-2xl px-4 py-3 font-semibold transition-colors ${
-                        isActive ? 'bg-cyan-500/15 text-cyan-300' : 'text-white hover:bg-white/5'
+                        isActive ? 'bg-cyan-500/15 text-[var(--c-cyan)]' : 'text-[var(--c-text-primary)] hover:bg-[var(--c-hover)]'
                       }`
                     }
                   >
@@ -181,7 +188,7 @@ function MobileNav({ nav, onClose }) {
             }
             return (
               <div key={item.title} className="mb-4">
-                <div className="mb-1 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-slate-600">
+                <div className="mb-1 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-[var(--c-text-faint)]">
                   {item.title}
                 </div>
                 <div className="ml-1">
@@ -210,15 +217,15 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
     <>
     {mobileOpen && <MobileNav nav={nav} onClose={onMobileClose} />}
     <aside
-      className={`hidden flex-col border-r border-white/10 bg-[#08111c] transition-all duration-300 lg:flex ${
+      className={`hidden flex-col border-r border-[var(--c-border)] bg-[var(--c-bg-nav)] transition-all duration-300 lg:flex ${
         collapsed ? 'w-16' : 'w-[280px]'
       }`}
     >
-      <div className="flex items-center justify-between border-b border-white/10 p-5">
-        {!collapsed && <h2 className="text-lg font-bold text-white">SPX Control Center</h2>}
+      <div className="flex items-center justify-between border-b border-[var(--c-border)] p-5">
+        {!collapsed && <h2 className="text-lg font-bold text-[var(--c-text-primary)]">SPX Control Center</h2>}
         <button
           onClick={onToggle}
-          className="ml-auto rounded-xl border border-white/10 p-2 text-slate-400 hover:bg-white/5 hover:text-white"
+          className="ml-auto rounded-xl border border-[var(--c-border)] p-2 text-[var(--c-text-muted)] hover:bg-[var(--c-hover)] hover:text-[var(--c-text-primary)]"
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? '›' : '‹'}
@@ -235,7 +242,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                     to={item.path}
                     className={({ isActive }) =>
                       `block rounded-2xl px-4 py-3 font-semibold transition-colors ${
-                        isActive ? 'bg-cyan-500/15 text-cyan-300' : 'text-white hover:bg-white/5'
+                        isActive ? 'bg-cyan-500/15 text-[var(--c-cyan)]' : 'text-[var(--c-text-primary)] hover:bg-[var(--c-hover)]'
                       }`
                     }
                   >
@@ -246,7 +253,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
             }
             return (
               <div key={item.title} className="mb-4">
-                <div className="mb-1 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-slate-600">
+                <div className="mb-1 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-[var(--c-text-faint)]">
                   {item.title}
                 </div>
                 <div className="ml-1">
@@ -266,13 +273,13 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
 
       {collapsed && (
         <nav className="flex flex-1 flex-col items-center gap-2 py-4">
-          <NavLink to="/" title="Home" className="rounded-xl p-3 text-slate-400 hover:bg-white/5 hover:text-white">⌂</NavLink>
-          <NavLink to="/spx-pivots" title="SPX Pivots" className="rounded-xl p-3 text-slate-400 hover:bg-white/5 hover:text-cyan-300">◈</NavLink>
+          <NavLink to="/" title="Home" className="rounded-xl p-3 text-[var(--c-text-muted)] hover:bg-[var(--c-hover)] hover:text-[var(--c-text-primary)]">⌂</NavLink>
+          <NavLink to="/spx-pivots" title="SPX Pivots" className="rounded-xl p-3 text-[var(--c-text-muted)] hover:bg-[var(--c-hover)] hover:text-[var(--c-cyan)]">◈</NavLink>
           {canAccess(accessMatrix, role, 'admin') && (
-            <NavLink to="/admin/sentiment" title="Admin" className="rounded-xl p-3 text-slate-400 hover:bg-white/5 hover:text-white">⚙</NavLink>
+            <NavLink to="/admin/sentiment" title="Admin" className="rounded-xl p-3 text-[var(--c-text-muted)] hover:bg-[var(--c-hover)] hover:text-[var(--c-text-primary)]">⚙</NavLink>
           )}
           {canAccess(accessMatrix, role, 'system-monitor') && (
-            <NavLink to="/system" title="System Monitor" className="rounded-xl p-3 text-slate-400 hover:bg-white/5 hover:text-white">⬡</NavLink>
+            <NavLink to="/system" title="System Monitor" className="rounded-xl p-3 text-[var(--c-text-muted)] hover:bg-[var(--c-hover)] hover:text-[var(--c-text-primary)]">⬡</NavLink>
           )}
         </nav>
       )}

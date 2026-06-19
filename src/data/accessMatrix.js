@@ -1,5 +1,5 @@
 const KEY     = 'access_matrix';
-const VERSION = 7;
+const VERSION = 9;
 
 // Flat list of every navigable item — used by both Sidebar and ManageAccess
 export const MENU_ITEMS = [
@@ -19,6 +19,9 @@ export const MENU_ITEMS = [
   { key: 'apps/pre-earnings/sector-tracker',       label: 'Sector Tracker',        level: 2 },
   { key: 'apps/pre-earnings/calendar',             label: 'Calendar',              level: 2 },
   { key: 'apps/pre-earnings/historical-performance', label: 'Historical Performance', level: 2 },
+  { key: 'apps/pre-earnings/hot-picks',              label: 'Hot Picks',              level: 2 },
+  { key: 'apps/eod-moc',                             label: 'EOD-MOC Signal',          level: 1 },
+  { key: 'apps/eod-moc/signal',                      label: 'Signal',                  level: 2 },
   { key: 'admin',                                           label: 'Admin',                   level: 0 },
   { key: 'admin/market-sentiment',                          label: 'Market Sentiment',        level: 1 },
   { key: 'admin/market-sentiment/subscriber-commentary',    label: 'Subscriber Commentary',   level: 2 },
@@ -56,6 +59,9 @@ export const DEFAULT_MATRIX = {
   'apps/pre-earnings/sector-tracker':               { subscriber: true,  admin: true,  superuser: true  },
   'apps/pre-earnings/calendar':                     { subscriber: true,  admin: true,  superuser: true  },
   'apps/pre-earnings/historical-performance':       { subscriber: true,  admin: true,  superuser: true  },
+  'apps/pre-earnings/hot-picks':                    { subscriber: true,  admin: true,  superuser: true  },
+  'apps/eod-moc':                                   { subscriber: true,  admin: true,  superuser: true  },
+  'apps/eod-moc/signal':                            { subscriber: true,  admin: true,  superuser: true  },
   'admin':                                          { subscriber: false, admin: true,  superuser: true  },
   'admin/market-sentiment':                         { subscriber: false, admin: true,  superuser: true  },
   'admin/market-sentiment/subscriber-commentary':   { subscriber: false, admin: true,  superuser: true  },

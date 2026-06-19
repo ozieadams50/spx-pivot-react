@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 const INTERVALS = [
   { v: '1',   l: '1 Min'   },
@@ -14,12 +15,13 @@ const INTERVALS = [
   { v: 'M',   l: 'Monthly' },
 ];
 
-const selectCls = 'rounded-lg border border-white/10 bg-[#061018] px-3 py-1.5 text-sm text-white outline-none focus:border-cyan-500/50';
+const selectCls = 'rounded-lg border border-[var(--c-border)] bg-[var(--c-bg-page)] px-3 py-1.5 text-sm text-[var(--c-text-primary)] outline-none focus:border-cyan-500/50';
 
 export default function ChartView() {
+  const { theme: globalTheme } = useTheme();
   const [symbol,   setSymbol]   = useState('OANDA:SPX500USD');
   const [interval, setInterval] = useState('D');
-  const [theme,    setTheme]    = useState('dark');
+  const [theme,    setTheme]    = useState(globalTheme);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const containerRef = useRef(null);
@@ -88,25 +90,25 @@ export default function ChartView() {
       {/* ── Toolbar ──────────────────────────────────────────────────── */}
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <div>
-          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Symbol</label>
+          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-[var(--c-text-dimmed)]">Symbol</label>
           <input
             type="text"
             value={symbol}
             onChange={e => setSymbol(e.target.value.trim())}
             placeholder="OANDA:SPX500USD"
-            className="w-52 rounded-lg border border-white/10 bg-[#061018] px-3 py-1.5 text-sm text-white outline-none focus:border-cyan-500/50"
+            className="w-52 rounded-lg border border-[var(--c-border)] bg-[var(--c-bg-page)] px-3 py-1.5 text-sm text-[var(--c-text-primary)] outline-none focus:border-cyan-500/50"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Interval</label>
+          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-[var(--c-text-dimmed)]">Interval</label>
           <select value={interval} onChange={e => setInterval(e.target.value)} className={selectCls}>
             {INTERVALS.map(i => <option key={i.v} value={i.v}>{i.l}</option>)}
           </select>
         </div>
 
         <div>
-          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">Theme</label>
+          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-[var(--c-text-dimmed)]">Theme</label>
           <select value={theme} onChange={e => setTheme(e.target.value)} className={selectCls}>
             <option value="dark">Dark</option>
             <option value="light">Light</option>
@@ -116,7 +118,7 @@ export default function ChartView() {
         <button
           onClick={toggleFullscreen}
           title={isFullscreen ? 'Exit full screen' : 'Full screen'}
-          className="mt-4 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-slate-300 transition hover:bg-white/10 hover:text-white"
+          className="mt-4 rounded-lg border border-[var(--c-border)] bg-[var(--c-hover)] px-3 py-1.5 text-[var(--c-text-secondary)] transition hover:bg-[var(--c-hover-strong)] hover:text-[var(--c-text-primary)]"
         >
           {isFullscreen ? (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -133,14 +135,14 @@ export default function ChartView() {
       {/* ── Chart container ───────────────────────────────────────────── */}
       <div
         ref={containerRef}
-        className="relative flex-1 overflow-hidden rounded-2xl border border-white/10 bg-[#0d1f2d]"
+        className="relative flex-1 overflow-hidden rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)]"
         style={{ minHeight: 500 }}
       >
         {/* Full screen button overlay (also shown inside full screen) */}
         <button
           onClick={toggleFullscreen}
           title={isFullscreen ? 'Exit full screen (Esc)' : 'Full screen'}
-          className="absolute right-3 top-3 z-10 rounded-lg border border-white/20 bg-black/40 p-1.5 text-slate-300 backdrop-blur-sm transition hover:bg-black/60 hover:text-white"
+          className="absolute right-3 top-3 z-10 rounded-lg border border-white/20 bg-black/40 p-1.5 text-[var(--c-text-secondary)] backdrop-blur-sm transition hover:bg-[var(--c-bg-modal-overlay)] hover:text-[var(--c-text-primary)]"
         >
           {isFullscreen ? (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -160,8 +162,8 @@ export default function ChartView() {
         />
       </div>
 
-      <p className="mt-2 text-center text-[10px] text-slate-600">
-        <a href="https://www.tradingview.com/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-400">
+      <p className="mt-2 text-center text-[10px] text-[var(--c-text-faint)]">
+        <a href="https://www.tradingview.com/" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--c-text-muted)]">
           Track all markets on TradingView
         </a>
       </p>

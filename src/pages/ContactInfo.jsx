@@ -4,9 +4,9 @@ import { apiFetch } from '../lib/api';
 function Row({ label, value }) {
   return (
     <div>
-      <p className="mb-1 text-xs font-medium text-slate-500">{label}</p>
-      <p className="rounded-xl border border-white/10 bg-[#061018] px-3 py-2 text-sm text-slate-200">
-        {value || <span className="text-slate-600">—</span>}
+      <p className="mb-1 text-xs font-medium text-[var(--c-text-dimmed)]">{label}</p>
+      <p className="rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-3 py-2 text-sm text-[var(--c-text-secondary)]">
+        {value || <span className="text-[var(--c-text-faint)]">—</span>}
       </p>
     </div>
   );
@@ -22,17 +22,17 @@ export default function ContactInfo() {
   return (
     <div className="p-6 md:p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Contact Info</h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">Contact Info</h1>
+        <p className="mt-1 text-sm text-[var(--c-text-muted)]">
           Your name, email, and phone number on file. Contact your administrator to make changes.
         </p>
       </div>
 
-      <div className="max-w-2xl rounded-2xl border border-white/10 bg-[#0d1f2d] p-6 shadow-lg">
+      <div className="max-w-2xl rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-6 shadow-lg">
         {!profile ? (
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-10 animate-pulse rounded-xl bg-white/5" />
+              <div key={i} className="h-10 animate-pulse rounded-xl bg-[var(--c-hover)]" />
             ))}
           </div>
         ) : (

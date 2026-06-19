@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { apiFetch } from '../lib/api';
+import PageGuide from '../components/PageGuide';
 
 // ── Period filter ─────────────────────────────────────────────────────────────
 
@@ -14,7 +15,7 @@ function filterByPeriod(data, period) {
 
 function EquityCurve({ data }) {
   if (!data || data.length < 2) return (
-    <div className="flex h-56 items-center justify-center text-sm text-slate-600">No data</div>
+    <div className="flex h-56 items-center justify-center text-sm text-[var(--c-text-faint)]">No data</div>
   );
 
   const W = 860, H = 240, PAD = { t: 12, r: 16, b: 36, l: 76 };
@@ -144,38 +145,38 @@ function TradeOutcomes({ s, fmtDollar }) {
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
-            <span className="text-slate-400">Winning Trades</span>
+            <span className="text-[var(--c-text-muted)]">Winning Trades</span>
           </span>
-          <span className="font-semibold text-emerald-400">
-            {s.wins.toLocaleString()} <span className="text-slate-500">({s.win_rate}%)</span>
+          <span className="font-semibold text-[var(--c-emerald)]">
+            {s.wins.toLocaleString()} <span className="text-[var(--c-text-dimmed)]">({s.win_rate}%)</span>
           </span>
         </div>
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-2 w-2 rounded-full bg-rose-500" />
-            <span className="text-slate-400">Losing Trades</span>
+            <span className="text-[var(--c-text-muted)]">Losing Trades</span>
           </span>
-          <span className="font-semibold text-rose-400">
-            {s.losses.toLocaleString()} <span className="text-slate-500">({(100 - s.win_rate).toFixed(1)}%)</span>
+          <span className="font-semibold text-[var(--c-rose)]">
+            {s.losses.toLocaleString()} <span className="text-[var(--c-text-dimmed)]">({(100 - s.win_rate).toFixed(1)}%)</span>
           </span>
         </div>
 
-        <div className="mt-2 border-t border-white/10 pt-2 space-y-1">
+        <div className="mt-2 border-t border-[var(--c-border)] pt-2 space-y-1">
           <div className="flex justify-between">
-            <span className="text-slate-500">Avg Win</span>
-            <span className="text-emerald-400">{fmtDollar(s.avg_win_pnl)}</span>
+            <span className="text-[var(--c-text-dimmed)]">Avg Win</span>
+            <span className="text-[var(--c-emerald)]">{fmtDollar(s.avg_win_pnl)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Avg Loss</span>
-            <span className="text-rose-400">{fmtDollar(s.avg_loss_pnl)}</span>
+            <span className="text-[var(--c-text-dimmed)]">Avg Loss</span>
+            <span className="text-[var(--c-rose)]">{fmtDollar(s.avg_loss_pnl)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Largest Win</span>
-            <span className="text-emerald-400">{fmtDollar(s.largest_win)}</span>
+            <span className="text-[var(--c-text-dimmed)]">Largest Win</span>
+            <span className="text-[var(--c-emerald)]">{fmtDollar(s.largest_win)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Largest Loss</span>
-            <span className="text-rose-400">{fmtDollar(s.largest_loss)}</span>
+            <span className="text-[var(--c-text-dimmed)]">Largest Loss</span>
+            <span className="text-[var(--c-rose)]">{fmtDollar(s.largest_loss)}</span>
           </div>
         </div>
       </div>
@@ -223,13 +224,13 @@ const ICONS = {
   ),
 };
 
-function Metric({ label, value, sub, color = 'text-white', badge, icon, tooltip }) {
+function Metric({ label, value, sub, color = 'text-[var(--c-text-primary)]', badge, icon, tooltip }) {
   return (
-    <div className="group relative rounded-xl border border-white/10 bg-[#0d1f2d] p-3 cursor-default">
+    <div className="group relative rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-3 cursor-default">
       {tooltip && (
-        <div className="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 z-50 w-52 -translate-x-1/2 rounded-xl border border-white/10 bg-[#0a1628] p-3 opacity-0 shadow-2xl transition-opacity duration-150 group-hover:opacity-100">
+        <div className="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 z-50 w-52 -translate-x-1/2 rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-dropdown)] p-3 opacity-0 shadow-2xl transition-opacity duration-150 group-hover:opacity-100">
           {tooltip.map((line, i) => (
-            <p key={i} className={i === 0 ? 'text-[11px] font-semibold text-white' : 'mt-1 text-[10px] text-slate-400'}>
+            <p key={i} className={i === 0 ? 'text-[11px] font-semibold text-[var(--c-text-primary)]' : 'mt-1 text-[10px] text-[var(--c-text-muted)]'}>
               {line}
             </p>
           ))}
@@ -237,16 +238,16 @@ function Metric({ label, value, sub, color = 'text-white', badge, icon, tooltip 
         </div>
       )}
       <div className="flex items-start justify-between">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">{label}</p>
-        {icon && <span className="text-slate-600">{ICONS[icon]}</span>}
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">{label}</p>
+        {icon && <span className="text-[var(--c-text-faint)]">{ICONS[icon]}</span>}
       </div>
       <p className={`mt-1 text-xl font-bold leading-none ${color}`}>{value}</p>
       {badge && (
-        <span className="mt-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold bg-violet-500/20 text-violet-300">
+        <span className="mt-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold bg-violet-500/20 text-[var(--c-violet)]">
           {badge}
         </span>
       )}
-      {sub && !badge && <p className="mt-0.5 text-[10px] text-slate-500">{sub}</p>}
+      {sub && !badge && <p className="mt-0.5 text-[10px] text-[var(--c-text-dimmed)]">{sub}</p>}
     </div>
   );
 }
@@ -260,8 +261,8 @@ function Seg({ options, value, onChange }) {
         <button key={o.v} type="button" onClick={() => onChange(o.v)}
           className={`flex-1 rounded-lg border py-1.5 text-xs font-medium transition ${
             value === o.v
-              ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300'
-              : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20'
+              ? 'border-cyan-500/50 bg-cyan-500/15 text-[var(--c-cyan)]'
+              : 'border-[var(--c-border)] bg-[var(--c-hover)] text-[var(--c-text-muted)] hover:border-white/20'
           }`}>
           {o.l ?? o.v}
         </button>
@@ -273,12 +274,12 @@ function Seg({ options, value, onChange }) {
 // ── Label ─────────────────────────────────────────────────────────────────────
 
 function Lbl({ children }) {
-  return <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-slate-500">{children}</label>;
+  return <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-[var(--c-text-dimmed)]">{children}</label>;
 }
 
 // ── Input ─────────────────────────────────────────────────────────────────────
 
-const inputCls = 'w-full rounded-lg border border-white/10 bg-[#061018] px-2 py-1.5 text-sm text-white outline-none focus:border-cyan-500/50';
+const inputCls = 'w-full rounded-lg border border-[var(--c-border)] bg-[var(--c-bg-page)] px-2 py-1.5 text-sm text-[var(--c-text-primary)] outline-none focus:border-cyan-500/50';
 
 // Free-key numeric input (no spinner arrows) with range validation on blur
 function NumInput({ value, onChange, min, max, step = 1, isFloat = false, className = '' }) {
@@ -318,10 +319,10 @@ function NumInput({ value, onChange, min, max, step = 1, isFloat = false, classN
 // ── EXIT COLORS ───────────────────────────────────────────────────────────────
 
 const EXIT_COLORS = {
-  expiry:        { bg: 'bg-emerald-500/15', text: 'text-emerald-300', label: 'Expiration'     },
-  profit_target: { bg: 'bg-cyan-500/15',    text: 'text-cyan-300',    label: 'Profit Target'  },
-  stop_loss:     { bg: 'bg-amber-500/15',   text: 'text-amber-300',   label: 'Stop Loss'      },
-  breach:        { bg: 'bg-rose-500/15',    text: 'text-rose-300',    label: 'Strike Breach'  },
+  expiry:        { bg: 'bg-emerald-500/15', text: 'text-[var(--c-emerald-strong)]', label: 'Expiration'     },
+  profit_target: { bg: 'bg-cyan-500/15',    text: 'text-[var(--c-cyan)]',    label: 'Profit Target'  },
+  stop_loss:     { bg: 'bg-amber-500/15',   text: 'text-[var(--c-amber)]',   label: 'Stop Loss'      },
+  breach:        { bg: 'bg-rose-500/15',    text: 'text-[var(--c-rose-strong)]',    label: 'Strike Breach'  },
 };
 
 // ── Main page ─────────────────────────────────────────────────────────────────
@@ -379,34 +380,46 @@ export default function SPXBacktest() {
     <div className="p-4 md:p-5">
 
       {/* ── Page header ──────────────────────────────────────────────────── */}
-      <div className="mb-4 flex items-center justify-between">
+      <div id="pg-run-btn" className="mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">SPX Put Credit Spread</h1>
-          <p className="text-sm text-slate-400">Backtester</p>
+          <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">SPX Put Credit Spread</h1>
+          <p className="text-sm text-[var(--c-text-muted)]">Backtester</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-white/10">
+          <button className="rounded-lg border border-[var(--c-border)] bg-[var(--c-hover)] px-3 py-1.5 text-xs text-[var(--c-text-secondary)] transition hover:bg-[var(--c-hover-strong)]">
             Save Strategy
           </button>
-          <button className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-white/10">
+          <button className="rounded-lg border border-[var(--c-border)] bg-[var(--c-hover)] px-3 py-1.5 text-xs text-[var(--c-text-secondary)] transition hover:bg-[var(--c-hover-strong)]">
             Load Strategy
           </button>
           <button onClick={runBacktest} disabled={loading}
-            className="rounded-lg bg-violet-600 px-4 py-1.5 text-xs font-bold text-white transition hover:bg-violet-500 disabled:opacity-50">
+            className="rounded-lg bg-violet-600 px-4 py-1.5 text-xs font-bold text-[var(--c-text-primary)] transition hover:bg-violet-500 disabled:opacity-50">
             {loading ? 'Running…' : '▶  Run Backtest'}
           </button>
         </div>
       </div>
 
+      <PageGuide
+        guideKey="spx-backtest"
+        accent="cyan"
+        title="Test any Bull Put Spread strategy against years of SPX historical data."
+        description="A backtest lets you see how a trading strategy would have performed in the past — before you risk real money. Adjust your parameters, run the simulation, and evaluate the results."
+        steps={[
+          { text: 'Set your strategy parameters in the left panel — choose your date range, expiration mode (Weekly/Monthly/Daily), and strike level. S1 places your short put at the first support pivot; S2 goes further out-of-the-money for a more conservative setup.', targetId: 'pg-inputs' },
+          { text: 'Click "▶ Run Backtest" when ready. The simulation usually takes 4–10 seconds. It tests every valid trading day in your date range using the exact rules you configured.', targetId: 'pg-run-btn' },
+          { text: 'Review the results on the right — focus on Win Rate, Profit Factor, and Max Drawdown. A Win Rate above 70% and Profit Factor above 1.5 are signs of a solid edge. The equity curve shows how account value grew (or fell) over time.', targetId: 'pg-results' },
+        ]}
+      />
+
       {/* ── Main grid: 3 inputs + 9 results ──────────────────────────────── */}
       <div className="grid grid-cols-12 gap-4">
 
         {/* ── Left: Inputs ─────────────────────────────────────────────── */}
-        <div className="col-span-3 rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
+        <div id="pg-inputs" className="col-span-3 rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-4">
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Strategy Inputs</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--c-text-dimmed)]">Strategy Inputs</p>
             <button type="button" onClick={() => setForm({ ...DEFAULTS })}
-              className="rounded-lg border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-slate-400 transition hover:bg-white/10 hover:text-slate-200">
+              className="rounded-lg border border-[var(--c-border)] bg-[var(--c-hover)] px-2 py-0.5 text-[10px] text-[var(--c-text-muted)] transition hover:bg-[var(--c-hover-strong)] hover:text-[var(--c-text-secondary)]">
               Reset
             </button>
           </div>
@@ -427,7 +440,7 @@ export default function SPXBacktest() {
                   className={inputCls} />
               </div>
               {form.start_date < MIN_DATE && (
-                <p className="mt-1 text-[10px] text-amber-400">
+                <p className="mt-1 text-[10px] text-[var(--c-amber-strong)]">
                   {MIN_DATE_LABEL} is our earliest available data.
                 </p>
               )}
@@ -451,12 +464,12 @@ export default function SPXBacktest() {
             <div>
               <div className="flex items-center justify-between">
                 <Lbl>Spread Width (Pts)</Lbl>
-                <span className="mb-1 text-xs font-semibold text-cyan-400">${form.spread_width}</span>
+                <span className="mb-1 text-xs font-semibold text-[var(--c-cyan-strong)]">${form.spread_width}</span>
               </div>
               <input type="range" min={5} max={50} step={5} value={form.spread_width}
                 onChange={e => set('spread_width')(Number(e.target.value))}
                 className="w-full accent-cyan-500" />
-              <div className="flex justify-between text-[9px] text-slate-600 mt-0.5">
+              <div className="flex justify-between text-[9px] text-[var(--c-text-faint)] mt-0.5">
                 <span>$5</span><span>$25</span><span>$50</span>
               </div>
             </div>
@@ -465,7 +478,7 @@ export default function SPXBacktest() {
             <div>
               <Lbl>Min Credit Per Spread</Lbl>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-slate-500">$</span>
+                <span className="text-xs text-[var(--c-text-dimmed)]">$</span>
                 <NumInput value={form.min_credit} onChange={set('min_credit')} min={0} max={20} isFloat />
               </div>
             </div>
@@ -480,15 +493,15 @@ export default function SPXBacktest() {
             <div>
               <div className="flex items-center justify-between">
                 <Lbl>VIX Range</Lbl>
-                <span className="mb-1 text-[10px] text-slate-500">Per Spread</span>
+                <span className="mb-1 text-[10px] text-[var(--c-text-dimmed)]">Per Spread</span>
               </div>
               <div className="grid grid-cols-2 gap-1.5">
                 <div className="flex items-center gap-1">
-                  <span className="text-[10px] text-slate-500 w-6">Min</span>
+                  <span className="text-[10px] text-[var(--c-text-dimmed)] w-6">Min</span>
                   <NumInput value={form.vix_min} onChange={set('vix_min')} min={0} max={149} />
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-[10px] text-slate-500 w-6">Max</span>
+                  <span className="text-[10px] text-[var(--c-text-dimmed)] w-6">Max</span>
                   <NumInput value={form.vix_max} onChange={set('vix_max')} min={1} max={150} />
                 </div>
               </div>
@@ -506,7 +519,7 @@ export default function SPXBacktest() {
               <Lbl>Stop Loss</Lbl>
               <Seg options={[{v:0,l:'None'},{v:1.0,l:'1×'},{v:2.0,l:'2×'},{v:3.0,l:'3×'}]}
                 value={form.stop_loss_pct} onChange={set('stop_loss_pct')} />
-              <p className="mt-0.5 text-[9px] text-slate-600">
+              <p className="mt-0.5 text-[9px] text-[var(--c-text-faint)]">
                 {form.stop_loss_pct === 0 ? 'No stop loss — hold to expiry or profit target' : 'Multiples of credit received'}
               </p>
             </div>
@@ -531,38 +544,38 @@ export default function SPXBacktest() {
             </div>
 
             {error && (
-              <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">{error}</div>
+              <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-[var(--c-rose-strong)]">{error}</div>
             )}
 
             <button onClick={runBacktest} disabled={loading}
-              className="w-full rounded-xl bg-violet-600 py-2.5 text-sm font-bold text-white transition hover:bg-violet-500 disabled:opacity-50">
+              className="w-full rounded-xl bg-violet-600 py-2.5 text-sm font-bold text-[var(--c-text-primary)] transition hover:bg-violet-500 disabled:opacity-50">
               {loading ? 'Running…' : '▶  RUN BACKTEST'}
             </button>
 
-            <p className="text-center text-[9px] text-slate-600">
+            <p className="text-center text-[9px] text-[var(--c-text-faint)]">
               Credits estimated via Black-Scholes + VIX (±20%)
             </p>
           </div>
         </div>
 
         {/* ── Right: Results ────────────────────────────────────────────── */}
-        <div className="col-span-9 space-y-4">
+        <div id="pg-results" className="col-span-9 space-y-4">
 
           {/* Loading state */}
           {loading && (
-            <div className="flex h-64 items-center justify-center rounded-2xl border border-white/10 bg-[#0d1f2d]">
+            <div className="flex h-64 items-center justify-center rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)]">
               <div className="text-center">
                 <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-2 border-violet-500/30 border-t-violet-400" />
-                <p className="text-sm text-slate-400">Running simulation…</p>
-                <p className="mt-1 text-xs text-slate-600">Usually 4–10 seconds</p>
+                <p className="text-sm text-[var(--c-text-muted)]">Running simulation…</p>
+                <p className="mt-1 text-xs text-[var(--c-text-faint)]">Usually 4–10 seconds</p>
               </div>
             </div>
           )}
 
           {/* Empty state */}
           {!results && !loading && (
-            <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-[#0d1f2d]">
-              <p className="text-sm text-slate-600">Configure inputs and click Run Backtest</p>
+            <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-[var(--c-border)] bg-[var(--c-bg-panel)]">
+              <p className="text-sm text-[var(--c-text-faint)]">Configure inputs and click Run Backtest</p>
             </div>
           )}
 
@@ -582,7 +595,7 @@ export default function SPXBacktest() {
                   ]} />
                 <Metric label="Win Rate"
                   value={`${s.win_rate}%`}
-                  color={s.win_rate >= 70 ? 'text-emerald-400' : s.win_rate >= 55 ? 'text-amber-400' : 'text-rose-400'}
+                  color={s.win_rate >= 70 ? 'text-[var(--c-emerald)]' : s.win_rate >= 55 ? 'text-[var(--c-amber-strong)]' : 'text-[var(--c-rose)]'}
                   icon="winrate"
                   tooltip={[
                     `${s.win_rate}% of trades profitable`,
@@ -592,7 +605,7 @@ export default function SPXBacktest() {
                   ]} />
                 <Metric label="Profit Factor"
                   value={s.profit_factor == null ? '∞' : s.profit_factor}
-                  color={s.profit_factor == null ? 'text-emerald-400' : s.profit_factor >= 1.5 ? 'text-emerald-400' : 'text-slate-300'}
+                  color={s.profit_factor == null ? 'text-[var(--c-emerald)]' : s.profit_factor >= 1.5 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-text-secondary)]'}
                   icon="factor"
                   tooltip={[
                     s.profit_factor == null ? 'Profit Factor: ∞ (no losing trades)' : `Profit factor: ${s.profit_factor}`,
@@ -604,7 +617,7 @@ export default function SPXBacktest() {
                   ]} />
                 <Metric label="Net Profit"
                   value={fmtDollar(s.net_profit)}
-                  color={s.net_profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}
+                  color={s.net_profit >= 0 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]'}
                   sub={`Avg ${fmtDollar(s.avg_pnl)} / trade`}
                   icon="profit"
                   tooltip={[
@@ -616,7 +629,7 @@ export default function SPXBacktest() {
                   ]} />
                 <Metric label="Max Drawdown"
                   value={fmtDollar(s.max_drawdown)}
-                  color="text-rose-400"
+                  color="text-[var(--c-rose)]"
                   icon="drawdown"
                   tooltip={[
                     `Max drawdown: ${fmtDollar(s.max_drawdown)}`,
@@ -625,7 +638,7 @@ export default function SPXBacktest() {
                   ]} />
                 <Metric label="Ann. Return on Capital"
                   value={`${s.annualized_return}%`}
-                  color={s.annualized_return >= 10 ? 'text-emerald-400' : s.annualized_return >= 0 ? 'text-amber-400' : 'text-rose-400'}
+                  color={s.annualized_return >= 10 ? 'text-[var(--c-emerald)]' : s.annualized_return >= 0 ? 'text-[var(--c-amber-strong)]' : 'text-[var(--c-rose)]'}
                   badge={s.annualized_return >= 20 ? 'Exceptional' : s.annualized_return >= 10 ? 'Strong' : null}
                   icon="annual"
                   tooltip={[
@@ -641,16 +654,16 @@ export default function SPXBacktest() {
               <div className="grid grid-cols-[1fr_240px] gap-4">
 
                 {/* Equity curve */}
-                <div className="rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
+                <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Equity Curve</p>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">Equity Curve</p>
                     <div className="flex gap-1">
                       {['1yr','3yr','5yr','All'].map(p => (
                         <button key={p} onClick={() => setPeriod(p)}
                           className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold transition ${
                             period === p
-                              ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300'
-                              : 'border-white/10 text-slate-500 hover:text-slate-300'
+                              ? 'border-cyan-500/50 bg-cyan-500/15 text-[var(--c-cyan)]'
+                              : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-secondary)]'
                           }`}>
                           {p}
                         </button>
@@ -661,8 +674,8 @@ export default function SPXBacktest() {
                 </div>
 
                 {/* Trade outcomes */}
-                <div className="rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
-                  <p className="mb-3 text-center text-xs font-semibold uppercase tracking-widest text-slate-500">
+                <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-4">
+                  <p className="mb-3 text-center text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
                     Trade Outcomes
                   </p>
                   <TradeOutcomes s={s} fmtDollar={fmtDollar} />
@@ -673,17 +686,17 @@ export default function SPXBacktest() {
               <div className="grid grid-cols-2 gap-4">
 
                 {/* Monthly Performance */}
-                <div className="rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-500">Monthly Performance</p>
+                <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-4">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">Monthly Performance</p>
                   <MonthlyBars data={results.monthly_perf} />
                 </div>
 
                 {/* VIX Range Performance */}
-                <div className="rounded-2xl border border-white/10 bg-[#0d1f2d] p-4">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-500">VIX Range Performance</p>
+                <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-4">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">VIX Range Performance</p>
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-white/10 text-[10px] uppercase tracking-widest text-slate-500">
+                      <tr className="border-b border-[var(--c-border)] text-[10px] uppercase tracking-widest text-[var(--c-text-dimmed)]">
                         <th className="pb-2 text-left">VIX Range</th>
                         <th className="pb-2 text-right">Trades</th>
                         <th className="pb-2 text-right">Win Rate</th>
@@ -693,16 +706,16 @@ export default function SPXBacktest() {
                     </thead>
                     <tbody className="divide-y divide-white/5">
                       {results.vix_breakdown.map(v => {
-                        const clr = v.win_rate >= 80 ? 'text-emerald-400' : v.win_rate >= 65 ? 'text-cyan-400' : v.win_rate >= 50 ? 'text-amber-400' : 'text-rose-400';
+                        const clr = v.win_rate >= 80 ? 'text-[var(--c-emerald)]' : v.win_rate >= 65 ? 'text-[var(--c-cyan-strong)]' : v.win_rate >= 50 ? 'text-[var(--c-amber-strong)]' : 'text-[var(--c-rose)]';
                         return (
                           <tr key={v.vix_bucket}>
-                            <td className="py-1.5 text-slate-300">{v.vix_bucket}</td>
-                            <td className="py-1.5 text-right text-slate-400">{v.trades}</td>
+                            <td className="py-1.5 text-[var(--c-text-secondary)]">{v.vix_bucket}</td>
+                            <td className="py-1.5 text-right text-[var(--c-text-muted)]">{v.trades}</td>
                             <td className={`py-1.5 text-right font-semibold ${clr}`}>{v.win_rate}%</td>
-                            <td className={`py-1.5 text-right font-semibold ${v.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            <td className={`py-1.5 text-right font-semibold ${v.pnl >= 0 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]'}`}>
                               {fmtDollar(v.pnl)}
                             </td>
-                            <td className={`py-1.5 text-right ${v.profit_factor >= 1.5 ? 'text-emerald-400' : 'text-slate-300'}`}>
+                            <td className={`py-1.5 text-right ${v.profit_factor >= 1.5 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-text-secondary)]'}`}>
                               {v.profit_factor ?? '—'}
                             </td>
                           </tr>
@@ -714,9 +727,9 @@ export default function SPXBacktest() {
               </div>
 
               {/* ── Trade Log ──────────────────────────────────────────── */}
-              <div className="rounded-2xl border border-white/10 bg-[#0d1f2d]">
-                <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Trade Log</p>
+              <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)]">
+                <div className="flex items-center justify-between border-b border-[var(--c-border)] px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">Trade Log</p>
                   <button
                     onClick={() => {
                       const cols = ['Date','SPX','VIX','Short Strike','Long Strike','DTE','Credit','P&L','Exit Type'];
@@ -732,7 +745,7 @@ export default function SPXBacktest() {
                       a.download = 'spx_backtest.csv';
                       a.click();
                     }}
-                    className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-400 transition hover:bg-cyan-500/20">
+                    className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-[var(--c-cyan-strong)] transition hover:bg-cyan-500/20">
                     ↓ Export CSV
                   </button>
                 </div>
@@ -740,7 +753,7 @@ export default function SPXBacktest() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-white/5 text-[10px] uppercase tracking-widest text-slate-600">
+                      <tr className="border-b border-[var(--c-border-subtle)] text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">
                         <th className="px-3 py-2 text-left">Date</th>
                         <th className="px-3 py-2 text-right">SPX</th>
                         <th className="px-3 py-2 text-right">VIX</th>
@@ -754,17 +767,17 @@ export default function SPXBacktest() {
                     </thead>
                     <tbody>
                       {[...results.trades].reverse().map((t, i) => {
-                        const cfg = EXIT_COLORS[t.exit_reason] ?? { bg: 'bg-white/5', text: 'text-slate-400', label: t.exit_reason };
+                        const cfg = EXIT_COLORS[t.exit_reason] ?? { bg: 'bg-[var(--c-hover)]', text: 'text-[var(--c-text-muted)]', label: t.exit_reason };
                         return (
                           <tr key={i} className={`border-b border-white/[0.04] transition-colors hover:bg-white/[0.02] ${!t.win ? 'bg-rose-500/[0.03]' : ''}`}>
-                            <td className="px-3 py-1.5 font-mono text-slate-300">{t.entry_date}</td>
-                            <td className="px-3 py-1.5 text-right font-mono text-slate-300">{t.spx_entry?.toFixed(0)}</td>
-                            <td className="px-3 py-1.5 text-right font-mono text-slate-400">{t.vix_entry?.toFixed(1)}</td>
-                            <td className="px-3 py-1.5 text-right font-mono text-slate-300">{t.short_strike}</td>
-                            <td className="px-3 py-1.5 text-right font-mono text-slate-500">{t.long_strike}</td>
-                            <td className="px-3 py-1.5 text-right text-slate-400">{t.dte}</td>
-                            <td className="px-3 py-1.5 text-right font-mono text-cyan-400">${t.credit?.toFixed(2)}</td>
-                            <td className={`px-3 py-1.5 text-right font-mono font-semibold ${t.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            <td className="px-3 py-1.5 font-mono text-[var(--c-text-secondary)]">{t.entry_date}</td>
+                            <td className="px-3 py-1.5 text-right font-mono text-[var(--c-text-secondary)]">{t.spx_entry?.toFixed(0)}</td>
+                            <td className="px-3 py-1.5 text-right font-mono text-[var(--c-text-muted)]">{t.vix_entry?.toFixed(1)}</td>
+                            <td className="px-3 py-1.5 text-right font-mono text-[var(--c-text-secondary)]">{t.short_strike}</td>
+                            <td className="px-3 py-1.5 text-right font-mono text-[var(--c-text-dimmed)]">{t.long_strike}</td>
+                            <td className="px-3 py-1.5 text-right text-[var(--c-text-muted)]">{t.dte}</td>
+                            <td className="px-3 py-1.5 text-right font-mono text-[var(--c-cyan-strong)]">${t.credit?.toFixed(2)}</td>
+                            <td className={`px-3 py-1.5 text-right font-mono font-semibold ${t.pnl >= 0 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]'}`}>
                               {t.pnl >= 0 ? '+' : ''}{t.pnl?.toFixed(0)}
                             </td>
                             <td className="px-3 py-1.5">

@@ -8,7 +8,7 @@ export default function AppLayout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#061018] text-slate-100">
+    <div className="min-h-screen overflow-x-hidden bg-[var(--c-bg-page)] text-[var(--c-text-primary)]">
       <div className="flex min-h-screen">
         <Sidebar
           collapsed={sidebarCollapsed}

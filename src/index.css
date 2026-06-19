@@ -2,6 +2,106 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Structural backgrounds */
+  --c-bg-page: #061018;
+  --c-bg-nav: #08111c;
+  --c-bg-nav-blur: rgba(8, 17, 28, 0.95);
+  --c-bg-card: #0b1420;
+  --c-bg-panel: #0d1f2d;
+  --c-bg-dropdown: #0d1726;
+  --c-bg-input: #061018;
+  --c-bg-gradient-from: #0f172a;
+  --c-bg-gradient-to: #0a1624;
+  --c-bg-alt: #091420;
+  --c-bg-alt2: #07101b;
+  --c-bg-modal-overlay: rgba(0, 0, 0, 0.6);
+
+  /* Text */
+  --c-text-primary: #ffffff;
+  --c-text-secondary: #cbd5e1;
+  --c-text-muted: #94a3b8;
+  --c-text-dimmed: #64748b;
+  --c-text-faint: #475569;
+
+  /* Borders */
+  --c-border: rgba(255, 255, 255, 0.1);
+  --c-border-subtle: rgba(255, 255, 255, 0.05);
+
+  /* Interactive */
+  --c-hover: rgba(255, 255, 255, 0.05);
+  --c-hover-strong: rgba(255, 255, 255, 0.1);
+  --c-hover-faint: rgba(255, 255, 255, 0.03);
+
+  /* Accent text (theme-adaptive for contrast) */
+  --c-cyan: #67e8f9;
+  --c-cyan-strong: #22d3ee;
+  --c-violet: #c4b5fd;
+  --c-violet-strong: #a78bfa;
+  --c-emerald: #34d399;
+  --c-emerald-strong: #6ee7b7;
+  --c-rose: #fb7185;
+  --c-rose-strong: #fda4af;
+  --c-sky: #7dd3fc;
+  --c-sky-strong: #38bdf8;
+  --c-amber: #fcd34d;
+  --c-amber-strong: #f59e0b;
+  --c-orange: #fdba74;
+  --c-orange-strong: #fb923c;
+
+  /* Button primary */
+  --c-btn-bg: #06b6d4;
+  --c-btn-text: #061018;
+  --c-btn-hover: #22d3ee;
+}
+
+[data-theme="light"] {
+  --c-bg-page: #f8fafc;
+  --c-bg-nav: #ffffff;
+  --c-bg-nav-blur: rgba(255, 255, 255, 0.95);
+  --c-bg-card: #ffffff;
+  --c-bg-panel: #ffffff;
+  --c-bg-dropdown: #ffffff;
+  --c-bg-input: #f8fafc;
+  --c-bg-gradient-from: #f8fafc;
+  --c-bg-gradient-to: #ffffff;
+  --c-bg-alt: #f1f5f9;
+  --c-bg-alt2: #f1f5f9;
+  --c-bg-modal-overlay: rgba(0, 0, 0, 0.3);
+
+  --c-text-primary: #0f172a;
+  --c-text-secondary: #475569;
+  --c-text-muted: #64748b;
+  --c-text-dimmed: #94a3b8;
+  --c-text-faint: #cbd5e1;
+
+  --c-border: #e2e8f0;
+  --c-border-subtle: #f1f5f9;
+
+  --c-hover: #f1f5f9;
+  --c-hover-strong: #e2e8f0;
+  --c-hover-faint: #f8fafc;
+
+  --c-cyan: #0e7490;
+  --c-cyan-strong: #0891b2;
+  --c-violet: #6d28d9;
+  --c-violet-strong: #7c3aed;
+  --c-emerald: #047857;
+  --c-emerald-strong: #059669;
+  --c-rose: #be123c;
+  --c-rose-strong: #e11d48;
+  --c-sky: #0369a1;
+  --c-sky-strong: #0284c7;
+  --c-amber: #b45309;
+  --c-amber-strong: #d97706;
+  --c-orange: #c2410c;
+  --c-orange-strong: #ea580c;
+
+  --c-btn-bg: #0891b2;
+  --c-btn-text: #ffffff;
+  --c-btn-hover: #0e7490;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

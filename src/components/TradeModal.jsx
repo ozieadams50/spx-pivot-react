@@ -1,15 +1,15 @@
 import vspImage from '../assets/VSP.png';
 
 const TONE_MAP = {
-  emerald: 'border-emerald-500/20 bg-emerald-500/5 text-emerald-300',
-  cyan: 'border-cyan-500/20 bg-cyan-500/5 text-cyan-300',
+  emerald: 'border-emerald-500/20 bg-emerald-500/5 text-[var(--c-emerald-strong)]',
+  cyan: 'border-cyan-500/20 bg-cyan-500/5 text-[var(--c-cyan)]',
 };
 
 function TradeLegCard({ title, contract, tone }) {
   return (
     <div className={`rounded-2xl border p-5 ${TONE_MAP[tone]}`}>
       <p className="mb-2 text-xs uppercase tracking-[0.2em] opacity-80">{title}</p>
-      <p className="text-lg font-semibold text-white">{contract}</p>
+      <p className="text-lg font-semibold text-[var(--c-text-primary)]">{contract}</p>
     </div>
   );
 }
@@ -27,21 +27,21 @@ function TastyTradeTicket({ buy, sell, strategyImage }) {
   const sto = parseLeg(sell);
 
   const rows = [
-    { ...bto, action: 'B', label: 'Buy to Open',  border: 'border-l-emerald-500', bg: 'bg-emerald-500/[0.06]', badge: 'bg-emerald-500 text-white' },
-    { ...sto, action: 'S', label: 'Sell to Open', border: 'border-l-rose-500',    bg: 'bg-rose-500/[0.06]',    badge: 'bg-rose-600 text-white'    },
+    { ...bto, action: 'B', label: 'Buy to Open',  border: 'border-l-emerald-500', bg: 'bg-emerald-500/[0.06]', badge: 'bg-emerald-500 text-[var(--c-text-primary)]' },
+    { ...sto, action: 'S', label: 'Sell to Open', border: 'border-l-rose-500',    bg: 'bg-rose-500/[0.06]',    badge: 'bg-rose-600 text-[var(--c-text-primary)]'    },
   ];
 
   return (
-    <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-black/50">
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">TastyTrade Order Entry</p>
+    <div className="mt-6 overflow-hidden rounded-2xl border border-[var(--c-border)] bg-black/50">
+      <div className="flex items-center justify-between border-b border-[var(--c-border)] px-4 py-2.5">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">TastyTrade Order Entry</p>
         {strategyImage && (
           <img src={strategyImage} alt="Strategy type" className="h-7 object-contain" />
         )}
       </div>
       <table className="w-full text-xs">
         <thead>
-          <tr className="border-b border-white/[0.06] text-[10px] uppercase tracking-widest text-slate-600">
+          <tr className="border-b border-white/[0.06] text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">
             <th className="px-4 py-2 text-left">Strike</th>
             {GREEK_COLS.map((c) => (
               <th key={c} className="px-3 py-2 text-right">{c}</th>
@@ -53,11 +53,11 @@ function TastyTradeTicket({ buy, sell, strategyImage }) {
           {rows.map((row) => (
             <tr key={row.action} className={`border-l-4 ${row.border} ${row.bg}`}>
               <td className="px-4 py-3">
-                <span className="text-sm font-bold text-white">{row.strike}</span>
-                <span className="ml-2 text-[10px] text-slate-500">Put · {row.expiry}</span>
+                <span className="text-sm font-bold text-[var(--c-text-primary)]">{row.strike}</span>
+                <span className="ml-2 text-[10px] text-[var(--c-text-dimmed)]">Put · {row.expiry}</span>
               </td>
               {GREEK_COLS.map((c) => (
-                <td key={c} className="px-3 py-3 text-right font-mono text-slate-600">—</td>
+                <td key={c} className="px-3 py-3 text-right font-mono text-[var(--c-text-faint)]">—</td>
               ))}
               <td className="px-4 py-3 text-right">
                 <span className={`inline-block rounded px-2.5 py-1 text-xs font-bold tracking-wide ${row.badge}`}>
@@ -87,22 +87,22 @@ export default function TradeModal({ selectedStrategy, setSelectedStrategy, exec
                         ?? premiums?.overall?.spreads?.[premKey];
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="max-h-[95vh] w-full max-w-5xl overflow-auto rounded-[32px] border border-white/10 bg-[#09111d] shadow-2xl">
-        <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
+      <div className="max-h-[95vh] w-full max-w-5xl overflow-auto rounded-[32px] border border-[var(--c-border)] bg-[var(--c-bg-dropdown)] shadow-2xl">
+        <div className="flex items-center justify-between border-b border-[var(--c-border)] px-6 py-5">
           <div>
-            <h3 className="text-2xl font-bold text-white sm:text-3xl">How to Trade — Bull Put Spread</h3>
-            <p className="mt-2 text-sm text-slate-400">Select a strategy profile to see execution details.</p>
+            <h3 className="text-2xl font-bold text-[var(--c-text-primary)] sm:text-3xl">How to Trade — Bull Put Spread</h3>
+            <p className="mt-2 text-sm text-[var(--c-text-muted)]">Select a strategy profile to see execution details.</p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-2xl border border-white/10 px-4 py-2 text-slate-400 hover:bg-white/5 hover:text-white transition-colors"
+            className="rounded-2xl border border-[var(--c-border)] px-4 py-2 text-[var(--c-text-muted)] hover:bg-[var(--c-hover)] hover:text-[var(--c-text-primary)] transition-colors"
           >
             ✕
           </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr]">
-          <div className="border-b border-white/10 p-5 lg:border-b-0 lg:border-r">
+          <div className="border-b border-[var(--c-border)] p-5 lg:border-b-0 lg:border-r">
             {Object.keys(execCards).map((strategy) => (
               <button
                 key={strategy}
@@ -122,8 +122,8 @@ export default function TradeModal({ selectedStrategy, setSelectedStrategy, exec
               {selectedStrategy}
             </div>
 
-            <h4 className="text-xl font-bold text-white sm:text-2xl">{activeStrategy.level}</h4>
-            <p className="mt-1 text-sm text-slate-400">{activeStrategy.risk}</p>
+            <h4 className="text-xl font-bold text-[var(--c-text-primary)] sm:text-2xl">{activeStrategy.level}</h4>
+            <p className="mt-1 text-sm text-[var(--c-text-muted)]">{activeStrategy.risk}</p>
 
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
               <TradeLegCard title="Buy to Open (Long Leg)"   contract={activeStrategy.buy}  tone="emerald" />
@@ -132,32 +132,32 @@ export default function TradeModal({ selectedStrategy, setSelectedStrategy, exec
 
             <TastyTradeTicket buy={activeStrategy.buy} sell={activeStrategy.sell} strategyImage={vspImage} />
 
-            <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Target Net Credit</p>
-              <p className="mt-2 text-3xl font-bold text-emerald-400">{activeStrategy.credit}</p>
+            <div className="mt-6 rounded-2xl border border-[var(--c-border)] bg-black/20 p-5">
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--c-text-dimmed)]">Target Net Credit</p>
+              <p className="mt-2 text-3xl font-bold text-[var(--c-emerald)]">{activeStrategy.credit}</p>
 
               {recData && (
                 <div className="mt-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-5 py-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-400">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--c-emerald)]">
                     Recommended Premium Range
-                    {currentVix && <span className="ml-2 font-normal text-emerald-400/60">· VIX {currentVix} ({currentBucket})</span>}
+                    {currentVix && <span className="ml-2 font-normal text-[var(--c-emerald)]/60">· VIX {currentVix} ({currentBucket})</span>}
                   </p>
                   <div className="mt-2 flex items-end justify-between">
                     <div>
-                      <p className="text-2xl font-bold tracking-tight text-white">
+                      <p className="text-2xl font-bold tracking-tight text-[var(--c-text-primary)]">
                         ${recData.p25}–${recData.p75}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-emerald-400/70">p25–p75 range · 5-wide spread</p>
+                      <p className="mt-0.5 text-[10px] text-[var(--c-emerald)]/70">p25–p75 range · 5-wide spread</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] text-slate-500">Mean</p>
-                      <p className="text-2xl font-bold text-emerald-400">${recData.mean.toFixed(2)}</p>
+                      <p className="text-[10px] text-[var(--c-text-dimmed)]">Mean</p>
+                      <p className="text-2xl font-bold text-[var(--c-emerald)]">${recData.mean.toFixed(2)}</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="mt-3 text-xs text-[var(--c-text-dimmed)]">
                 Collect premium upfront. Max profit if SPX stays above short strike at expiry.
               </p>
             </div>

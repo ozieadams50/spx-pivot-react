@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { canAccess } from './data/accessMatrix';
 import AppLayout from './layouts/AppLayout';
 import Home from './pages/Home';
@@ -32,6 +33,8 @@ import PreEarningsTicker           from './pages/PreEarningsTicker';
 import EarningsCalendar            from './pages/EarningsCalendar';
 import EarningsHistoricalPerformance from './pages/EarningsHistoricalPerformance';
 import SectorTracker                 from './pages/SectorTracker';
+import HotPicksPage                  from './pages/HotPicksPage';
+import EodMocSignal                  from './pages/EodMocSignal';
 
 function AuthGuard({ children }) {
   const { loggedIn } = useAuth();
@@ -62,7 +65,11 @@ function AppRoutes() {
         <Route path="earnings/sectors"     element={<Guard matrixKey="apps/pre-earnings/sector-tracker"><SectorTracker /></Guard>} />
         <Route path="earnings/calendar"    element={<Guard matrixKey="apps/pre-earnings/calendar"><EarningsCalendar /></Guard>} />
         <Route path="earnings/historical" element={<Guard matrixKey="apps/pre-earnings/historical-performance"><EarningsHistoricalPerformance /></Guard>} />
+        <Route path="earnings/hot-picks"  element={<Guard matrixKey="apps/pre-earnings/hot-picks"><HotPicksPage /></Guard>} />
         <Route path="earnings/:ticker"    element={<Guard matrixKey="apps/pre-earnings"><PreEarningsTicker /></Guard>} />
+
+        {/* EOD-MOC Signal */}
+        <Route path="eod-moc"            element={<Guard matrixKey="apps/eod-moc/signal"><EodMocSignal /></Guard>} />
         <Route path="spx-pivots/charts"  element={<Guard matrixKey="apps/spx-pivots/chart-view"><ChartView /></Guard>} />
 
         {/* Admin — Market Sentiment */}
@@ -101,10 +108,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

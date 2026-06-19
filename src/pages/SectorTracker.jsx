@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
+import PageGuide from '../components/PageGuide';
 
 // ── Color helpers ─────────────────────────────────────────────────────────────
 
@@ -34,24 +35,24 @@ function SectorBar({ d, rank, maxAbs, onSelect }) {
   return (
     <button
       onClick={() => onSelect(d.etf_ticker)}
-      className="group w-full flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0b1420] p-3 text-left transition-all hover:border-violet-500/30 hover:bg-violet-500/5"
+      className="group w-full flex items-center gap-3 rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-3 text-left transition-all hover:border-violet-500/30 hover:bg-violet-500/5"
     >
-      <span className={`w-6 shrink-0 text-center text-xs font-bold ${isTop3 ? 'text-violet-300' : 'text-slate-600'}`}>
+      <span className={`w-6 shrink-0 text-center text-xs font-bold ${isTop3 ? 'text-[var(--c-violet)]' : 'text-[var(--c-text-faint)]'}`}>
         {rank}
       </span>
 
       <div className="w-52 shrink-0">
-        <p className={`text-sm font-semibold ${isTop3 ? 'text-white' : 'text-slate-300'}`}>{d.sector}</p>
+        <p className={`text-sm font-semibold ${isTop3 ? 'text-[var(--c-text-primary)]' : 'text-[var(--c-text-secondary)]'}`}>{d.sector}</p>
         <span className={`mt-0.5 inline-block rounded px-1.5 py-0.5 text-[10px] font-bold border ${
           isTop3
-            ? 'border-violet-500/40 bg-violet-500/15 text-violet-300'
-            : 'border-white/10 text-slate-600'
+            ? 'border-violet-500/40 bg-violet-500/15 text-[var(--c-violet)]'
+            : 'border-[var(--c-border)] text-[var(--c-text-faint)]'
         }`}>
           {d.etf_ticker}
         </span>
       </div>
 
-      <div className="relative flex-1 h-7 overflow-hidden rounded-lg bg-white/5">
+      <div className="relative flex-1 h-7 overflow-hidden rounded-lg bg-[var(--c-hover)]">
         <div
           className={`absolute top-0 h-full rounded-lg transition-all ${
             pos
@@ -62,15 +63,15 @@ function SectorBar({ d, rank, maxAbs, onSelect }) {
         />
       </div>
 
-      <span className={`w-16 shrink-0 text-right font-mono text-sm font-bold ${pos ? 'text-emerald-400' : 'text-rose-400'}`}>
+      <span className={`w-16 shrink-0 text-right font-mono text-sm font-bold ${pos ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]'}`}>
         {signedFmt(d.perf_1m)}
       </span>
       {d.weight != null && (
-        <span className="w-12 shrink-0 text-right font-mono text-xs text-slate-500">
+        <span className="w-12 shrink-0 text-right font-mono text-xs text-[var(--c-text-dimmed)]">
           {d.weight.toFixed(1)}%
         </span>
       )}
-      <span className="shrink-0 text-slate-600 transition-colors group-hover:text-violet-400">›</span>
+      <span className="shrink-0 text-[var(--c-text-faint)] transition-colors group-hover:text-[var(--c-violet-strong)]">›</span>
     </button>
   );
 }
@@ -94,12 +95,12 @@ function HeatTile({ h, period, onClick }) {
       {h.in_signals && (
         <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-violet-400 shadow-lg shadow-violet-500/50" />
       )}
-      <p className="text-xs font-bold leading-tight text-white">{h.ticker}</p>
-      <p className="mt-0.5 font-mono text-[11px] font-semibold text-white/85">
+      <p className="text-xs font-bold leading-tight text-[var(--c-text-primary)]">{h.ticker}</p>
+      <p className="mt-0.5 font-mono text-[11px] font-semibold text-[var(--c-text-primary)]/85">
         {pct != null ? signedFmt(pct) : '—'}
       </p>
       {h.weight != null && (
-        <p className="mt-0.5 text-[9px] text-white/45">{h.weight.toFixed(1)}%</p>
+        <p className="mt-0.5 text-[9px] text-[var(--c-text-primary)]/45">{h.weight.toFixed(1)}%</p>
       )}
     </Tag>
   );
@@ -121,10 +122,10 @@ function Legend() {
           />
         ))}
       </div>
-      <span className="text-[10px] text-slate-600">← underperform · outperform →</span>
+      <span className="text-[10px] text-[var(--c-text-faint)]">← underperform · outperform →</span>
       <div className="flex items-center gap-1.5 ml-2">
         <span className="h-2.5 w-2.5 rounded-full bg-violet-400" />
-        <span className="text-[10px] text-slate-500">in our Pre-Earnings signals</span>
+        <span className="text-[10px] text-[var(--c-text-dimmed)]">in our Pre-Earnings signals</span>
       </div>
     </div>
   );
@@ -175,19 +176,19 @@ function HeatMap({ etf, onBack }) {
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-slate-400 transition-colors hover:text-white"
+          className="flex items-center gap-1.5 text-sm text-[var(--c-text-muted)] transition-colors hover:text-[var(--c-text-primary)]"
         >
           ← All Sectors
         </button>
         <span className="text-slate-700">|</span>
         {data && (
           <>
-            <h2 className="text-xl font-bold text-white">{data.sector}</h2>
-            <span className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-bold text-violet-300">
+            <h2 className="text-xl font-bold text-[var(--c-text-primary)]">{data.sector}</h2>
+            <span className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-bold text-[var(--c-violet)]">
               {etf}
             </span>
             {signalCount > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-400/30 bg-violet-400/10 px-2.5 py-0.5 text-xs font-semibold text-violet-300">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-400/30 bg-violet-400/10 px-2.5 py-0.5 text-xs font-semibold text-[var(--c-violet)]">
                 <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
                 {signalCount} in our signals
               </span>
@@ -197,26 +198,26 @@ function HeatMap({ etf, onBack }) {
 
         {/* Sort + Period toggles */}
         <div className="ml-auto flex items-center gap-2">
-          <div className="flex rounded-xl border border-white/10 bg-black/30 p-0.5 text-xs font-semibold">
+          <div className="flex rounded-xl border border-[var(--c-border)] bg-black/30 p-0.5 text-xs font-semibold">
             {[['weight', 'Weight'], ['return', 'Return']].map(([val, label]) => (
               <button
                 key={val}
                 onClick={() => setSortKey(val)}
                 className={`rounded-lg px-3 py-1.5 transition-all ${
-                  sortKey === val ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20' : 'text-slate-400 hover:text-white'
+                  sortKey === val ? 'bg-violet-500 text-[var(--c-text-primary)] shadow-lg shadow-violet-500/20' : 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'
                 }`}
               >
                 {label}
               </button>
             ))}
           </div>
-          <div className="flex rounded-xl border border-white/10 bg-black/30 p-0.5 text-xs font-semibold">
+          <div className="flex rounded-xl border border-[var(--c-border)] bg-black/30 p-0.5 text-xs font-semibold">
             {[['30d', '30 Day'], ['5d', '5 Day']].map(([val, label]) => (
               <button
                 key={val}
                 onClick={() => setPeriod(val)}
                 className={`rounded-lg px-4 py-1.5 transition-all ${
-                  period === val ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20' : 'text-slate-400 hover:text-white'
+                  period === val ? 'bg-violet-500 text-[var(--c-text-primary)] shadow-lg shadow-violet-500/20' : 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'
                 }`}
               >
                 {label}
@@ -229,19 +230,19 @@ function HeatMap({ etf, onBack }) {
       {loading && (
         <div className="grid grid-cols-5 sm:grid-cols-7 lg:grid-cols-10 gap-2">
           {Array.from({ length: 50 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-white/5" />
+            <div key={i} className="h-16 animate-pulse rounded-xl bg-[var(--c-hover)]" />
           ))}
         </div>
       )}
 
       {error && (
-        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-4 text-sm text-rose-300">
+        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-4 text-sm text-[var(--c-rose-strong)]">
           Failed to load holdings: {error}
         </div>
       )}
 
       {!loading && data && data.holdings.length === 0 && (
-        <div className="rounded-2xl border border-white/10 bg-[#0b1420] px-8 py-14 text-center text-slate-500">
+        <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-card)] px-8 py-14 text-center text-[var(--c-text-dimmed)]">
           No holdings data available for {etf}. Holdings are sourced from SSGA and may be temporarily unavailable.
         </div>
       )}
@@ -304,12 +305,12 @@ export default function SectorTracker() {
   return (
     <div className="mx-auto max-w-5xl p-3 sm:p-4 lg:p-8">
       {/* Page header */}
-      <div className="mb-6 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-[#0a1624] p-6 lg:p-8">
-        <div className="mb-3 inline-flex rounded-full border border-violet-500/20 bg-violet-500/10 px-4 py-1 text-xs uppercase tracking-[0.2em] text-violet-300">
+      <div className="mb-6 rounded-3xl border border-[var(--c-border)] bg-gradient-to-br from-[var(--c-bg-gradient-from)] to-[var(--c-bg-gradient-to)] p-6 lg:p-8">
+        <div className="mb-3 inline-flex rounded-full border border-violet-500/20 bg-violet-500/10 px-4 py-1 text-xs uppercase tracking-[0.2em] text-[var(--c-violet)]">
           Quantified Edge
         </div>
-        <h1 className="text-3xl font-bold text-white sm:text-4xl">Sector Tracker</h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <h1 className="text-3xl font-bold text-[var(--c-text-primary)] sm:text-4xl">Sector Tracker</h1>
+        <p className="mt-2 text-sm text-[var(--c-text-muted)]">
           {selectedEtf
             ? 'SPDR ETF holdings heat map · 30-day and 5-day returns'
             : '30-day return by SPDR sector ETF · click a sector to explore holdings'}
@@ -317,7 +318,7 @@ export default function SectorTracker() {
       </div>
 
       {error && !selectedEtf && (
-        <div className="mb-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-4 text-sm text-rose-300">
+        <div className="mb-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-4 text-sm text-[var(--c-rose-strong)]">
           {error}
         </div>
       )}
@@ -326,19 +327,31 @@ export default function SectorTracker() {
         <HeatMap etf={selectedEtf} onBack={() => setSelectedEtf(null)} />
       ) : (
         <>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+          <PageGuide
+            guideKey="sector-tracker"
+            accent="violet"
+            title="See which sectors are leading the market — and find signals inside them."
+            description="Knowing which sectors have momentum helps you pick pre-earnings stocks with a tailwind behind them. A stock in a strong sector has a better chance of continuing its run."
+            steps={[
+              { text: 'Bars show each S&P 500 sector\'s 30-day return — green = gaining, red = losing. The top 3 sectors are highlighted in violet, showing where market momentum is strongest right now. Ideally you want your pre-earnings picks sitting in one of these.', targetId: 'pg-sector-bars' },
+              { text: 'Use the Return / Weight toggle to switch between ranking by recent performance vs. ranking by S&P 500 index weight. Return is most useful for spotting momentum; Weight helps you understand which sectors have the most impact on the overall index.', targetId: 'pg-sector-sort' },
+              'Click any sector row to drill into a color-coded heat map of every stock in that ETF. Stocks with a violet dot are currently in our Pre-Earnings Runners signals — so you can instantly see if a signal is sitting in a strong or weak sector before you trade.',
+            ]}
+          />
+
+          <div id="pg-sector-sort" className="mb-3 flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
               {sortKey === 'weight' ? 'Sectors by S&P 500 Weight' : 'Sectors by 30-Day Return'}
             </h2>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-slate-600">Top 3 highlighted · click to view holdings →</span>
-              <div className="flex rounded-xl border border-white/10 bg-black/30 p-0.5 text-xs font-semibold">
+              <span className="text-xs text-[var(--c-text-faint)]">Top 3 highlighted · click to view holdings →</span>
+              <div className="flex rounded-xl border border-[var(--c-border)] bg-black/30 p-0.5 text-xs font-semibold">
                 {[['return', 'Return'], ['weight', 'Weight']].map(([val, label]) => (
                   <button
                     key={val}
                     onClick={() => setSortKey(val)}
                     className={`rounded-lg px-3 py-1.5 transition-all ${
-                      sortKey === val ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20' : 'text-slate-400 hover:text-white'
+                      sortKey === val ? 'bg-violet-500 text-[var(--c-text-primary)] shadow-lg shadow-violet-500/20' : 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'
                     }`}
                   >
                     {label}
@@ -348,10 +361,11 @@ export default function SectorTracker() {
             </div>
           </div>
 
+          <div id="pg-sector-bars">
           {loading ? (
             <div className="space-y-2">
               {Array.from({ length: 11 }).map((_, i) => (
-                <div key={i} className="h-14 animate-pulse rounded-2xl bg-white/5" />
+                <div key={i} className="h-14 animate-pulse rounded-2xl bg-[var(--c-hover)]" />
               ))}
             </div>
           ) : (
@@ -367,6 +381,7 @@ export default function SectorTracker() {
               ))}
             </div>
           )}
+          </div>
         </>
       )}
     </div>

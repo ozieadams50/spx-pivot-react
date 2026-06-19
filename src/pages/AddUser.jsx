@@ -24,7 +24,7 @@ const DEFAULTS = {
 function Field({ label, children }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-medium text-slate-300">{label}</label>
+      <label className="mb-1.5 block text-xs font-medium text-[var(--c-text-secondary)]">{label}</label>
       {children}
     </div>
   );
@@ -37,7 +37,7 @@ function TextInput({ value, onChange, placeholder, type = 'text' }) {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-xl border border-white/10 bg-[#061018] px-3 py-2 text-sm text-white placeholder-slate-600 outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+      className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-3 py-2 text-sm text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
     />
   );
 }
@@ -52,8 +52,8 @@ function Segment({ options, value, onChange }) {
           onClick={() => onChange(opt)}
           className={`flex-1 rounded-xl border py-2 text-xs font-medium transition ${
             value === opt
-              ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300'
-              : 'border-white/10 bg-white/5 text-slate-400 hover:border-cyan-500/30 hover:text-cyan-300'
+              ? 'border-cyan-500/50 bg-cyan-500/15 text-[var(--c-cyan)]'
+              : 'border-[var(--c-border)] bg-[var(--c-hover)] text-[var(--c-text-muted)] hover:border-cyan-500/30 hover:text-[var(--c-cyan)]'
           }`}
         >
           {opt}
@@ -76,8 +76,8 @@ function MultiToggle({ options, value, onChange }) {
           onClick={() => toggle(opt)}
           className={`flex-1 rounded-xl border py-2 text-xs font-medium transition ${
             value.includes(opt)
-              ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300'
-              : 'border-white/10 bg-white/5 text-slate-400 hover:border-cyan-500/30 hover:text-cyan-300'
+              ? 'border-cyan-500/50 bg-cyan-500/15 text-[var(--c-cyan)]'
+              : 'border-[var(--c-border)] bg-[var(--c-hover)] text-[var(--c-text-muted)] hover:border-cyan-500/30 hover:text-[var(--c-cyan)]'
           }`}
         >
           {opt}
@@ -94,8 +94,8 @@ function ToggleSwitch({ label, checked, onChange }) {
       onClick={() => onChange(!checked)}
       className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm transition ${
         checked
-          ? 'border-cyan-500/50 bg-cyan-500/15 text-cyan-300'
-          : 'border-white/10 bg-white/5 text-slate-400 hover:border-cyan-500/30'
+          ? 'border-cyan-500/50 bg-cyan-500/15 text-[var(--c-cyan)]'
+          : 'border-[var(--c-border)] bg-[var(--c-hover)] text-[var(--c-text-muted)] hover:border-cyan-500/30'
       }`}
     >
       <span className="relative inline-block h-4 w-8 rounded-full bg-slate-700 transition">
@@ -148,29 +148,29 @@ export default function AddUser() {
   return (
     <div className="p-6 md:p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Add User</h1>
-        <p className="mt-1 text-sm text-slate-400">Register a new platform subscriber.</p>
+        <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">Add User</h1>
+        <p className="mt-1 text-sm text-[var(--c-text-muted)]">Register a new platform subscriber.</p>
       </div>
 
-      <div className="max-w-2xl rounded-2xl border border-white/10 bg-[#0d1f2d] p-6 shadow-lg">
+      <div className="max-w-2xl rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-6 shadow-lg">
 
-        <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Identity</p>
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--c-text-faint)]">Identity</p>
         <div className="grid grid-cols-3 gap-3">
           <Field label="First Name"><TextInput value={form.firstName} onChange={set('firstName')} placeholder="Jane" /></Field>
           <Field label="Last Name"><TextInput value={form.lastName}   onChange={set('lastName')}  placeholder="Smith" /></Field>
           <Field label="Suffix"><TextInput value={form.suffix} onChange={set('suffix')} placeholder="Jr." /></Field>
         </div>
 
-        <div className="mt-6 border-t border-white/10 pt-5">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Contact</p>
+        <div className="mt-6 border-t border-[var(--c-border)] pt-5">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--c-text-faint)]">Contact</p>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Email"><TextInput value={form.email} onChange={set('email')} placeholder="jane@example.com" /></Field>
             <Field label="Phone"><TextInput value={form.phone} onChange={set('phone')} placeholder="+15551234567" /></Field>
           </div>
         </div>
 
-        <div className="mt-6 border-t border-white/10 pt-5">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Trading Preferences</p>
+        <div className="mt-6 border-t border-[var(--c-border)] pt-5">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--c-text-faint)]">Trading Preferences</p>
           <div className="grid grid-cols-3 gap-3">
             <Field label="Trading Style"><Segment options={STYLE_OPTS} value={form.tradingStyle} onChange={set('tradingStyle')} /></Field>
             <Field label="Index"><Segment options={INDEX_OPTS} value={form.index} onChange={set('index')} /></Field>
@@ -179,7 +179,7 @@ export default function AddUser() {
                 type="number" min={0.05} max={0.99} step={0.05}
                 value={form.deltaTrigger}
                 onChange={(e) => set('deltaTrigger')(parseFloat(e.target.value))}
-                className="w-full rounded-xl border border-white/10 bg-[#061018] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
+                className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-3 py-2 text-sm text-[var(--c-text-primary)] outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30"
               />
             </Field>
           </div>
@@ -190,16 +190,16 @@ export default function AddUser() {
           </div>
         </div>
 
-        <div className="mt-6 border-t border-white/10 pt-5">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Alerts</p>
+        <div className="mt-6 border-t border-[var(--c-border)] pt-5">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--c-text-faint)]">Alerts</p>
           <div className="flex gap-3">
             <ToggleSwitch label="Email Alerts" checked={form.notifEmail} onChange={set('notifEmail')} />
             <ToggleSwitch label="ntfy Push"    checked={form.notifNtfy}  onChange={set('notifNtfy')} />
           </div>
         </div>
 
-        <div className="mt-6 border-t border-white/10 pt-5">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Access</p>
+        <div className="mt-6 border-t border-[var(--c-border)] pt-5">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--c-text-faint)]">Access</p>
           <div className="space-y-4">
             <Field label="Subscription Level">
               <Segment options={SUB_LEVELS} value={form.subscriptionLevel} onChange={set('subscriptionLevel')} />
@@ -211,22 +211,22 @@ export default function AddUser() {
                 onChange={set('role')}
               />
               {currentRole !== 'superuser' && (
-                <p className="mt-1.5 text-xs text-slate-500">Only Super Users can assign Admin or Super User roles.</p>
+                <p className="mt-1.5 text-xs text-[var(--c-text-dimmed)]">Only Super Users can assign Admin or Super User roles.</p>
               )}
             </Field>
           </div>
         </div>
 
-        <div className="mt-6 border-t border-white/10 pt-5">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Password</p>
+        <div className="mt-6 border-t border-[var(--c-border)] pt-5">
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--c-text-faint)]">Password</p>
           <Field label="Password">
             <TextInput type="password" value={form.password} onChange={set('password')} placeholder="••••••••" />
           </Field>
         </div>
 
-        <div className="mt-6 border-t border-white/10 pt-5">
+        <div className="mt-6 border-t border-[var(--c-border)] pt-5">
           {error && (
-            <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+            <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-[var(--c-rose-strong)]">
               {error}
             </div>
           )}
@@ -234,13 +234,13 @@ export default function AddUser() {
             <button
               onClick={handleSubmit}
               disabled={saving}
-              className="flex-1 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-1 rounded-xl bg-[var(--c-btn-bg)] px-4 py-2.5 text-sm font-semibold text-[var(--c-btn-text)] transition hover:bg-[var(--c-btn-hover)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? 'Creating…' : 'Create User'}
             </button>
             <button
               onClick={() => navigate('/admin/users')}
-              className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/10"
+              className="flex-1 rounded-xl border border-[var(--c-border)] bg-[var(--c-hover)] px-4 py-2.5 text-sm text-[var(--c-text-secondary)] transition hover:bg-[var(--c-hover-strong)]"
             >
               Cancel
             </button>

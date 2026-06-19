@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import { GRADE_CONFIG, MODEL_CONFIG } from '../data/earningsConfig';
+import PageGuide from '../components/PageGuide';
 
 const GRADES      = ['A+', 'A', 'B', 'C', 'D'];
 const GRADE_ORDER = { 'A+': 0, A: 1, B: 2, C: 3, D: 4 };
@@ -46,7 +47,7 @@ function ModelBadge({ model }) {
 
 function NewBadge() {
   return (
-    <span className="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+    <span className="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--c-emerald)]">
       NEW
     </span>
   );
@@ -55,7 +56,7 @@ function NewBadge() {
 function ShortBadge({ pct }) {
   if (pct == null || pct <= 20) return null;
   return (
-    <span className="inline-flex items-center rounded-full border border-orange-500/40 bg-orange-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-orange-400">
+    <span className="inline-flex items-center rounded-full border border-orange-500/40 bg-orange-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--c-orange-strong)]">
       Short {pct.toFixed(0)}%
     </span>
   );
@@ -63,13 +64,13 @@ function ShortBadge({ pct }) {
 
 function SignedPct({ value, label }) {
   const color =
-    value == null ? 'text-slate-500'
-    : value > 0   ? 'text-emerald-400'
-    : value < 0   ? 'text-rose-400'
-    :               'text-slate-400';
+    value == null ? 'text-[var(--c-text-dimmed)]'
+    : value > 0   ? 'text-[var(--c-emerald)]'
+    : value < 0   ? 'text-[var(--c-rose)]'
+    :               'text-[var(--c-text-muted)]';
   return (
     <div className="text-center">
-      <p className="text-[10px] uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-[10px] uppercase tracking-wide text-[var(--c-text-dimmed)]">{label}</p>
       <p className={`mt-0.5 text-sm font-semibold font-mono ${color}`}>
         {value == null ? '—' : `${value > 0 ? '+' : ''}${value.toFixed(1)}%`}
       </p>
@@ -90,13 +91,13 @@ function SignalCard({ signal, optionsLoading, onClick }) {
       <div className="mb-3 flex items-start justify-between gap-2">
         <div>
           <div className="flex items-center gap-1.5">
-            <p className="text-xl font-bold text-white group-hover:text-cyan-100 transition-colors">{signal.ticker}</p>
+            <p className="text-xl font-bold text-[var(--c-text-primary)] group-hover:text-cyan-100 transition-colors">{signal.ticker}</p>
             {signal.is_new && <NewBadge />}
           </div>
           {signal.company_name && (
-            <p className="mt-0.5 text-xs font-medium text-slate-400 truncate max-w-[140px]">{signal.company_name}</p>
+            <p className="mt-0.5 text-xs font-medium text-[var(--c-text-muted)] truncate max-w-[140px]">{signal.company_name}</p>
           )}
-          <p className="mt-0.5 text-[10px] text-slate-600 truncate max-w-[120px]">{signal.sector ?? ''}</p>
+          <p className="mt-0.5 text-[10px] text-[var(--c-text-faint)] truncate max-w-[120px]">{signal.sector ?? ''}</p>
         </div>
         <div className="flex flex-col items-end gap-1.5 shrink-0">
           <GradeBadge grade={signal.grade} />
@@ -104,40 +105,40 @@ function SignalCard({ signal, optionsLoading, onClick }) {
         </div>
       </div>
       <div className="mb-3 flex items-baseline gap-1.5">
-        <span className="text-2xl font-bold text-white">{signal.score.toFixed(0)}</span>
-        <span className="text-xs text-slate-500">/ 82 pts</span>
+        <span className="text-2xl font-bold text-[var(--c-text-primary)]">{signal.score.toFixed(0)}</span>
+        <span className="text-xs text-[var(--c-text-dimmed)]">/ 82 pts</span>
       </div>
-      <div className="mb-3 border-t border-white/5 pt-3">
-        <p className="text-xs text-slate-400 leading-relaxed">
+      <div className="mb-3 border-t border-[var(--c-border-subtle)] pt-3">
+        <p className="text-xs text-[var(--c-text-muted)] leading-relaxed">
           Earnings{' '}
-          <span className="font-semibold text-white">{signal.earnings_date}</span>{' '}
-          <span className={`font-semibold ${urgent ? 'text-amber-400' : 'text-slate-400'}`}>
+          <span className="font-semibold text-[var(--c-text-primary)]">{signal.earnings_date}</span>{' '}
+          <span className={`font-semibold ${urgent ? 'text-[var(--c-amber-strong)]' : 'text-[var(--c-text-muted)]'}`}>
             {signal.days_to_earnings != null ? `(in ${signal.days_to_earnings}d)` : ''}
           </span>
         </p>
         {signal.entry_date && (
-          <p className="text-xs text-slate-400 mt-0.5">
-            Entry <span className="font-semibold text-white">{signal.entry_date}</span>
+          <p className="text-xs text-[var(--c-text-muted)] mt-0.5">
+            Entry <span className="font-semibold text-[var(--c-text-primary)]">{signal.entry_date}</span>
           </p>
         )}
-        <p className="text-[10px] text-slate-600 mt-0.5">{signal.earnings_quarter}</p>
+        <p className="text-[10px] text-[var(--c-text-faint)] mt-0.5">{signal.earnings_quarter}</p>
       </div>
-      <div className="grid grid-cols-4 gap-1 border-t border-white/5 pt-3">
+      <div className="grid grid-cols-4 gap-1 border-t border-[var(--c-border-subtle)] pt-3">
         <SignedPct label="RS/SPY" value={signal.rs_spy_pct} />
         <SignedPct label="AVWAP"  value={signal.avwap_pct}  />
         <div className="text-center">
-          <p className="text-[10px] uppercase tracking-wide text-slate-500">RSI</p>
-          <p className="mt-0.5 text-sm font-semibold font-mono text-slate-300">
+          <p className="text-[10px] uppercase tracking-wide text-[var(--c-text-dimmed)]">RSI</p>
+          <p className="mt-0.5 text-sm font-semibold font-mono text-[var(--c-text-secondary)]">
             {signal.rsi != null ? signal.rsi.toFixed(0) : '—'}
           </p>
         </div>
         <div className="text-center">
-          <p className="text-[10px] uppercase tracking-wide text-slate-500">Exp Move</p>
-          <p className={`mt-0.5 text-sm font-semibold font-mono ${signal.expected_move_usd != null ? 'text-sky-300' : optionsLoading ? 'animate-pulse text-slate-700' : 'text-slate-600'}`}>
+          <p className="text-[10px] uppercase tracking-wide text-[var(--c-text-dimmed)]">Exp Move</p>
+          <p className={`mt-0.5 text-sm font-semibold font-mono ${signal.expected_move_usd != null ? 'text-[var(--c-sky)]' : optionsLoading ? 'animate-pulse text-slate-700' : 'text-[var(--c-text-faint)]'}`}>
             {signal.expected_move_usd != null ? `$${signal.expected_move_usd.toFixed(2)}` : '—'}
           </p>
           {signal.expected_move_pct != null && (
-            <p className="text-[10px] font-mono text-slate-500 mt-0.5">
+            <p className="text-[10px] font-mono text-[var(--c-text-dimmed)] mt-0.5">
               ±{signal.expected_move_pct.toFixed(1)}%
             </p>
           )}
@@ -158,15 +159,15 @@ function GradeBucketCard({ grade, count, avgScore, onClick }) {
     >
       <div className="mb-2 flex items-center gap-2">
         <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />
-        <span className="text-[10px] uppercase tracking-widest text-slate-500">Grade</span>
+        <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-dimmed)]">Grade</span>
       </div>
-      <p className="text-5xl font-black text-white leading-none">{grade}</p>
+      <p className="text-5xl font-black text-[var(--c-text-primary)] leading-none">{grade}</p>
       <div className="mt-4">
-        <p className="text-3xl font-bold text-white">{count}</p>
-        <p className="text-xs text-slate-400 mt-0.5">{count !== 1 ? 'signals' : 'signal'}</p>
+        <p className="text-3xl font-bold text-[var(--c-text-primary)]">{count}</p>
+        <p className="text-xs text-[var(--c-text-muted)] mt-0.5">{count !== 1 ? 'signals' : 'signal'}</p>
       </div>
       {avgScore != null && count > 0 && (
-        <p className="mt-3 text-xs text-slate-500">avg score {avgScore.toFixed(0)}</p>
+        <p className="mt-3 text-xs text-[var(--c-text-dimmed)]">avg score {avgScore.toFixed(0)}</p>
       )}
     </button>
   );
@@ -180,7 +181,7 @@ function SortTh({ label, sk, sortKey, sortDir, onSort, className = '' }) {
     <th
       onClick={() => onSort(sk)}
       className={`cursor-pointer select-none py-3 text-[10px] uppercase tracking-widest whitespace-nowrap transition-colors ${
-        active ? 'text-violet-400' : 'text-slate-500 hover:text-slate-300'
+        active ? 'text-[var(--c-violet-strong)]' : 'text-[var(--c-text-dimmed)] hover:text-[var(--c-text-secondary)]'
       } ${className}`}
     >
       {label}
@@ -196,31 +197,31 @@ function SignalRow({ signal, optionsLoading, onClick }) {
 
   const num = (v, fmt) =>
     v == null
-      ? <span className={optionsLoading ? 'animate-pulse text-slate-700' : 'text-slate-600'}>—</span>
-      : <span className="text-slate-200">{fmt(v)}</span>;
+      ? <span className={optionsLoading ? 'animate-pulse text-slate-700' : 'text-[var(--c-text-faint)]'}>—</span>
+      : <span className="text-[var(--c-text-secondary)]">{fmt(v)}</span>;
 
   return (
-    <tr onClick={onClick} className="cursor-pointer border-b border-white/5 transition-colors hover:bg-white/5">
+    <tr onClick={onClick} className="cursor-pointer border-b border-[var(--c-border-subtle)] transition-colors hover:bg-[var(--c-hover)]">
       <td className="py-2.5 pl-4 pr-3">
         <div className="flex items-center gap-1.5">
-          <span className="font-bold text-white">{signal.ticker}</span>
+          <span className="font-bold text-[var(--c-text-primary)]">{signal.ticker}</span>
           {signal.is_new && <NewBadge />}
         </div>
-        {signal.company_name && <span className="text-xs text-slate-400 hidden sm:block">{signal.company_name}</span>}
-        {signal.sector && <span className="text-[10px] text-slate-600 hidden sm:block">{signal.sector}</span>}
+        {signal.company_name && <span className="text-xs text-[var(--c-text-muted)] hidden sm:block">{signal.company_name}</span>}
+        {signal.sector && <span className="text-[10px] text-[var(--c-text-faint)] hidden sm:block">{signal.sector}</span>}
       </td>
       <td className="px-3 py-2.5 text-center"><GradeBadge grade={signal.grade} /></td>
-      <td className="px-3 py-2.5 text-center font-mono text-sm text-white">{signal.score.toFixed(0)}</td>
-      <td className="px-3 py-2.5 text-center text-sm text-slate-300 whitespace-nowrap">
+      <td className="px-3 py-2.5 text-center font-mono text-sm text-[var(--c-text-primary)]">{signal.score.toFixed(0)}</td>
+      <td className="px-3 py-2.5 text-center text-sm text-[var(--c-text-secondary)] whitespace-nowrap">
         {signal.earnings_date}
         {signal.days_to_earnings != null && (
-          <span className={`ml-1.5 text-[10px] font-semibold ${urgent ? 'text-amber-400' : 'text-slate-600'}`}>
+          <span className={`ml-1.5 text-[10px] font-semibold ${urgent ? 'text-[var(--c-amber-strong)]' : 'text-[var(--c-text-faint)]'}`}>
             {urgent ? `⚡ ${signal.days_to_earnings}d` : `${signal.days_to_earnings}d`}
           </span>
         )}
       </td>
-      <td className="px-3 py-2.5 text-center text-sm text-slate-300 whitespace-nowrap">
-        {signal.entry_date ?? <span className="text-slate-600">—</span>}
+      <td className="px-3 py-2.5 text-center text-sm text-[var(--c-text-secondary)] whitespace-nowrap">
+        {signal.entry_date ?? <span className="text-[var(--c-text-faint)]">—</span>}
       </td>
       <td className="px-3 py-2.5 text-center text-sm font-mono">
         {num(signal.expected_move_pct, (v) => `${v.toFixed(1)}%`)}
@@ -234,15 +235,15 @@ function SignalRow({ signal, optionsLoading, onClick }) {
       <td className="px-3 py-2.5 text-center text-sm font-mono">
         {num(signal.spot_price, (v) => `$${v.toFixed(2)}`)}
       </td>
-      <td className="px-3 py-2.5 text-center text-sm font-mono text-slate-300">
+      <td className="px-3 py-2.5 text-center text-sm font-mono text-[var(--c-text-secondary)]">
         {signal.dte != null
           ? signal.dte
-          : <span className={optionsLoading ? 'animate-pulse text-slate-700' : 'text-slate-600'}>—</span>}
+          : <span className={optionsLoading ? 'animate-pulse text-slate-700' : 'text-[var(--c-text-faint)]'}>—</span>}
       </td>
       <td className="px-3 py-2.5 pr-4 text-center text-sm font-mono">
         {signal.short_float_pct == null
-          ? <span className="text-slate-600">—</span>
-          : <span className={signal.short_float_pct > 20 ? 'font-bold text-orange-400' : 'text-slate-300'}>
+          ? <span className="text-[var(--c-text-faint)]">—</span>
+          : <span className={signal.short_float_pct > 20 ? 'font-bold text-[var(--c-orange-strong)]' : 'text-[var(--c-text-secondary)]'}>
               {signal.short_float_pct.toFixed(1)}%
             </span>
         }
@@ -255,20 +256,20 @@ function SignalRow({ signal, optionsLoading, onClick }) {
 
 function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, setMaxDays, minExpMove, setMinExpMove, highShortOnly, setHighShortOnly, total, filtered }) {
   return (
-    <div className="mb-4 rounded-2xl border border-white/10 bg-[#0b1420] p-3 flex flex-wrap items-center gap-3">
+    <div className="mb-4 rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-3 flex flex-wrap items-center gap-3">
       <div className="relative min-w-[140px]">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs pointer-events-none">⌕</span>
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--c-text-dimmed)] text-xs pointer-events-none">⌕</span>
         <input
           type="text"
           value={tickerQ}
           onChange={(e) => setTickerQ(e.target.value.toUpperCase())}
           placeholder="Ticker…"
-          className="w-full rounded-xl border border-white/10 bg-white/5 py-1.5 pl-7 pr-3 text-sm text-white placeholder-slate-600 focus:border-violet-500/50 focus:outline-none"
+          className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-hover)] py-1.5 pl-7 pr-3 text-sm text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] focus:border-violet-500/50 focus:outline-none"
         />
       </div>
 
       <div className="flex items-center gap-1.5">
-        <span className="text-[10px] uppercase tracking-widest text-slate-600 mr-1">Grade</span>
+        <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)] mr-1">Grade</span>
         {GRADES.map((g) => {
           const cfg = GRADE_CONFIG[g];
           const on  = activeGrades.has(g);
@@ -277,7 +278,7 @@ function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, se
               key={g}
               onClick={() => toggleGrade(g)}
               className={`rounded-lg border px-2 py-0.5 text-xs font-bold transition-all ${
-                on ? cfg.badge : 'border-white/10 bg-transparent text-slate-600 hover:text-slate-400'
+                on ? cfg.badge : 'border-[var(--c-border)] bg-transparent text-[var(--c-text-faint)] hover:text-[var(--c-text-muted)]'
               }`}
             >
               {g}
@@ -287,15 +288,15 @@ function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, se
       </div>
 
       <div className="flex items-center gap-1.5">
-        <span className="text-[10px] uppercase tracking-widest text-slate-600 mr-1">Days</span>
+        <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)] mr-1">Days</span>
         {DAY_OPTS.map(({ label, value }) => (
           <button
             key={label}
             onClick={() => setMaxDays(value)}
             className={`rounded-lg border px-2.5 py-0.5 text-xs font-semibold transition-all ${
               maxDays === value
-                ? 'border-violet-500/40 bg-violet-500/20 text-violet-300'
-                : 'border-white/10 text-slate-500 hover:text-white'
+                ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
+                : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
             }`}
           >
             {label}
@@ -304,15 +305,15 @@ function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, se
       </div>
 
       <div className="flex items-center gap-1.5">
-        <span className="text-[10px] uppercase tracking-widest text-slate-600 mr-1">Exp Move</span>
+        <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)] mr-1">Exp Move</span>
         {EXP_MOVE_OPTS.map(({ label, value }) => (
           <button
             key={label}
             onClick={() => setMinExpMove(value)}
             className={`rounded-lg border px-2.5 py-0.5 text-xs font-semibold transition-all ${
               minExpMove === value
-                ? 'border-sky-500/40 bg-sky-500/20 text-sky-300'
-                : 'border-white/10 text-slate-500 hover:text-white'
+                ? 'border-sky-500/40 bg-sky-500/20 text-[var(--c-sky)]'
+                : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
             }`}
           >
             {label}
@@ -324,19 +325,132 @@ function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, se
         onClick={() => setHighShortOnly(!highShortOnly)}
         className={`rounded-lg border px-2.5 py-0.5 text-xs font-semibold transition-all ${
           highShortOnly
-            ? 'border-orange-500/50 bg-orange-500/20 text-orange-300'
-            : 'border-white/10 text-slate-500 hover:text-white'
+            ? 'border-orange-500/50 bg-orange-500/20 text-[var(--c-orange)]'
+            : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
         }`}
       >
         Short &gt;20%
       </button>
 
       {filtered < total && (
-        <span className="ml-auto text-xs text-slate-500">
-          <span className="font-semibold text-white">{filtered}</span> of {total}
+        <span className="ml-auto text-xs text-[var(--c-text-dimmed)]">
+          <span className="font-semibold text-[var(--c-text-primary)]">{filtered}</span> of {total}
         </span>
       )}
     </div>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
+
+// ── Hot Pick card ─────────────────────────────────────────────────────────────
+
+function HotPickCard({ pick, rank, onClick }) {
+  const cfg    = GRADE_CONFIG[pick.grade] ?? GRADE_CONFIG['D'];
+  const urgent = (pick.days_to_earnings ?? 99) <= 5;
+  const isHot  = pick.tier === 'hot';
+
+  return (
+    <button
+      onClick={onClick}
+      className={`group relative w-full text-left rounded-2xl border bg-gradient-to-br from-[#0b1420] to-[#07101a] p-4 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl ${
+        isHot ? 'border-amber-500/30 hover:border-amber-400/50' : 'border-[var(--c-border)] hover:border-white/20'
+      }`}
+    >
+      {/* Rank badge */}
+      <div className={`absolute -top-2 -left-2 h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-black ${
+        isHot ? 'bg-amber-500 text-black' : 'bg-slate-700 text-[var(--c-text-secondary)]'
+      }`}>
+        {rank}
+      </div>
+
+      {/* Momentum override badge */}
+      {pick.momentum_override && (
+        <div className="absolute -top-2 right-3 inline-flex items-center gap-1 rounded-full border border-cyan-500/40 bg-cyan-500/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--c-cyan-strong)]">
+          ⚡ Override
+        </div>
+      )}
+
+      <div className="mb-2 flex items-start justify-between gap-1">
+        <div>
+          <p className="text-base font-bold text-[var(--c-text-primary)] group-hover:text-[var(--c-amber)] transition-colors">{pick.ticker}</p>
+          {pick.company_name && (
+            <p className="text-[10px] text-[var(--c-text-dimmed)] truncate max-w-[120px]">{pick.company_name}</p>
+          )}
+        </div>
+        <GradeBadge grade={pick.grade} />
+      </div>
+
+      {/* Dynamic score */}
+      <div className="mb-2 flex items-baseline gap-1.5">
+        <span className={`text-xl font-black ${isHot ? 'text-[var(--c-amber-strong)]' : 'text-[var(--c-text-secondary)]'}`}>
+          {pick.dynamic_score.toFixed(0)}
+        </span>
+        <span className="text-[10px] text-[var(--c-text-faint)]">dyn</span>
+        <span className="text-slate-700 text-xs">/</span>
+        <span className="text-xs text-[var(--c-text-dimmed)]">{pick.model_score.toFixed(0)} mdl</span>
+      </div>
+
+      {/* Earnings timing */}
+      <p className="mb-2 text-[10px] text-[var(--c-text-dimmed)]">
+        Earnings{' '}
+        <span className={`font-semibold ${urgent ? 'text-[var(--c-amber-strong)]' : 'text-[var(--c-text-secondary)]'}`}>
+          {pick.days_to_earnings != null ? `in ${pick.days_to_earnings}d` : pick.earnings_date}
+        </span>
+      </p>
+
+      {/* Key metrics row */}
+      <div className="grid grid-cols-3 gap-1 border-t border-[var(--c-border-subtle)] pt-2">
+        <div className="text-center">
+          <p className="text-[9px] uppercase tracking-wide text-[var(--c-text-faint)]">RS/SPY</p>
+          <p className={`text-xs font-bold font-mono ${(pick.rs_spy_pct ?? 0) > 10 ? 'text-[var(--c-cyan-strong)]' : 'text-[var(--c-text-muted)]'}`}>
+            {pick.rs_spy_pct != null ? `+${pick.rs_spy_pct.toFixed(1)}` : '—'}
+          </p>
+        </div>
+        <div className="text-center">
+          <p className="text-[9px] uppercase tracking-wide text-[var(--c-text-faint)]">ADX</p>
+          <p className={`text-xs font-bold font-mono ${(pick.adx ?? 0) > 25 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-text-muted)]'}`}>
+            {pick.adx != null ? pick.adx.toFixed(0) : '—'}
+          </p>
+        </div>
+        <div className="text-center">
+          <p className="text-[9px] uppercase tracking-wide text-[var(--c-text-faint)]">RVOL</p>
+          <p className={`text-xs font-bold font-mono ${(pick.rvol_5d ?? 0) > 1.5 ? 'text-[var(--c-violet-strong)]' : 'text-[var(--c-text-muted)]'}`}>
+            {pick.rvol_5d != null ? `${pick.rvol_5d.toFixed(1)}x` : '—'}
+          </p>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function OnDeckCard({ pick, rank, onClick }) {
+  const cfg = GRADE_CONFIG[pick.grade] ?? GRADE_CONFIG['D'];
+  return (
+    <button
+      onClick={onClick}
+      className="group flex w-full items-center gap-3 rounded-xl border border-white/8 bg-[var(--c-bg-card)] px-3 py-2.5 text-left transition-all hover:border-white/20 hover:bg-[var(--c-hover-faint)]"
+    >
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-800 text-[9px] font-black text-[var(--c-text-muted)]">
+        {rank}
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-bold text-[var(--c-text-primary)]">{pick.ticker}</span>
+          <GradeBadge grade={pick.grade} />
+          {pick.momentum_override && (
+            <span className="text-[8px] font-bold text-[var(--c-cyan-strong)]">⚡</span>
+          )}
+        </div>
+        <p className="text-[10px] text-[var(--c-text-faint)]">
+          {pick.days_to_earnings != null ? `in ${pick.days_to_earnings}d` : pick.earnings_date}
+        </p>
+      </div>
+      <div className="text-right shrink-0">
+        <p className="text-sm font-black text-[var(--c-text-secondary)]">{pick.dynamic_score.toFixed(0)}</p>
+        <p className="text-[9px] text-[var(--c-text-faint)]">dyn</p>
+      </div>
+    </button>
   );
 }
 
@@ -359,6 +473,8 @@ export default function PreEarningsRunners() {
   const [sortDir,          setSortDir]          = useState('desc');
   const [minExpMove,       setMinExpMove]       = useState(null);
   const [sectorFilter,     setSectorFilter]     = useState([]);
+  const [hotPicks,         setHotPicks]         = useState({ hot_picks: [], on_deck: [], compute_date: null });
+  const [hotLoading,       setHotLoading]       = useState(true);
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -403,6 +519,15 @@ export default function PreEarningsRunners() {
       .then((data) => setShortFloatMap(data))
       .catch(() => {});
   }, [signals]);
+
+  // Fetch Hot Picks (independent of model — dynamic score is model-agnostic)
+  useEffect(() => {
+    setHotLoading(true);
+    apiFetch('/earnings/hot-picks')
+      .then((data) => setHotPicks(data))
+      .catch(() => setHotPicks({ hot_picks: [], on_deck: [], compute_date: null }))
+      .finally(() => setHotLoading(false));
+  }, []);
 
   const handleSort = (key) => {
     if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -490,28 +615,28 @@ export default function PreEarningsRunners() {
     <div className="mx-auto max-w-7xl p-3 sm:p-4 lg:p-8">
 
       {/* Page header */}
-      <div className="mb-6 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-[#0a1624] p-6 lg:p-8">
+      <div className="mb-6 rounded-3xl border border-[var(--c-border)] bg-gradient-to-br from-[var(--c-bg-gradient-from)] to-[var(--c-bg-gradient-to)] p-6 lg:p-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="mb-3 inline-flex rounded-full border border-violet-500/20 bg-violet-500/10 px-4 py-1 text-xs uppercase tracking-[0.2em] text-violet-300">
+            <div className="mb-3 inline-flex rounded-full border border-violet-500/20 bg-violet-500/10 px-4 py-1 text-xs uppercase tracking-[0.2em] text-[var(--c-violet)]">
               Quantified Edge
             </div>
-            <h1 className="text-3xl font-bold text-white sm:text-4xl">Pre-Earnings Runners</h1>
+            <h1 className="text-3xl font-bold text-[var(--c-text-primary)] sm:text-4xl">Pre-Earnings Runners</h1>
             {!loading && (
-              <p className="mt-2 text-sm text-slate-400">
-                <span className="font-semibold text-white">{uniqueTickers}</span> tickers reporting in the next 22 days
+              <p className="mt-2 text-sm text-[var(--c-text-muted)]">
+                <span className="font-semibold text-[var(--c-text-primary)]">{uniqueTickers}</span> tickers reporting in the next 22 days
               </p>
             )}
           </div>
-          <div className="flex self-start rounded-2xl border border-white/10 bg-black/30 p-1 lg:self-auto">
+          <div className="flex self-start rounded-2xl border border-[var(--c-border)] bg-black/30 p-1 lg:self-auto">
             {['Both', 'Recovery', 'Momentum'].map((m) => (
               <button
                 key={m}
                 onClick={() => setModel(m)}
                 className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
                   model === m
-                    ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-violet-500 text-[var(--c-text-primary)] shadow-lg shadow-violet-500/20'
+                    : 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'
                 }`}
               >
                 {m}
@@ -521,17 +646,31 @@ export default function PreEarningsRunners() {
         </div>
       </div>
 
+      {isSummary && (
+        <PageGuide
+          guideKey="pre-earnings-summary"
+          accent="violet"
+          title="Find stocks that go up before earnings — then pick the best ones."
+          description="Stocks often rise in the days BEFORE their earnings announcement, driven by anticipation and excitement. This page gives you two ways to find the best opportunities: grade buckets and Hot Picks."
+          steps={[
+            { text: 'The grade cards (A+, A, B, C, D) show how reliable this pattern has been historically for each group. A+ means the strongest track record — the most past signals confirmed the run. Click any grade card to see every ticker in that bucket.', targetId: 'pg-grades' },
+            { text: 'Hot Picks are ranked by Dynamic Score — a daily calculation that blends the historical grade with real-time conditions like relative strength vs SPY, sector momentum, and volume. ⚡ Momentum Override means ALL 6 key signals are firing at once — that\'s the highest-conviction alert the system can generate.', targetId: 'pg-hotpicks' },
+            'Once you spot a stock that looks interesting — from the grade cards or Hot Picks — click it to open the full research report. That page shows exactly why it made the list and what conditions look like right now. Always review before placing a trade.',
+          ]}
+        />
+      )}
+
       {!isSummary && (
         <button
           onClick={() => setParams({})}
-          className="mb-5 flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+          className="mb-5 flex items-center gap-2 text-sm text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)] transition-colors"
         >
           ← Back to Summary
         </button>
       )}
 
       {error && (
-        <div className="mb-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-4 text-sm text-rose-300">
+        <div className="mb-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-4 text-sm text-[var(--c-rose-strong)]">
           Failed to load signals: {error}
         </div>
       )}
@@ -540,18 +679,18 @@ export default function PreEarningsRunners() {
       {isSummary && (
         <>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Signals by Grade</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">Signals by Grade</h2>
             <button
               onClick={() => setParams({ grade: 'all' })}
-              className="text-sm text-violet-400 hover:text-violet-300 transition-colors"
+              className="text-sm text-[var(--c-violet-strong)] hover:text-[var(--c-violet)] transition-colors"
             >
               View all →
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div id="pg-grades" className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {loading
               ? Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-44 animate-pulse rounded-3xl bg-white/5" />
+                  <div key={i} className="h-44 animate-pulse rounded-3xl bg-[var(--c-hover)]" />
                 ))
               : byGrade.map(({ grade, count, avgScore }) => (
                   <GradeBucketCard
@@ -564,11 +703,76 @@ export default function PreEarningsRunners() {
                 ))}
           </div>
 
+          {/* ── Hot Picks & On Deck ───────────────────────────────────────── */}
+          {(hotLoading || hotPicks.hot_picks.length > 0) && (
+            <div id="pg-hotpicks" className="mt-8">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xs font-semibold uppercase tracking-widest text-amber-500">
+                    🔥 Hot Picks
+                  </h2>
+                  <span className="text-[10px] text-[var(--c-text-faint)]">
+                    Top 10 by dynamic score — updated daily at market close
+                  </span>
+                </div>
+                {hotPicks.compute_date && (
+                  <span className="text-[10px] text-[var(--c-text-faint)]">
+                    As of {hotPicks.compute_date}
+                  </span>
+                )}
+              </div>
+
+              {hotLoading ? (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div key={i} className="h-40 animate-pulse rounded-2xl bg-[var(--c-hover)]" />
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                    {hotPicks.hot_picks.map((pick, i) => (
+                      <HotPickCard
+                        key={pick.ticker}
+                        pick={pick}
+                        rank={i + 1}
+                        onClick={() => navigate(`/earnings/${pick.ticker}`)}
+                      />
+                    ))}
+                  </div>
+
+                  {hotPicks.on_deck.length > 0 && (
+                    <div className="mt-5">
+                      <div className="mb-3 flex items-center gap-3">
+                        <h3 className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
+                          On Deck
+                        </h3>
+                        <span className="text-[10px] text-[var(--c-text-faint)]">
+                          Next 5 — ready to move up
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+                        {hotPicks.on_deck.map((pick, i) => (
+                          <OnDeckCard
+                            key={pick.ticker}
+                            pick={pick}
+                            rank={hotPicks.hot_picks.length + i + 1}
+                            onClick={() => navigate(`/earnings/${pick.ticker}`)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
           {!loading && recentNew.length > 0 && (
             <div className="mt-8">
               <div className="mb-3 flex items-center gap-3">
-                <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">New Additions</h2>
-                <span className="text-[10px] text-slate-600">Added in the last 3 days</span>
+                <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">New Additions</h2>
+                <span className="text-[10px] text-[var(--c-text-faint)]">Added in the last 3 days</span>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {recentNew.map((s) => (
@@ -588,26 +792,38 @@ export default function PreEarningsRunners() {
       {/* Signal list / cards */}
       {!isSummary && (
         <>
+          <PageGuide
+            guideKey="all-signals"
+            accent="violet"
+            title="Every active pre-earnings signal — filtered and sorted your way."
+            description="This is the full unfiltered list of all tickers approaching their earnings date. Use the filters to narrow down by grade, days to earnings, sector, or expected move size."
+            steps={[
+              { text: 'Use the grade buttons to focus on specific tiers, or the day filter to zero in on what\'s coming up soonest. The "≤5d" filter shows the most urgent opportunities — stocks with earnings in 5 days or less.', targetId: 'pg-filter-bar' },
+              { text: 'The sector filter lets you target a specific industry or avoid a weak one. If Tech is running hot, you can filter to just Tech signals. If a sector is in a downtrend, you can exclude it entirely.', targetId: 'pg-sector-filter' },
+              { text: 'Toggle between ⊞ Card view for a rich snapshot of each signal, or ☰ List view for a compact sortable table. In List view, click any column header to sort — useful for ranking by days to earnings, expected move, or IV.', targetId: 'pg-signals-list' },
+            ]}
+          />
+
           {/* Toolbar */}
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-500">
+              <span className="text-sm text-[var(--c-text-dimmed)]">
                 {loading ? '…' : `${displayed.length} signal${displayed.length !== 1 ? 's' : ''}${displayed.length < deduped.length ? ` of ${deduped.length}` : ''}`}
               </span>
               {optionsLoading && (
-                <span className="text-[10px] text-slate-600 animate-pulse">loading market data…</span>
+                <span className="text-[10px] text-[var(--c-text-faint)] animate-pulse">loading market data…</span>
               )}
             </div>
-            <div className="flex rounded-xl border border-white/10 bg-black/30 p-0.5 text-xs font-semibold">
+            <div className="flex rounded-xl border border-[var(--c-border)] bg-black/30 p-0.5 text-xs font-semibold">
               <button
                 onClick={() => setView('card')}
-                className={`rounded-lg px-3 py-1.5 transition-all ${view === 'card' ? 'bg-violet-500 text-white' : 'text-slate-400 hover:text-white'}`}
+                className={`rounded-lg px-3 py-1.5 transition-all ${view === 'card' ? 'bg-violet-500 text-[var(--c-text-primary)]' : 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'}`}
               >
                 ⊞ Card
               </button>
               <button
                 onClick={() => setView('list')}
-                className={`rounded-lg px-3 py-1.5 transition-all ${view === 'list' ? 'bg-violet-500 text-white' : 'text-slate-400 hover:text-white'}`}
+                className={`rounded-lg px-3 py-1.5 transition-all ${view === 'list' ? 'bg-violet-500 text-[var(--c-text-primary)]' : 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'}`}
               >
                 ☰ List
               </button>
@@ -616,6 +832,7 @@ export default function PreEarningsRunners() {
 
           {/* Filter bar */}
           {!loading && (
+            <div id="pg-filter-bar">
             <FilterBar
               tickerQ={tickerQ}
               setTickerQ={setTickerQ}
@@ -630,20 +847,21 @@ export default function PreEarningsRunners() {
               total={deduped.length}
               filtered={displayed.length}
             />
+            </div>
           )}
 
           {/* Sector filter */}
           {!loading && allSectors.length > 0 && (
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              <span className="text-[10px] uppercase tracking-widest text-slate-600 mr-1">Sector</span>
+            <div id="pg-sector-filter" className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)] mr-1">Sector</span>
               {allSectors.map((s) => (
                 <button
                   key={s}
                   onClick={() => toggleSector(s)}
                   className={`rounded-lg border px-2.5 py-0.5 text-xs font-semibold transition-all ${
                     sectorFilter.includes(s)
-                      ? 'border-violet-500/40 bg-violet-500/20 text-violet-300'
-                      : 'border-white/10 text-slate-500 hover:text-white'
+                      ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
+                      : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
                   }`}
                 >
                   {s}
@@ -652,7 +870,7 @@ export default function PreEarningsRunners() {
               {sectorFilter.length > 0 && (
                 <button
                   onClick={() => setSectorFilter([])}
-                  className="ml-1 rounded-lg border border-white/10 px-2.5 py-0.5 text-xs text-slate-600 hover:text-slate-300 transition-colors"
+                  className="ml-1 rounded-lg border border-[var(--c-border)] px-2.5 py-0.5 text-xs text-[var(--c-text-faint)] hover:text-[var(--c-text-secondary)] transition-colors"
                 >
                   Clear
                 </button>
@@ -660,16 +878,17 @@ export default function PreEarningsRunners() {
             </div>
           )}
 
+          <div id="pg-signals-list">
           {/* Card view */}
           {view === 'card' && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {loading
                 ? Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="h-56 animate-pulse rounded-3xl bg-white/5" />
+                    <div key={i} className="h-56 animate-pulse rounded-3xl bg-[var(--c-hover)]" />
                   ))
                 : displayed.length === 0
                   ? (
-                      <div className="col-span-full rounded-3xl border border-white/10 bg-[#0b1420] px-8 py-14 text-center text-slate-500">
+                      <div className="col-span-full rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] px-8 py-14 text-center text-[var(--c-text-dimmed)]">
                         No signals match the current filters.
                       </div>
                     )
@@ -686,22 +905,22 @@ export default function PreEarningsRunners() {
 
           {/* List view */}
           {view === 'list' && (
-            <div className="rounded-3xl border border-white/10 bg-[#0b1420] overflow-hidden">
+            <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] overflow-hidden">
               {loading ? (
                 <div className="space-y-2 p-4">
                   {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="h-10 animate-pulse rounded-xl bg-white/5" />
+                    <div key={i} className="h-10 animate-pulse rounded-xl bg-[var(--c-hover)]" />
                   ))}
                 </div>
               ) : displayed.length === 0 ? (
-                <div className="px-8 py-14 text-center text-slate-500">
+                <div className="px-8 py-14 text-center text-[var(--c-text-dimmed)]">
                   No signals match the current filters.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-white/10">
+                      <tr className="border-b border-[var(--c-border)]">
                         <SortTh label="Ticker"    sk="ticker"            {...shProps} className="pl-4 pr-3 text-left" />
                         <SortTh label="Grade"     sk="grade"             {...shProps} className="px-3 text-center" />
                         <SortTh label="Score"     sk="score"             {...shProps} className="px-3 text-center" />
@@ -730,6 +949,7 @@ export default function PreEarningsRunners() {
               )}
             </div>
           )}
+          </div>
         </>
       )}
     </div>

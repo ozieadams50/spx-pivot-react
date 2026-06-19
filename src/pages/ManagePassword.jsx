@@ -4,13 +4,13 @@ import { apiFetch } from '../lib/api';
 function Field({ label, children }) {
   return (
     <div>
-      <label className="mb-1.5 block text-xs font-medium text-slate-300">{label}</label>
+      <label className="mb-1.5 block text-xs font-medium text-[var(--c-text-secondary)]">{label}</label>
       {children}
     </div>
   );
 }
 
-const INPUT_CLS = 'w-full rounded-xl border border-white/10 bg-[#061018] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30';
+const INPUT_CLS = 'w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-3 py-2 text-sm text-[var(--c-text-primary)] outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30';
 
 export default function ManagePassword() {
   const [current,  setCurrent]  = useState('');
@@ -46,11 +46,11 @@ export default function ManagePassword() {
   return (
     <div className="p-6 md:p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Manage Password</h1>
-        <p className="mt-1 text-sm text-slate-400">Update your account password.</p>
+        <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">Manage Password</h1>
+        <p className="mt-1 text-sm text-[var(--c-text-muted)]">Update your account password.</p>
       </div>
 
-      <div className="max-w-md rounded-2xl border border-white/10 bg-[#0d1f2d] p-6 shadow-lg">
+      <div className="max-w-md rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-6 shadow-lg">
         <div className="space-y-4">
           <Field label="Current Password">
             <input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} className={INPUT_CLS} />
@@ -62,11 +62,11 @@ export default function ManagePassword() {
             <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={INPUT_CLS} />
           </Field>
 
-          {error   && <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">{error}</div>}
-          {success && <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">Password updated successfully.</div>}
+          {error   && <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-[var(--c-rose-strong)]">{error}</div>}
+          {success && <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-[var(--c-emerald-strong)]">Password updated successfully.</div>}
 
           <button onClick={handleSubmit} disabled={saving}
-            className="w-full rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-[#061018] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50">
+            className="w-full rounded-xl bg-[var(--c-btn-bg)] px-4 py-2.5 text-sm font-semibold text-[var(--c-btn-text)] transition hover:bg-[var(--c-btn-hover)] disabled:cursor-not-allowed disabled:opacity-50">
             {saving ? 'Updating…' : 'Update Password'}
           </button>
         </div>
