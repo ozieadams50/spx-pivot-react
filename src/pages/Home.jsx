@@ -68,21 +68,6 @@ export default function Home() {
           <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">Daily, weekly, and monthly pivot levels with Bull Put Spread recommendations.</p>
         </Link>
 
-        {/* SPX Backtester */}
-        <Link
-          id="pg-spx-backtest-card"
-          to="/spx-backtest"
-          className="group rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6 hover:border-sky-500/30 transition-all"
-        >
-          <div className="mb-4 inline-flex rounded-2xl border border-sky-500/20 bg-sky-500/10 p-3">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[var(--c-sky-strong)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-[var(--c-text-primary)] group-hover:text-[var(--c-sky)] transition-colors">SPX Backtester</h3>
-          <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">Test any Bull Put Spread strategy against years of SPX historical data.</p>
-        </Link>
-
         {/* EOD-MOC Signal */}
         <Link
           id="pg-eod-moc-card"
@@ -96,6 +81,21 @@ export default function Home() {
           </div>
           <h3 className="text-lg font-semibold text-[var(--c-text-primary)] group-hover:text-[var(--c-amber)] transition-colors">EOD-MOC Signal</h3>
           <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">End-of-day 0DTE spread signal based on dealer positioning and market-on-close imbalance flow.</p>
+        </Link>
+
+        {/* SPX Backtester */}
+        <Link
+          id="pg-spx-backtest-card"
+          to="/spx-backtest"
+          className="group rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6 hover:border-sky-500/30 transition-all"
+        >
+          <div className="mb-4 inline-flex rounded-2xl border border-sky-500/20 bg-sky-500/10 p-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[var(--c-sky-strong)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-[var(--c-text-primary)] group-hover:text-[var(--c-sky)] transition-colors">SPX Backtester</h3>
+          <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">Test any Bull Put Spread strategy against years of SPX historical data.</p>
         </Link>
 
         {/* System Monitor — admin/superuser only */}
