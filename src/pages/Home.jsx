@@ -26,10 +26,11 @@ export default function Home() {
         guideKey="home"
         accent="violet"
         title="New here? Here's how this platform is organized."
-        description="You have two main tools — one for finding stocks that run up before earnings, and one for SPX credit spread strategies. Here's where each one lives."
+        description="You have three trading tools — one for finding stocks that run up before earnings, one for SPX credit spread strategies, and one for end-of-day directional trades. Here's where each one lives."
         steps={[
           { text: 'Pre-Earnings Runners is the core product. The system scans every stock daily, finds ones that historically go up before their earnings announcement, and ranks the best opportunities. If you\'re new, click it and go straight to Hot Picks — that\'s today\'s top-ranked list.', targetId: 'pg-pre-earnings-card' },
           { text: 'SPX Pivots gives you today\'s key S&P 500 price levels and a ready-to-use Bull Put Spread trade recommendation — updated daily with current market sentiment factored in. Start here for SPX options trades.', targetId: 'pg-spx-pivots-card' },
+          { text: 'EOD-MOC Signal activates at 3:50 PM ET. Based on dealer gamma exposure and market-on-close imbalance flow, it tells you whether to trade and recommends a 0DTE debit spread with specific strikes. Check it in the final 10 minutes of the trading day.', targetId: 'pg-eod-moc-card' },
           { text: 'SPX Backtester lets you test any Bull Put Spread strategy against years of historical data before risking real money. Adjust the parameters, run the simulation, and check the win rate and profit factor before committing to a setup.', targetId: 'pg-spx-backtest-card' },
         ]}
       />
@@ -80,6 +81,21 @@ export default function Home() {
           </div>
           <h3 className="text-lg font-semibold text-[var(--c-text-primary)] group-hover:text-[var(--c-sky)] transition-colors">SPX Backtester</h3>
           <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">Test any Bull Put Spread strategy against years of SPX historical data.</p>
+        </Link>
+
+        {/* EOD-MOC Signal */}
+        <Link
+          id="pg-eod-moc-card"
+          to="/eod-moc"
+          className="group rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6 hover:border-amber-500/30 transition-all"
+        >
+          <div className="mb-4 inline-flex rounded-2xl border border-amber-500/20 bg-amber-500/10 p-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[var(--c-amber-strong)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-[var(--c-text-primary)] group-hover:text-[var(--c-amber)] transition-colors">EOD-MOC Signal</h3>
+          <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">End-of-day 0DTE spread signal based on dealer positioning and market-on-close imbalance flow.</p>
         </Link>
 
         {/* System Monitor — admin/superuser only */}
