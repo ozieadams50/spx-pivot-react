@@ -494,12 +494,12 @@ export default function PreEarningsTicker() {
         <PageGuide
           guideKey="ticker-detail"
           accent="violet"
-          title="This is your full research report — read it before placing any trade."
-          description="You're looking at the complete breakdown of why this stock made the list and how strong the conditions are right now. Take your time here before acting."
+          title="Full research report — review before placing any trade."
+          description="This is the complete breakdown of why this stock made the list and how strong the current conditions are."
           steps={[
-            { text: 'The grade and score at the top show historical reliability. A+ means the strongest confirmed track record. The number out of 82 shows how many individual scoring criteria this stock currently meets — hover any metric card for a plain-language explanation of what it measures.', targetId: 'pg-ticker-header' },
-            { text: 'The key metric cards (RS vs SPY, AVWAP, RSI, EPS Accel) are the live market signals that feed into the Dynamic Score. Green values mean favorable conditions right now. If most are green, the stock is behaving the way you want it to ahead of earnings.', targetId: 'pg-key-metrics' },
-            { text: 'Dynamic Context at the bottom breaks this stock\'s setup into 5 scored sections (S1–S5). If ⚡ Momentum Override is active, all 6 key conditions are simultaneously met — that\'s the strongest buy signal the system generates. Always check this before entering.', targetId: 'pg-dynamic-context' },
+            { text: 'The grade and score at the top reflect the overall strength of this setup. Hover any metric card for a plain-language explanation of what it measures.', targetId: 'pg-ticker-header' },
+            { text: 'The key metric cards show live market conditions. Green values mean favorable conditions right now. If most are green, the setup is aligned.', targetId: 'pg-key-metrics' },
+            { text: 'The context section at the bottom gives you a multi-dimensional view of the setup. ⚡ means all key conditions are firing at once — the strongest signal the system can show.', targetId: 'pg-dynamic-context' },
           ]}
         />
       )}

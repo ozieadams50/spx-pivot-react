@@ -456,11 +456,11 @@ export default function EarningsCalendar() {
         guideKey="earnings-calendar"
         accent="violet"
         title="How to use the Earnings Calendar"
-        description="This calendar shows every stock our system has scored with an upcoming earnings announcement. Use it to plan your entries for the week ahead — and to review how past signals played out."
+        description="See every scored stock with an upcoming earnings announcement. Plan your entries for the week ahead and review how past signals played out."
         steps={[
-          { text: 'Filter by Grade and Model at the top. A+ and A are the strongest setups — start there. The Recovery model looks for stocks that historically bounce before earnings; Momentum looks for stocks already trending up. "Both" shows all signals together.', targetId: 'pg-cal-filters' },
-          { text: 'The Calendar view shows this week\'s tickers arranged by day. Each company logo shows a colored dot for its grade. Past earnings show a green ✓ for a WIN or red ✗ for a LOSS — dimmed to show they\'ve already reported. Use the ← → arrows to browse other weeks, or click Today to jump back.', targetId: 'pg-cal-grid' },
-          { text: 'Switch to List view to see every upcoming signal in a sortable table — sort by earnings date, grade, score, or sector. Click any row to open that stock\'s full analysis page.', targetId: 'pg-cal-list' },
+          { text: 'Filter by Grade and Model at the top. A+ and A represent the strongest setups — start there.', targetId: 'pg-cal-filters' },
+          { text: 'Calendar view shows this week\'s tickers by day. Colored dots indicate grade. Past earnings show ✓ for WIN or ✗ for LOSS. Use the arrows to browse weeks.', targetId: 'pg-cal-grid' },
+          { text: 'Switch to List view for a sortable table. Click any row to open that stock\'s full research page.', targetId: 'pg-cal-list' },
         ]}
       />
 

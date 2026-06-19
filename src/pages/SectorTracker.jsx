@@ -330,12 +330,12 @@ export default function SectorTracker() {
           <PageGuide
             guideKey="sector-tracker"
             accent="violet"
-            title="See which sectors are leading the market — and find signals inside them."
-            description="Knowing which sectors have momentum helps you pick pre-earnings stocks with a tailwind behind them. A stock in a strong sector has a better chance of continuing its run."
+            title="See which sectors are leading the market."
+            description="Sector momentum matters. A stock in a strong sector has a better chance of following through on its setup."
             steps={[
-              { text: 'Bars show each S&P 500 sector\'s 30-day return — green = gaining, red = losing. The top 3 sectors are highlighted in violet, showing where market momentum is strongest right now. Ideally you want your pre-earnings picks sitting in one of these.', targetId: 'pg-sector-bars' },
-              { text: 'Use the Return / Weight toggle to switch between ranking by recent performance vs. ranking by S&P 500 index weight. Return is most useful for spotting momentum; Weight helps you understand which sectors have the most impact on the overall index.', targetId: 'pg-sector-sort' },
-              'Click any sector row to drill into a color-coded heat map of every stock in that ETF. Stocks with a violet dot are currently in our Pre-Earnings Runners signals — so you can instantly see if a signal is sitting in a strong or weak sector before you trade.',
+              { text: 'Bars show each S&P 500 sector\'s recent performance — green = gaining, red = losing. The top sectors are highlighted, showing where momentum is strongest.', targetId: 'pg-sector-bars' },
+              { text: 'Use the Return / Weight toggle to switch between ranking by performance vs. index weight.', targetId: 'pg-sector-sort' },
+              'Click any sector row to drill into the individual holdings. Stocks with a violet dot are in our active signals.',
             ]}
           />
 

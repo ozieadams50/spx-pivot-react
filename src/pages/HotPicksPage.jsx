@@ -295,12 +295,12 @@ export default function HotPicksPage() {
       <PageGuide
         guideKey="hot-picks"
         accent="amber"
-        title="Today's top 10 stocks most likely to run up before earnings — re-ranked every night."
-        description="These aren't just historically strong stocks. Hot Picks are scored fresh every day based on what's actually happening in the market right now — so a lower-grade stock with strong current momentum can rank above a higher-grade stock that's gone quiet."
+        title="Today's top-ranked stocks — re-scored every night."
+        description="Hot Picks are scored fresh each day based on current market conditions, not just history. A stock with strong momentum today can outrank a historically strong name that's gone quiet."
         steps={[
-          { text: 'The Dynamic Score on each card blends historical track record with real-time market conditions like strength vs the S&P 500, sector momentum, and volume. ⚡ means ALL 6 key momentum signals are firing at once — the strongest possible setup the system can show.', targetId: 'pg-hot-picks-grid' },
-          { text: 'The S1–S5 mini bars show how strong this stock is across 5 categories: S1 Historical Pattern, S2 Current Momentum, S3 Fundamental Catalyst, S4 Technical Setup, S5 Volume & Accumulation. Green = strong, red = weak. Three or more green bars means conviction across multiple dimensions.', targetId: 'pg-hot-picks-grid' },
-          { text: 'On Deck are the next 5 candidates waiting to enter Hot Picks. If a top pick gets removed or its earnings pass, an On Deck ticker moves up. Watch these — they can quickly become the next trade opportunity.', targetId: 'pg-on-deck' },
+          { text: 'Each card shows the stock\'s current score and grade. ⚡ means all key conditions are aligned at once — the strongest setup the system can show.', targetId: 'pg-hot-picks-grid' },
+          { text: 'The mini bars on each card show strength across multiple dimensions. Green = strong, red = weak. More green bars means higher conviction.', targetId: 'pg-hot-picks-grid' },
+          { text: 'On Deck are the next candidates waiting to enter Hot Picks. Watch these — they can quickly become the next opportunity.', targetId: 'pg-on-deck' },
         ]}
       />
 

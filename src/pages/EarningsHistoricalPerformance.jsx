@@ -293,12 +293,12 @@ export default function EarningsHistoricalPerformance() {
         <PageGuide
           guideKey="historical-performance"
           accent="violet"
-          title="The honest scorecard — see exactly how past signals performed."
-          description="Every signal this system has generated is tracked here with the real outcome. Use this page to build confidence in the strategy before risking real money, and to understand which conditions produce the best results."
+          title="The scorecard — see exactly how past signals performed."
+          description="Every signal the system has generated is tracked here with the real outcome. Use it to evaluate performance across different grades and conditions."
           steps={[
-            { text: 'Use the grade buttons and model filter to narrow down the results. A+ and A grades have historically shown the highest win rates. Filtering to a single grade lets you see how reliable that tier has been over time.', targetId: 'pg-hist-filters' },
-            { text: 'The summary bar shows your Win Rate, total signals, and average pre-earnings high % across all filtered results. This is the headline number — check it first to get a quick read on how the selected group performed.', targetId: 'pg-hist-summary' },
-            { text: 'In the table, pay attention to the "Ran Up?" column — even LOSS signals often reached a high before pulling back. This shows there was a real opportunity window, even if the standard exit (2 days before earnings) missed it.', targetId: 'pg-hist-table' },
+            { text: 'Use the grade buttons and model filter to narrow results. Higher grades have historically produced stronger outcomes.', targetId: 'pg-hist-filters' },
+            { text: 'The summary bar shows Win Rate, total signals, and average performance across your filtered results.', targetId: 'pg-hist-summary' },
+            { text: 'In the table, review individual signals and their outcomes. Click any row to see the full research page for that signal.', targetId: 'pg-hist-table' },
           ]}
         />
 
