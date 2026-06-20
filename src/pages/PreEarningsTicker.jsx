@@ -45,7 +45,7 @@ function MetricBar({ label, score, max, rawValue }) {
   );
 }
 
-function KeyMetric({ label, value, signed = false, pct = false, prefix = '', tooltip }) {
+function KeyMetric({ label, value, signed = false, pct = false, prefix = '', tooltip, subtitle }) {
   const color =
     value == null        ? 'text-[var(--c-text-faint)]'
     : signed && value > 0 ? 'text-[var(--c-emerald)]'
@@ -58,6 +58,7 @@ function KeyMetric({ label, value, signed = false, pct = false, prefix = '', too
     <div className="relative group/tip rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-4 text-center cursor-default">
       <p className="text-[10px] uppercase tracking-wide text-[var(--c-text-dimmed)]">{label}</p>
       <p className={`mt-2 text-xl font-bold font-mono ${color}`}>{display}</p>
+      {subtitle && <p className="mt-1 text-[10px] font-mono text-[var(--c-text-dimmed)]">{subtitle}</p>}
       {tooltip && (
         <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 z-50
                         opacity-0 group-hover/tip:opacity-100 transition-opacity duration-150
@@ -672,7 +673,10 @@ export default function PreEarningsTicker() {
             <KeyMetric label="Exp Move %"  value={signal.expected_move_pct} pct
               tooltip="Expected Move % — the options market's implied one-standard-deviation move by expiration, expressed as a percentage of current spot price. Derived from near-term straddle pricing." />
             <KeyMetric label="Exp Move $"  value={signal.expected_move_usd} prefix="$"
-              tooltip="Expected Move $ — the options market's implied one-standard-deviation move in dollar terms. Useful for sizing positions relative to the anticipated range." />
+              tooltip="Expected Move $ — the options market's implied one-standard-deviation move in dollar terms. Useful for sizing positions relative to the anticipated range."
+              subtitle={signal.spot_price != null && signal.expected_move_usd != null
+                ? `$${(signal.spot_price - signal.expected_move_usd).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} – $${(signal.spot_price + signal.expected_move_usd).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+                : null} />
             <KeyMetric label="IV"          value={signal.iv}                pct
               tooltip="Implied Volatility — the market's forward-looking volatility expectation priced into options. Elevated IV increases option premiums and expected move size ahead of earnings." />
             <KeyMetric label="Spot Price"  value={signal.spot_price}        prefix="$"
