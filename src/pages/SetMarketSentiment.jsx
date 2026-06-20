@@ -86,7 +86,7 @@ export default function SetMarketSentiment() {
         </p>
       </div>
 
-      <div className="max-w-2xl rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-6 shadow-lg">
+      <div className="max-w-4xl rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-6 shadow-lg">
 
         <div className="mb-5 grid grid-cols-2 gap-4">
           <div>
@@ -141,9 +141,9 @@ export default function SetMarketSentiment() {
           <label className="mb-1.5 block text-xs font-medium text-[var(--c-text-secondary)]">
             Commentary <span className="font-normal text-[var(--c-text-dimmed)]">(optional — included in subscriber alert)</span>
           </label>
-          <textarea value={commentary} onChange={(e) => setCommentary(e.target.value)} rows={3}
+          <textarea value={commentary} onChange={(e) => setCommentary(e.target.value)} rows={14}
             placeholder="Add context for subscribers..."
-            className="w-full resize-y rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-4 py-2.5 text-sm text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
+            className="w-full resize-y rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-4 py-2.5 text-sm leading-relaxed text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
         </div>
 
         {current && currentDef && (
