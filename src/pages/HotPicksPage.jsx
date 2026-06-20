@@ -64,13 +64,13 @@ function PillTag({ label, value, threshold, fmt, tooltip }) {
   return <Tooltip text={tooltip}>{pill}</Tooltip>;
 }
 
-function FullPickCard({ pick, rank, navigate }) {
+function FullPickCard({ pick, rank, navigate, tickers }) {
   const urgent  = (pick.days_to_earnings ?? 99) <= 5;
   const metCount = Object.values(pick.override_details ?? {}).filter(Boolean).length;
 
   return (
     <div
-      onClick={() => navigate(`/earnings/${pick.ticker}`)}
+      onClick={() => navigate(`/earnings/${pick.ticker}`, { state: { tickers } })}
       className="group cursor-pointer rounded-2xl border border-amber-500/25 bg-gradient-to-br from-[#0d1822] to-[#071018] p-5 transition-all duration-200 hover:border-amber-400/50 hover:shadow-xl hover:shadow-amber-500/5"
     >
       {/* Header row */}
@@ -149,13 +149,13 @@ function FullPickCard({ pick, rank, navigate }) {
   );
 }
 
-function OnDeckRow({ pick, rank, navigate }) {
+function OnDeckRow({ pick, rank, navigate, tickers }) {
   const urgent  = (pick.days_to_earnings ?? 99) <= 5;
   const metCount = Object.values(pick.override_details ?? {}).filter(Boolean).length;
 
   return (
     <div
-      onClick={() => navigate(`/earnings/${pick.ticker}`)}
+      onClick={() => navigate(`/earnings/${pick.ticker}`, { state: { tickers } })}
       className="group cursor-pointer flex items-center gap-3 rounded-xl border border-white/8 bg-[var(--c-bg-card)] px-4 py-3 transition-all hover:border-white/20 hover:bg-[var(--c-hover-faint)]"
     >
       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-800 text-[10px] font-black text-[var(--c-text-muted)]">
@@ -325,9 +325,12 @@ export default function HotPicksPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {hotPicks.map((pick, i) => (
-              <FullPickCard key={pick.ticker} pick={pick} rank={i + 1} navigate={navigate} />
-            ))}
+            {(() => {
+              const allTickers = [...hotPicks, ...onDeck].map(p => p.ticker);
+              return hotPicks.map((pick, i) => (
+                <FullPickCard key={pick.ticker} pick={pick} rank={i + 1} navigate={navigate} tickers={allTickers} />
+              ));
+            })()}
           </div>
         )}
       </section>
@@ -351,9 +354,12 @@ export default function HotPicksPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {onDeck.map((pick, i) => (
-                <OnDeckRow key={pick.ticker} pick={pick} rank={i + 1} navigate={navigate} />
-              ))}
+              {(() => {
+                const allTickers = [...hotPicks, ...onDeck].map(p => p.ticker);
+                return onDeck.map((pick, i) => (
+                  <OnDeckRow key={pick.ticker} pick={pick} rank={i + 1} navigate={navigate} tickers={allTickers} />
+                ));
+              })()}
             </div>
           )}
         </section>

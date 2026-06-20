@@ -731,14 +731,17 @@ export default function PreEarningsRunners() {
               ) : (
                 <>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                    {hotPicks.hot_picks.map((pick, i) => (
-                      <HotPickCard
-                        key={pick.ticker}
-                        pick={pick}
-                        rank={i + 1}
-                        onClick={() => navigate(`/earnings/${pick.ticker}`)}
-                      />
-                    ))}
+                    {hotPicks.hot_picks.map((pick, i) => {
+                      const hpTickers = [...hotPicks.hot_picks, ...hotPicks.on_deck].map(p => p.ticker);
+                      return (
+                        <HotPickCard
+                          key={pick.ticker}
+                          pick={pick}
+                          rank={i + 1}
+                          onClick={() => navigate(`/earnings/${pick.ticker}`, { state: { tickers: hpTickers } })}
+                        />
+                      );
+                    })}
                   </div>
 
                   {hotPicks.on_deck.length > 0 && (
@@ -752,14 +755,17 @@ export default function PreEarningsRunners() {
                         </span>
                       </div>
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
-                        {hotPicks.on_deck.map((pick, i) => (
-                          <OnDeckCard
-                            key={pick.ticker}
-                            pick={pick}
-                            rank={hotPicks.hot_picks.length + i + 1}
-                            onClick={() => navigate(`/earnings/${pick.ticker}`)}
-                          />
-                        ))}
+                        {hotPicks.on_deck.map((pick, i) => {
+                          const hpTickers = [...hotPicks.hot_picks, ...hotPicks.on_deck].map(p => p.ticker);
+                          return (
+                            <OnDeckCard
+                              key={pick.ticker}
+                              pick={pick}
+                              rank={hotPicks.hot_picks.length + i + 1}
+                              onClick={() => navigate(`/earnings/${pick.ticker}`, { state: { tickers: hpTickers } })}
+                            />
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -775,14 +781,17 @@ export default function PreEarningsRunners() {
                 <span className="text-[10px] text-[var(--c-text-faint)]">Added in the last 3 days</span>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {recentNew.map((s) => (
-                  <SignalCard
-                    key={s.ticker}
-                    signal={s}
-                    optionsLoading={optionsLoading}
-                    onClick={() => navigate(`/earnings/${s.ticker}`)}
-                  />
-                ))}
+                {recentNew.map((s) => {
+                  const newTickers = recentNew.map(r => r.ticker);
+                  return (
+                    <SignalCard
+                      key={s.ticker}
+                      signal={s}
+                      optionsLoading={optionsLoading}
+                      onClick={() => navigate(`/earnings/${s.ticker}`, { state: { tickers: newTickers } })}
+                    />
+                  );
+                })}
               </div>
             </div>
           )}
@@ -892,14 +901,17 @@ export default function PreEarningsRunners() {
                         No signals match the current filters.
                       </div>
                     )
-                  : displayed.map((s) => (
-                      <SignalCard
-                        key={`${s.ticker}-${s.model_type}`}
-                        signal={s}
-                        optionsLoading={optionsLoading}
-                        onClick={() => navigate(`/earnings/${s.ticker}`)}
-                      />
-                    ))}
+                  : displayed.map((s) => {
+                      const sigTickers = displayed.map(d => d.ticker);
+                      return (
+                        <SignalCard
+                          key={`${s.ticker}-${s.model_type}`}
+                          signal={s}
+                          optionsLoading={optionsLoading}
+                          onClick={() => navigate(`/earnings/${s.ticker}`, { state: { tickers: sigTickers } })}
+                        />
+                      );
+                    })}
             </div>
           )}
 
@@ -935,14 +947,17 @@ export default function PreEarningsRunners() {
                       </tr>
                     </thead>
                     <tbody>
-                      {displayed.map((s) => (
-                        <SignalRow
-                          key={`${s.ticker}-${s.model_type}`}
-                          signal={s}
-                          optionsLoading={optionsLoading}
-                          onClick={() => navigate(`/earnings/${s.ticker}`)}
-                        />
-                      ))}
+                      {displayed.map((s) => {
+                        const sigTickers = displayed.map(d => d.ticker);
+                        return (
+                          <SignalRow
+                            key={`${s.ticker}-${s.model_type}`}
+                            signal={s}
+                            optionsLoading={optionsLoading}
+                            onClick={() => navigate(`/earnings/${s.ticker}`, { state: { tickers: sigTickers } })}
+                          />
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

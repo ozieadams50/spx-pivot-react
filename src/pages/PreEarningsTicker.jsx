@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import { GRADE_CONFIG, MODEL_CONFIG, METRICS } from '../data/earningsConfig';
 import PageGuide from '../components/PageGuide';
@@ -456,9 +456,15 @@ function DynamicContext({ ticker }) {
 export default function PreEarningsTicker() {
   const { ticker }       = useParams();
   const navigate         = useNavigate();
+  const location         = useLocation();
   const [searchParams]   = useSearchParams();
   const earningsDate     = searchParams.get('earningsDate');   // set when viewing a snapshot
   const isSnapshot       = !!earningsDate;
+
+  const tickerList = location.state?.tickers ?? [];
+  const listIdx    = tickerList.indexOf(ticker);
+  const prevTicker = listIdx > 0 ? tickerList[listIdx - 1] : null;
+  const nextTicker = listIdx >= 0 && listIdx < tickerList.length - 1 ? tickerList[listIdx + 1] : null;
 
   const [details,   setDetails]   = useState([]);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -483,12 +489,35 @@ export default function PreEarningsTicker() {
   return (
     <div className="mx-auto max-w-4xl p-3 sm:p-4 lg:p-8">
 
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-5 flex items-center gap-2 text-sm text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)] transition-colors"
-      >
-        ← Back
-      </button>
+      <div className="mb-5 flex items-center justify-between">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-sm text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)] transition-colors"
+        >
+          ← Back
+        </button>
+        {tickerList.length > 0 && listIdx >= 0 && (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => prevTicker && navigate(`/earnings/${prevTicker}`, { state: { tickers: tickerList } })}
+              disabled={!prevTicker}
+              className={`text-sm transition-colors ${prevTicker ? 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]' : 'text-[var(--c-text-faint)] cursor-not-allowed'}`}
+            >
+              ← Prev
+            </button>
+            <span className="text-xs font-mono text-[var(--c-text-dimmed)]">
+              {listIdx + 1} / {tickerList.length}
+            </span>
+            <button
+              onClick={() => nextTicker && navigate(`/earnings/${nextTicker}`, { state: { tickers: tickerList } })}
+              disabled={!nextTicker}
+              className={`text-sm transition-colors ${nextTicker ? 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]' : 'text-[var(--c-text-faint)] cursor-not-allowed'}`}
+            >
+              Next →
+            </button>
+          </div>
+        )}
+      </div>
 
       {!isSnapshot && (
         <PageGuide
