@@ -218,13 +218,13 @@ const SECTION_META = [
     desc: 'What this stock has done in pre-earnings windows across past quarters',
     metrics: [
       { label: 'Avg Run-Up',    key: 'm1_avg_pct',      fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—',
-        tip: 'Mean 15-day pre-earnings return across prior quarters. Feeds M1 scoring (max 6 pts). Weak standalone predictor (r=+0.003) — context matters more than history.' },
+        tip: 'The average % the stock has moved in the 15 days before earnings over past quarters. Higher = the stock tends to run up before reports.' },
       { label: 'Positive Rate', key: 'm2_pos_rate',      fmt: v => v != null ? `${v.toFixed(0)}%` : '—',
-        tip: 'REMOVED from scoring (r=-0.022, slightly inverted). Shown for context only — how often the stock has historically run up before earnings. Does not contribute points.' },
+        tip: 'How often the stock has gone up before earnings. Shown for context only — does not add to the score.' },
       { label: 'Beat Rate',     key: 'm8_beat_rate',     fmt: v => v != null ? `${v.toFixed(0)}%` : '—',
-        tip: 'EPS beat rate across prior quarters. Feeds M8 (max 2 pts). Low weight — most large caps beat estimates. 100% rate = 2 pts.' },
+        tip: 'How often earnings came in above analyst estimates. Most big companies beat regularly, so this has low weight in scoring.' },
       { label: 'Post-Earn Avg', key: 'm4_post_earn_avg', fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—',
-        tip: 'REMOVED from scoring (r=-0.015, pure noise). Avg post-earnings day return. Shown for context — winners and losers both cluster near 0%. Does not contribute points.' },
+        tip: 'Average stock move on earnings day itself. Shown for context only — does not add to the score. Winners and losers both hover near 0% on average.' },
     ],
   },
   {
@@ -233,15 +233,15 @@ const SECTION_META = [
     desc: 'Where price is moving right now relative to SPY and its sector',
     metrics: [
       { label: 'RS vs SPY',     key: 'm5_rs_spy',        fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—',
-        tip: '20-day relative strength vs SPY. Feeds M5 (max 8 pts, U-shaped). Both strong outperformers and strong underperformers score high — conviction in either direction matters.' },
+        tip: 'How much the stock beat or trailed the S&P 500 over the last 20 days. Strong moves in either direction score well — laggards can catch up, and leaders tend to keep going.' },
       { label: 'Stk vs Sector', key: 'm15_stk_vs_sec',   fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—',
-        tip: 'Stock return minus sector ETF return over 20 days. Part of M15 3-way (max 5 pts of 10). U-shaped — strong deviation from sector in either direction = higher score.' },
+        tip: 'How much the stock is outperforming or underperforming its own sector. A stock moving independently from its peers signals something stock-specific is happening.' },
       { label: 'Sec vs SPY',    key: 'm15_sec_vs_spy',   fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—',
-        tip: 'Sector ETF return minus SPY return over 20 days. Part of M15 3-way (max 5 pts of 10). Sector leadership OR weakness both contribute — U-shaped scoring.' },
+        tip: 'How the stock\'s sector is performing vs the overall market. A strong sector tailwind (or headwind creating a catch-up) both contribute to the score.' },
       { label: 'AVWAP',         key: 'm19_avwap_pct',    fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—',
-        tip: 'Price vs VWAP anchored to last earnings. Feeds M19 (max 6 pts). RECOVERY scoring: below AVWAP = catch-up opportunity. 3%+ below = full pts; above = 0.' },
+        tip: 'How far above or below the average price since last earnings. Below = the average buyer is losing money, creating pressure for a catch-up move into the next report.' },
       { label: 'Higher Lows',   key: 'm20_lows_slope',   fmt: v => v != null ? `${(v * 100).toFixed(2)}%/d` : '—',
-        tip: 'Linear regression slope of daily lows over 20 sessions. Feeds M20 (max 8 pts, r=+0.105). RECOVERY scoring: descending lows = catch-up opportunity. Negative slope = more pts.' },
+        tip: 'Are the daily lows trending up or down? Falling lows = the stock is still drifting lower, creating a catch-up opportunity before earnings. Strongest recovery signal.' },
     ],
   },
   {
@@ -250,11 +250,11 @@ const SECTION_META = [
     desc: 'Earnings setup quality — acceleration, beat history, and post-earnings reaction',
     metrics: [
       { label: 'EPS Accel',      key: 'm6_eps_accel',    fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)} ppts` : '—',
-        tip: 'Q/Q EPS growth rate change. Feeds M6 (max 4 pts). Positive = earnings growth speeding up. Accel >20 ppts = full score. Weak global signal (r=-0.006).' },
+        tip: 'Is earnings growth speeding up? Positive = the company is growing faster than the quarter before. Accelerating earnings attract more attention heading into the report.' },
       { label: 'Beat Magnitude', key: 'm7_beat_mag',     fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—',
-        tip: 'Avg EPS surprise % across prior quarters. Feeds M7 (max 5 pts). 15%+ avg beat = full score. Companies that consistently crush estimates attract pre-earnings positioning.' },
+        tip: 'How much the company beats estimates on average. Companies that consistently crush expectations by a wide margin tend to attract pre-earnings buying.' },
       { label: 'Beat Rate',      key: 'm8_beat_rate',    fmt: v => v != null ? `${v.toFixed(0)}%` : '—',
-        tip: 'Same as S1 beat rate. Feeds M8 (max 2 pts). Low weight — most large caps beat. 100% = 2 pts.' },
+        tip: 'What % of recent quarters beat analyst estimates. Low weight because beating estimates is common among large companies.' },
     ],
   },
   {
@@ -263,11 +263,11 @@ const SECTION_META = [
     desc: 'Chart configuration — MA alignment, RSI position, and volatility expansion',
     metrics: [
       { label: 'RSI',          key: 'm16_rsi',         fmt: v => v != null ? v.toFixed(0) : '—',
-        tip: 'Feeds M16 (max 6 pts, U-shaped). ≤40 = oversold recovery (6 pts); 55-65 = neutral dead zone (0 pts); 65-80 = momentum zone (up to 6 pts); >80 = extended, decays.' },
+        tip: 'Measures if the stock is overbought or oversold. Two sweet spots: below 40 (oversold, ready to bounce) and 65-80 (strong momentum). The middle zone (55-65) has no edge.' },
       { label: 'ATR Ratio',    key: 'm17_atr_ratio',   fmt: v => v != null ? `${v.toFixed(2)}x` : '—',
-        tip: 'ATR(10)/ATR(50). Feeds M17 (max 4 pts, r=+0.148). Expanding ATR = momentum building. Winners avg 1.17x vs losers 0.997x. >1.10 = full score; <0.85 = 0.' },
+        tip: 'Is the stock\'s daily range expanding? Above 1.10x means the stock is already moving — winners tend to show expanding ranges going into earnings.' },
       { label: 'MA Alignment', key: 'm18_ma_align',    fmt: v => v ?? '—',
-        tip: 'Price vs 20 EMA vs 50 MA. Feeds M18 (max 4 pts, r=+0.110). RECOVERY scoring: below MAs = catch-up. "none" = all below = full 4 pts; "full" = all above = 0 pts.' },
+        tip: 'Where price sits vs its moving averages. "none" = below all averages = recovery setup = highest score. Counterintuitive, but stocks below their averages tend to catch up before earnings.' },
     ],
   },
   {
@@ -276,7 +276,7 @@ const SECTION_META = [
     desc: 'Is smart money positioning? Volume trend and relative volume signal conviction',
     metrics: [
       { label: 'Vol Ratio', key: 'm13_vol_ratio', fmt: v => v != null ? `${v.toFixed(2)}x` : '—',
-        tip: '10-day avg volume / 90-day avg volume. Feeds M13 (max 3 pts). >2.0x = full score. Rising relative volume signals institutional accumulation before earnings.' },
+        tip: 'Recent volume compared to the 90-day average. Above 2x means significantly more shares are trading hands — a sign that big players may be building positions before earnings.' },
     ],
   },
 ];
@@ -333,7 +333,7 @@ function SectionPanel({ meta, ctx, defaultOpen, isAdmin }) {
   const score = ctx[meta.key];
 
   return (
-    <div className="rounded-2xl border border-[var(--c-border)] overflow-hidden">
+    <div className="rounded-2xl border border-[var(--c-border)]">
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--c-hover)] transition-colors text-left"
