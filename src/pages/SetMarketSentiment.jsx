@@ -19,6 +19,8 @@ export default function SetMarketSentiment() {
   const [sentiment,  setSentiment]  = useState('');
   const [commentary, setCommentary] = useState('');
   const [current,    setCurrent]    = useState(null);
+  const [draft,      setDraft]      = useState(null);
+  const [draftLoading, setDraftLoading] = useState(false);
   const [success,    setSuccess]    = useState('');
   const [error,      setError]      = useState('');
   const [saving,     setSaving]     = useState(false);
@@ -30,6 +32,26 @@ export default function SetMarketSentiment() {
       .then((data) => setCurrent(data[pivot.toLowerCase()] ?? null))
       .catch(() => {});
   }, [pivot, date]);
+
+  async function handleLoadDraft() {
+    setDraftLoading(true);
+    setError('');
+    try {
+      const data = await apiFetch('/sentiment/draft');
+      const d = data[pivot.toLowerCase()];
+      if (d) {
+        setDraft(d);
+        setSentiment(d.suggestedSentiment || '');
+        setCommentary(d.commentary || '');
+      } else {
+        setError(`No AI draft available for ${pivot} yet.`);
+      }
+    } catch (err) {
+      setError(err.message ?? 'Failed to load draft.');
+    } finally {
+      setDraftLoading(false);
+    }
+  }
 
   async function handleSubmit() {
     setError(''); setSuccess('');
@@ -84,6 +106,18 @@ export default function SetMarketSentiment() {
               onChange={(e) => setDate(e.target.value)}
               className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-page)] px-4 py-2 text-sm text-[var(--c-text-primary)] outline-none transition focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30" />
           </div>
+        </div>
+
+        <div className="mb-5">
+          <button onClick={handleLoadDraft} disabled={draftLoading}
+            className="w-full rounded-xl border border-violet-500/40 bg-violet-500/10 px-4 py-2.5 text-sm font-semibold text-violet-300 transition hover:bg-violet-500/20 disabled:cursor-not-allowed disabled:opacity-50">
+            {draftLoading ? 'Loading Draft...' : 'Load AI Draft'}
+          </button>
+          {draft && (
+            <p className="mt-2 text-[10px] text-[var(--c-text-faint)] text-center">
+              Draft generated {draft.createdAt?.slice(0, 16).replace('T', ' ')} UTC
+            </p>
+          )}
         </div>
 
         <div className="mb-5">
