@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import { GRADE_CONFIG, MODEL_CONFIG, METRICS } from '../data/earningsConfig';
 import PageGuide from '../components/PageGuide';
 
@@ -24,13 +25,13 @@ function ModelBadge({ model }) {
   );
 }
 
-function MetricBar({ label, score, max, rawValue }) {
+function MetricBar({ label, score, max, rawValue, tip }) {
   const pct   = max > 0 ? Math.min(100, ((score ?? 0) / max) * 100) : 0;
   const color = pct >= 75 ? 'bg-emerald-500' : pct >= 40 ? 'bg-sky-500' : 'bg-slate-600';
   return (
-    <div className="py-2.5">
+    <div className={`py-2.5 ${tip ? 'relative group/bar' : ''}`}>
       <div className="mb-1 flex items-center justify-between gap-4">
-        <span className="text-xs text-[var(--c-text-muted)] truncate">{label}</span>
+        <span className={`text-xs text-[var(--c-text-muted)] truncate ${tip ? 'cursor-help border-b border-dotted border-[var(--c-text-faint)]' : ''}`}>{label}</span>
         <div className="flex items-center gap-3 shrink-0">
           <span className="text-xs font-mono text-[var(--c-text-dimmed)] w-24 text-right truncate">{rawValue}</span>
           <span className="text-xs font-mono text-[var(--c-text-primary)] w-14 text-right">
@@ -41,6 +42,14 @@ function MetricBar({ label, score, max, rawValue }) {
       <div className="h-1.5 w-full rounded-full bg-[var(--c-hover-strong)]">
         <div className={`h-1.5 rounded-full transition-all duration-500 ${color}`} style={{ width: `${pct}%` }} />
       </div>
+      {tip && (
+        <div className="pointer-events-none absolute left-0 bottom-full z-50 mb-1
+                        opacity-0 group-hover/bar:opacity-100 transition-opacity duration-150
+                        w-80 rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-dropdown)] shadow-xl
+                        px-3 py-2.5 text-[10px] text-[var(--c-text-secondary)] leading-relaxed whitespace-normal">
+          {tip}
+        </div>
+      )}
     </div>
   );
 }
@@ -208,10 +217,14 @@ const SECTION_META = [
     label: 'S1 · Historical Pattern',
     desc: 'What this stock has done in pre-earnings windows across past quarters',
     metrics: [
-      { label: 'Avg Run-Up',    key: 'm1_avg_pct',      fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—' },
-      { label: 'Positive Rate', key: 'm2_pos_rate',      fmt: v => v != null ? `${v.toFixed(0)}%` : '—' },
-      { label: 'Beat Rate',     key: 'm8_beat_rate',     fmt: v => v != null ? `${v.toFixed(0)}%` : '—' },
-      { label: 'Post-Earn Avg', key: 'm4_post_earn_avg', fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—' },
+      { label: 'Avg Run-Up',    key: 'm1_avg_pct',      fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—',
+        tip: 'Mean 15-day pre-earnings return across prior quarters. Feeds M1 scoring (max 6 pts). Weak standalone predictor (r=+0.003) — context matters more than history.' },
+      { label: 'Positive Rate', key: 'm2_pos_rate',      fmt: v => v != null ? `${v.toFixed(0)}%` : '—',
+        tip: 'REMOVED from scoring (r=-0.022, slightly inverted). Shown for context only — how often the stock has historically run up before earnings. Does not contribute points.' },
+      { label: 'Beat Rate',     key: 'm8_beat_rate',     fmt: v => v != null ? `${v.toFixed(0)}%` : '—',
+        tip: 'EPS beat rate across prior quarters. Feeds M8 (max 2 pts). Low weight — most large caps beat estimates. 100% rate = 2 pts.' },
+      { label: 'Post-Earn Avg', key: 'm4_post_earn_avg', fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—',
+        tip: 'REMOVED from scoring (r=-0.015, pure noise). Avg post-earnings day return. Shown for context — winners and losers both cluster near 0%. Does not contribute points.' },
     ],
   },
   {
@@ -219,11 +232,16 @@ const SECTION_META = [
     label: 'S2 · Current Momentum',
     desc: 'Where price is moving right now relative to SPY and its sector',
     metrics: [
-      { label: 'RS vs SPY',     key: 'm5_rs_spy',        fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—' },
-      { label: 'Stk vs Sector', key: 'm15_stk_vs_sec',   fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—' },
-      { label: 'Sec vs SPY',    key: 'm15_sec_vs_spy',   fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—' },
-      { label: 'AVWAP',         key: 'm19_avwap_pct',    fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—' },
-      { label: 'Higher Lows',   key: 'm20_lows_slope',   fmt: v => v != null ? `${(v * 100).toFixed(2)}%/d` : '—' },
+      { label: 'RS vs SPY',     key: 'm5_rs_spy',        fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—',
+        tip: '20-day relative strength vs SPY. Feeds M5 (max 8 pts, U-shaped). Both strong outperformers and strong underperformers score high — conviction in either direction matters.' },
+      { label: 'Stk vs Sector', key: 'm15_stk_vs_sec',   fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—',
+        tip: 'Stock return minus sector ETF return over 20 days. Part of M15 3-way (max 5 pts of 10). U-shaped — strong deviation from sector in either direction = higher score.' },
+      { label: 'Sec vs SPY',    key: 'm15_sec_vs_spy',   fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—',
+        tip: 'Sector ETF return minus SPY return over 20 days. Part of M15 3-way (max 5 pts of 10). Sector leadership OR weakness both contribute — U-shaped scoring.' },
+      { label: 'AVWAP',         key: 'm19_avwap_pct',    fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—',
+        tip: 'Price vs VWAP anchored to last earnings. Feeds M19 (max 6 pts). RECOVERY scoring: below AVWAP = catch-up opportunity. 3%+ below = full pts; above = 0.' },
+      { label: 'Higher Lows',   key: 'm20_lows_slope',   fmt: v => v != null ? `${(v * 100).toFixed(2)}%/d` : '—',
+        tip: 'Linear regression slope of daily lows over 20 sessions. Feeds M20 (max 8 pts, r=+0.105). RECOVERY scoring: descending lows = catch-up opportunity. Negative slope = more pts.' },
     ],
   },
   {
@@ -231,9 +249,12 @@ const SECTION_META = [
     label: 'S3 · Fundamental Catalyst',
     desc: 'Earnings setup quality — acceleration, beat history, and post-earnings reaction',
     metrics: [
-      { label: 'EPS Accel',      key: 'm6_eps_accel',    fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)} ppts` : '—' },
-      { label: 'Beat Magnitude', key: 'm7_beat_mag',     fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—' },
-      { label: 'Beat Rate',      key: 'm8_beat_rate',    fmt: v => v != null ? `${v.toFixed(0)}%` : '—' },
+      { label: 'EPS Accel',      key: 'm6_eps_accel',    fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)} ppts` : '—',
+        tip: 'Q/Q EPS growth rate change. Feeds M6 (max 4 pts). Positive = earnings growth speeding up. Accel >20 ppts = full score. Weak global signal (r=-0.006).' },
+      { label: 'Beat Magnitude', key: 'm7_beat_mag',     fmt: v => v != null ? `${v >= 0 ? '+' : ''}${v.toFixed(1)}%` : '—',
+        tip: 'Avg EPS surprise % across prior quarters. Feeds M7 (max 5 pts). 15%+ avg beat = full score. Companies that consistently crush estimates attract pre-earnings positioning.' },
+      { label: 'Beat Rate',      key: 'm8_beat_rate',    fmt: v => v != null ? `${v.toFixed(0)}%` : '—',
+        tip: 'Same as S1 beat rate. Feeds M8 (max 2 pts). Low weight — most large caps beat. 100% = 2 pts.' },
     ],
   },
   {
@@ -241,9 +262,12 @@ const SECTION_META = [
     label: 'S4 · Technical Setup',
     desc: 'Chart configuration — MA alignment, RSI position, and volatility expansion',
     metrics: [
-      { label: 'RSI',          key: 'm16_rsi',         fmt: v => v != null ? v.toFixed(0) : '—' },
-      { label: 'ATR Ratio',    key: 'm17_atr_ratio',   fmt: v => v != null ? `${v.toFixed(2)}x` : '—' },
-      { label: 'MA Alignment', key: 'm18_ma_align',    fmt: v => v ?? '—' },
+      { label: 'RSI',          key: 'm16_rsi',         fmt: v => v != null ? v.toFixed(0) : '—',
+        tip: 'Feeds M16 (max 6 pts, U-shaped). ≤40 = oversold recovery (6 pts); 55-65 = neutral dead zone (0 pts); 65-80 = momentum zone (up to 6 pts); >80 = extended, decays.' },
+      { label: 'ATR Ratio',    key: 'm17_atr_ratio',   fmt: v => v != null ? `${v.toFixed(2)}x` : '—',
+        tip: 'ATR(10)/ATR(50). Feeds M17 (max 4 pts, r=+0.148). Expanding ATR = momentum building. Winners avg 1.17x vs losers 0.997x. >1.10 = full score; <0.85 = 0.' },
+      { label: 'MA Alignment', key: 'm18_ma_align',    fmt: v => v ?? '—',
+        tip: 'Price vs 20 EMA vs 50 MA. Feeds M18 (max 4 pts, r=+0.110). RECOVERY scoring: below MAs = catch-up. "none" = all below = full 4 pts; "full" = all above = 0 pts.' },
     ],
   },
   {
@@ -251,7 +275,8 @@ const SECTION_META = [
     label: 'S5 · Volume & Accumulation',
     desc: 'Is smart money positioning? Volume trend and relative volume signal conviction',
     metrics: [
-      { label: 'Vol Ratio', key: 'm13_vol_ratio', fmt: v => v != null ? `${v.toFixed(2)}x` : '—' },
+      { label: 'Vol Ratio', key: 'm13_vol_ratio', fmt: v => v != null ? `${v.toFixed(2)}x` : '—',
+        tip: '10-day avg volume / 90-day avg volume. Feeds M13 (max 3 pts). >2.0x = full score. Rising relative volume signals institutional accumulation before earnings.' },
     ],
   },
 ];
@@ -303,7 +328,7 @@ function Tooltip({ text, children }) {
   );
 }
 
-function SectionPanel({ meta, ctx, defaultOpen }) {
+function SectionPanel({ meta, ctx, defaultOpen, isAdmin }) {
   const [open, setOpen] = useState(defaultOpen);
   const score = ctx[meta.key];
 
@@ -333,9 +358,17 @@ function SectionPanel({ meta, ctx, defaultOpen }) {
         <div className="border-t border-[var(--c-border)] px-4 py-3 space-y-2">
           <p className="text-[10px] text-[var(--c-text-dimmed)] mb-2">{meta.desc}</p>
           {meta.metrics.map(m => (
-            <div key={m.key} className="flex items-center justify-between">
-              <span className="text-xs text-[var(--c-text-muted)]">{m.label}</span>
+            <div key={m.key} className={`flex items-center justify-between ${isAdmin && m.tip ? 'relative group/sm' : ''}`}>
+              <span className={`text-xs text-[var(--c-text-muted)] ${isAdmin && m.tip ? 'cursor-help border-b border-dotted border-[var(--c-text-faint)]' : ''}`}>{m.label}</span>
               <span className="text-xs font-mono text-[var(--c-text-primary)]">{m.fmt(ctx[m.key])}</span>
+              {isAdmin && m.tip && (
+                <div className="pointer-events-none absolute left-0 bottom-full z-50 mb-1
+                                opacity-0 group-hover/sm:opacity-100 transition-opacity duration-150
+                                w-80 rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-dropdown)] shadow-xl
+                                px-3 py-2.5 text-[10px] text-[var(--c-text-secondary)] leading-relaxed whitespace-normal">
+                  {m.tip}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -344,7 +377,7 @@ function SectionPanel({ meta, ctx, defaultOpen }) {
   );
 }
 
-function DynamicContext({ ticker }) {
+function DynamicContext({ ticker, isAdmin }) {
   const [ctx, setCtx]         = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -444,7 +477,7 @@ function DynamicContext({ ticker }) {
       {/* 5 section panels */}
       <div className="space-y-2">
         {SECTION_META.map((meta, i) => (
-          <SectionPanel key={meta.key} meta={meta} ctx={ctx} defaultOpen={i === 0} />
+          <SectionPanel key={meta.key} meta={meta} ctx={ctx} defaultOpen={i === 0} isAdmin={isAdmin} />
         ))}
       </div>
     </div>
@@ -458,6 +491,8 @@ export default function PreEarningsTicker() {
   const { ticker }       = useParams();
   const navigate         = useNavigate();
   const location         = useLocation();
+  const { role }         = useAuth();
+  const isAdmin          = role === 'admin' || role === 'superuser';
   const [searchParams]   = useSearchParams();
   const earningsDate     = searchParams.get('earningsDate');   // set when viewing a snapshot
   const isSnapshot       = !!earningsDate;
@@ -700,6 +735,7 @@ export default function PreEarningsTicker() {
                   score={signal.metrics?.[m.key]}
                   max={m.max}
                   rawValue={m.fmt(signal.metrics?.[m.rawKey])}
+                  tip={isAdmin ? m.tip : undefined}
                 />
               ))}
             </div>
@@ -712,7 +748,7 @@ export default function PreEarningsTicker() {
           </div>
 
           {/* Dynamic Context */}
-          {!isSnapshot && <div id="pg-dynamic-context"><DynamicContext ticker={ticker} /></div>}
+          {!isSnapshot && <div id="pg-dynamic-context"><DynamicContext ticker={ticker} isAdmin={isAdmin} /></div>}
 
         </div>
       ) : null}
