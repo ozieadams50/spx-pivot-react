@@ -563,7 +563,7 @@ export default function PreEarningsTicker() {
           title="Full research report — review before placing any trade."
           description="This is the complete breakdown of why this stock made the list and how strong the current conditions are."
           steps={[
-            { text: 'The grade and score at the top reflect the overall strength of this setup. Hover any metric card for a plain-language explanation of what it measures.', targetId: 'pg-ticker-header' },
+            { text: 'The star rating and score at the top reflect the overall strength of this setup. Hover any metric card for a plain-language explanation of what it measures.', targetId: 'pg-ticker-header' },
             { text: 'The key metric cards show live market conditions. Green values mean favorable conditions right now. If most are green, the setup is aligned.', targetId: 'pg-key-metrics' },
             { text: 'The context section at the bottom gives you a multi-dimensional view of the setup. ⚡ means all key conditions are firing at once — the strongest signal the system can show.', targetId: 'pg-dynamic-context' },
           ]}

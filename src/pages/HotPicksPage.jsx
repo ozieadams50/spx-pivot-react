@@ -299,7 +299,7 @@ export default function HotPicksPage() {
         title="Today's top-ranked stocks — re-scored every night."
         description="Hot Picks are scored fresh each day based on current market conditions, not just history. A stock with strong momentum today can outrank a historically strong name that's gone quiet."
         steps={[
-          { text: 'Each card shows the stock\'s current score and grade. ⚡ means all key conditions are aligned at once — the strongest setup the system can show.', targetId: 'pg-hot-picks-grid' },
+          { text: 'Each card shows the stock\'s current score and star rating (★ to ★★★★★). ⚡ means all key conditions are aligned at once — the strongest setup the system can show.', targetId: 'pg-hot-picks-grid' },
           { text: 'The mini bars on each card show strength across multiple dimensions. Green = strong, red = weak. More green bars means higher conviction.', targetId: 'pg-hot-picks-grid' },
           { text: 'On Deck are the next candidates waiting to enter Hot Picks. Watch these — they can quickly become the next opportunity.', targetId: 'pg-on-deck' },
         ]}

@@ -636,9 +636,9 @@ export default function PreEarningsRunners() {
           guideKey="pre-earnings-summary"
           accent="violet"
           title="Find stocks positioned to move before earnings — then pick the best ones."
-          description="This page gives you two ways to find opportunities: grade buckets that reflect historical strength, and Hot Picks that are re-ranked daily based on current conditions."
+          description="This page gives you two ways to find opportunities: star-rating buckets that reflect setup strength, and Hot Picks that are re-ranked daily based on current conditions."
           steps={[
-            { text: 'The grade cards (A+ through D) group stocks by the strength of their setup. A+ represents the highest-conviction opportunities. Click any grade card to see every ticker in that bucket.', targetId: 'pg-grades' },
+            { text: 'The rating cards (★★★★★ through ★) group stocks by the strength of their setup. 5-star represents the highest-conviction opportunities. Click any card to see every ticker in that bucket.', targetId: 'pg-grades' },
             { text: 'Hot Picks are the system\'s top-ranked stocks right now — scored fresh each day by blending historical patterns with current market conditions. ⚡ means all key conditions are aligned at once.', targetId: 'pg-hotpicks' },
             'Click any stock to open its full research page. Always review the details before placing a trade.',
           ]}
@@ -792,7 +792,7 @@ export default function PreEarningsRunners() {
             title="Every active pre-earnings signal — filtered and sorted your way."
             description="The full list of all tickers approaching their earnings date. Use the filters to narrow down what matters most to you."
             steps={[
-              { text: 'Use the grade buttons to focus on specific tiers, or the day filter to zero in on what\'s coming up soonest.', targetId: 'pg-filter-bar' },
+              { text: 'Use the star-rating buttons to focus on specific tiers, or the day filter to zero in on what\'s coming up soonest.', targetId: 'pg-filter-bar' },
               { text: 'The sector filter lets you target a specific industry or avoid one. Focus on sectors with momentum behind them for the strongest setups.', targetId: 'pg-sector-filter' },
               { text: 'Toggle between ⊞ Card view for a snapshot of each signal, or ☰ List view for a sortable table. Click any column header to sort.', targetId: 'pg-signals-list' },
             ]}

@@ -295,9 +295,9 @@ export default function EarningsHistoricalPerformance() {
           guideKey="historical-performance"
           accent="violet"
           title="The scorecard — see exactly how past signals performed."
-          description="Every signal the system has generated is tracked here with the real outcome. Use it to evaluate performance across different grades and conditions."
+          description="Every signal the system has generated is tracked here with the real outcome. Use it to evaluate performance across different star ratings and conditions."
           steps={[
-            { text: 'Use the grade buttons and model filter to narrow results. Higher grades have historically produced stronger outcomes.', targetId: 'pg-hist-filters' },
+            { text: 'Use the star-rating buttons to narrow results. Higher-rated setups (more stars) have historically produced stronger outcomes.', targetId: 'pg-hist-filters' },
             { text: 'The summary bar shows Win Rate, total signals, and average performance across your filtered results.', targetId: 'pg-hist-summary' },
             { text: 'In the table, review individual signals and their outcomes. Click any row to see the full research page for that signal.', targetId: 'pg-hist-table' },
           ]}

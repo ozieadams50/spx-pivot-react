@@ -443,8 +443,8 @@ export default function EarningsCalendar() {
         title="How to use the Earnings Calendar"
         description="See every scored stock with an upcoming earnings announcement. Plan your entries for the week ahead and review how past signals played out."
         steps={[
-          { text: 'Filter by Grade and Model at the top. A+ and A represent the strongest setups — start there.', targetId: 'pg-cal-filters' },
-          { text: 'Calendar view shows this week\'s tickers by day. Colored dots indicate grade. Past earnings show ✓ for WIN or ✗ for LOSS. Use the arrows to browse weeks.', targetId: 'pg-cal-grid' },
+          { text: 'Filter by star rating at the top. ★★★★★ and ★★★★ represent the strongest setups — start there.', targetId: 'pg-cal-filters' },
+          { text: 'Calendar view shows this week\'s tickers by day. Colored dots indicate rating strength. Past earnings show ✓ for WIN or ✗ for LOSS. Use the arrows to browse weeks.', targetId: 'pg-cal-grid' },
           { text: 'Switch to List view for a sortable table. Click any row to open that stock\'s full research page.', targetId: 'pg-cal-list' },
         ]}
       />
@@ -483,7 +483,7 @@ export default function EarningsCalendar() {
           {loading ? (
             <div className="p-8 text-center text-[var(--c-text-dimmed)]">Loading…</div>
           ) : sorted.length === 0 ? (
-            <div className="p-8 text-center text-[var(--c-text-faint)]">No upcoming signals match the selected grades.</div>
+            <div className="p-8 text-center text-[var(--c-text-faint)]">No upcoming signals match the selected ratings.</div>
           ) : (
             <table className="w-full">
               <thead className="border-b border-[var(--c-border)] bg-black/20">
