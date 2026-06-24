@@ -34,6 +34,7 @@ import EarningsCalendar            from './pages/EarningsCalendar';
 import EarningsHistoricalPerformance from './pages/EarningsHistoricalPerformance';
 import SectorTracker                 from './pages/SectorTracker';
 import HotPicksPage                  from './pages/HotPicksPage';
+import BreakoutScanner               from './pages/BreakoutScanner';
 import EodMocSignal                  from './pages/EodMocSignal';
 import MocComparisonHistory          from './pages/MocComparisonHistory';
 
@@ -68,6 +69,9 @@ function AppRoutes() {
         <Route path="earnings/historical" element={<Guard matrixKey="apps/pre-earnings/historical-performance"><EarningsHistoricalPerformance /></Guard>} />
         <Route path="earnings/hot-picks"  element={<Guard matrixKey="apps/pre-earnings/hot-picks"><HotPicksPage /></Guard>} />
         <Route path="earnings/:ticker"    element={<Guard matrixKey="apps/pre-earnings"><PreEarningsTicker /></Guard>} />
+
+        {/* Breakout Scanner */}
+        <Route path="breakout-scanner"   element={<Guard matrixKey="apps/breakout-scanner/dashboard"><BreakoutScanner /></Guard>} />
 
         {/* EOD-MOC Signal */}
         <Route path="eod-moc"            element={<Guard matrixKey="apps/eod-moc/signal"><EodMocSignal /></Guard>} />

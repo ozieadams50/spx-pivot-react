@@ -30,6 +30,12 @@ const FULL_NAV = [
         ],
       },
       {
+        title: 'Breakout Scanner', matrixKey: 'apps/breakout-scanner',
+        children: [
+          { title: 'Dashboard', path: '/breakout-scanner', matrixKey: 'apps/breakout-scanner/dashboard' },
+        ],
+      },
+      {
         title: 'EOD-MOC Signal', matrixKey: 'apps/eod-moc',
         children: [
           { title: 'Signal', path: '/eod-moc', matrixKey: 'apps/eod-moc/signal' },
