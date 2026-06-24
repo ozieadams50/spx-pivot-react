@@ -27,11 +27,11 @@ function compareSignals(a, b, key, dir) {
 
 // ── Badges ────────────────────────────────────────────────────────────────────
 
-function GradeBadge({ grade }) {
+function GradeBadge({ grade, compact }) {
   const cfg = GRADE_CONFIG[grade] ?? GRADE_CONFIG['D'];
   const { label } = gradeToStars(grade);
   return (
-    <span className={`inline-flex items-center rounded-xl border px-2.5 py-0.5 text-xs font-bold ${cfg.badge}`}>
+    <span className={`inline-flex items-center rounded-xl border font-bold whitespace-nowrap ${cfg.badge} ${compact ? 'px-1.5 py-0.5 text-[10px] tracking-tight' : 'px-2.5 py-0.5 text-xs'}`}>
       {label}
     </span>
   );
@@ -372,14 +372,14 @@ function HotPickCard({ pick, rank, onClick }) {
         </div>
       )}
 
-      <div className="mb-2 flex items-start justify-between gap-1">
-        <div>
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div className="min-w-0">
           <p className="text-base font-bold text-[var(--c-text-primary)] group-hover:text-[var(--c-amber)] transition-colors">{pick.ticker}</p>
           {pick.company_name && (
             <p className="text-[10px] text-[var(--c-text-dimmed)] truncate max-w-[120px]">{pick.company_name}</p>
           )}
         </div>
-        <GradeBadge grade={pick.grade} />
+        <GradeBadge grade={pick.grade} compact />
       </div>
 
       {/* Live score */}

@@ -9,7 +9,7 @@ function GradeBadge({ grade }) {
   const cfg = GRADE_CONFIG[grade] ?? GRADE_CONFIG['D'];
   const { label } = gradeToStars(grade);
   return (
-    <span className={`inline-flex items-center rounded-xl border px-2 py-0.5 text-[10px] font-bold ${cfg.badge}`}>
+    <span className={`inline-flex items-center rounded-xl border px-1.5 py-0.5 text-[10px] font-bold whitespace-nowrap tracking-tight ${cfg.badge}`}>
       {label}
     </span>
   );
