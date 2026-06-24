@@ -6,6 +6,21 @@ export const GRADE_CONFIG = {
   'D':  { gradient: 'from-rose-500/20 to-rose-500/5',     border: 'border-rose-500/30',   badge: 'bg-rose-500/20 text-[var(--c-rose-strong)] border-rose-500/30',       dot: 'bg-rose-400'    },
 };
 
+export const STAR_MAP = {
+  'A+': { stars: 5, label: '★★★★★' },
+  'A':  { stars: 4, label: '★★★★' },
+  'B':  { stars: 3, label: '★★★' },
+  'C':  { stars: 2, label: '★★' },
+  'D':  { stars: 1, label: '★' },
+};
+
+export const STAR_LABELS = ['5★', '4★', '3★', '2★', '1★'];
+export const STAR_GRADES = ['A+', 'A', 'B', 'C', 'D'];
+
+export function gradeToStars(grade) {
+  return STAR_MAP[grade] ?? STAR_MAP['D'];
+}
+
 export const MODEL_CONFIG = {
   Recovery: 'bg-emerald-500/15 text-[var(--c-emerald-strong)] border-emerald-500/25',
   Momentum: 'bg-purple-500/15 text-purple-300 border-purple-500/25',

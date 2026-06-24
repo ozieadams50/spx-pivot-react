@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
-import { GRADE_CONFIG } from '../data/earningsConfig';
+import { GRADE_CONFIG, gradeToStars, STAR_GRADES } from '../data/earningsConfig';
 import PageGuide from '../components/PageGuide';
 
 // ── constants ─────────────────────────────────────────────────────────────────
 
-const GRADES      = ['A+', 'A', 'B', 'C', 'D'];
+const GRADES      = STAR_GRADES;
 const GRADE_ORDER = { 'A+': 0, A: 1, B: 2, C: 3, D: 4 };
 
 // ── date helpers ──────────────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ function DayColumn({ date, dayIndex, signals, isToday, navigate }) {
                   <span
                     key={s.ticker}
                     className={`h-1.5 w-1.5 rounded-full ${dot}`}
-                    title={`${s.ticker} (${s.grade})`}
+                    title={`${s.ticker} (${gradeToStars(s.grade).label})`}
                   />
                 );
               })}
@@ -210,7 +210,7 @@ function CalendarListRow({ signal, navigate }) {
       </td>
       <td className="px-3 py-3 text-center">
         <span className={`inline-flex items-center rounded-xl border px-2.5 py-0.5 text-xs font-bold ${cfg.badge}`}>
-          {signal.grade}
+          {gradeToStars(signal.grade).label}
         </span>
       </td>
       <td className="px-3 py-3 text-center text-sm text-[var(--c-text-secondary)]">
@@ -431,7 +431,7 @@ export default function EarningsCalendar() {
 
           {/* grade filter chips */}
           <div id="pg-cal-filters" className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-[var(--c-text-dimmed)] uppercase tracking-wider mr-1">Grade</span>
+            <span className="text-xs text-[var(--c-text-dimmed)] uppercase tracking-wider mr-1">Rating</span>
             {GRADES.map((g) => {
               const cfg = GRADE_CONFIG[g] ?? GRADE_CONFIG['D'];
               const on  = activeGrades.has(g);
@@ -443,7 +443,7 @@ export default function EarningsCalendar() {
                     on ? cfg.badge : 'border-[var(--c-border)] bg-transparent text-[var(--c-text-faint)]'
                   }`}
                 >
-                  {g}
+                  {gradeToStars(g).label}
                 </button>
               );
             })}

@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
-import { GRADE_CONFIG, MODEL_CONFIG } from '../data/earningsConfig';
+import { GRADE_CONFIG, MODEL_CONFIG, gradeToStars, STAR_LABELS, STAR_GRADES } from '../data/earningsConfig';
 import PageGuide from '../components/PageGuide';
 
-const GRADES      = ['A+', 'A', 'B', 'C', 'D'];
+const GRADES      = STAR_GRADES;
 const GRADE_ORDER = { 'A+': 0, A: 1, B: 2, C: 3, D: 4 };
 const DAY_OPTS    = [{ label: '≤5d', value: 5 }, { label: '≤10d', value: 10 }, { label: '≤15d', value: 15 }, { label: 'All', value: null }];
 const EXP_MOVE_OPTS = [{ label: 'All', value: null }, { label: '≥5%', value: 5 }, { label: '≥10%', value: 10 }, { label: '≥15%', value: 15 }, { label: '≥20%', value: 20 }];
@@ -29,9 +29,10 @@ function compareSignals(a, b, key, dir) {
 
 function GradeBadge({ grade }) {
   const cfg = GRADE_CONFIG[grade] ?? GRADE_CONFIG['D'];
+  const { label } = gradeToStars(grade);
   return (
     <span className={`inline-flex items-center rounded-xl border px-2.5 py-0.5 text-xs font-bold ${cfg.badge}`}>
-      {grade}
+      {label}
     </span>
   );
 }
@@ -159,9 +160,9 @@ function GradeBucketCard({ grade, count, avgScore, onClick }) {
     >
       <div className="mb-2 flex items-center gap-2">
         <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />
-        <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-dimmed)]">Grade</span>
+        <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-dimmed)]">Rating</span>
       </div>
-      <p className="text-5xl font-black text-[var(--c-text-primary)] leading-none">{grade}</p>
+      <p className="text-3xl font-black text-[var(--c-text-primary)] leading-none">{gradeToStars(grade).label}</p>
       <div className="mt-4">
         <p className="text-3xl font-bold text-[var(--c-text-primary)]">{count}</p>
         <p className="text-xs text-[var(--c-text-muted)] mt-0.5">{count !== 1 ? 'signals' : 'signal'}</p>
@@ -269,7 +270,7 @@ function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, se
       </div>
 
       <div className="flex items-center gap-1.5">
-        <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)] mr-1">Grade</span>
+        <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)] mr-1">Rating</span>
         {GRADES.map((g) => {
           const cfg = GRADE_CONFIG[g];
           const on  = activeGrades.has(g);
@@ -281,7 +282,7 @@ function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, se
                 on ? cfg.badge : 'border-[var(--c-border)] bg-transparent text-[var(--c-text-faint)] hover:text-[var(--c-text-muted)]'
               }`}
             >
-              {g}
+              {gradeToStars(g).label}
             </button>
           );
         })}
@@ -381,14 +382,12 @@ function HotPickCard({ pick, rank, onClick }) {
         <GradeBadge grade={pick.grade} />
       </div>
 
-      {/* Dynamic score */}
+      {/* Live score */}
       <div className="mb-2 flex items-baseline gap-1.5">
         <span className={`text-xl font-black ${isHot ? 'text-[var(--c-amber-strong)]' : 'text-[var(--c-text-secondary)]'}`}>
           {pick.dynamic_score.toFixed(0)}
         </span>
-        <span className="text-[10px] text-[var(--c-text-faint)]">dyn</span>
-        <span className="text-slate-700 text-xs">/</span>
-        <span className="text-xs text-[var(--c-text-dimmed)]">{pick.model_score.toFixed(0)} mdl</span>
+        <span className="text-[10px] text-[var(--c-text-faint)]">score</span>
       </div>
 
       {/* Earnings timing */}

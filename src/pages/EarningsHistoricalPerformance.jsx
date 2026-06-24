@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
-import { GRADE_CONFIG, MODEL_CONFIG } from '../data/earningsConfig';
+import { GRADE_CONFIG, MODEL_CONFIG, gradeToStars, STAR_GRADES } from '../data/earningsConfig';
 import { useAuth } from '../context/AuthContext';
 import PageGuide from '../components/PageGuide';
 
 const GRADE_ORDER = { 'A+': 0, A: 1, B: 2, C: 3, D: 4 };
-const GRADES      = ['A+', 'A', 'B', 'C', 'D'];
+const GRADES      = STAR_GRADES;
 
 // ── Formatters ────────────────────────────────────────────────────────────────
 
@@ -35,9 +35,10 @@ function fmtDate(d) {
 
 function GradeBadge({ grade }) {
   const cfg = GRADE_CONFIG[grade] ?? GRADE_CONFIG['D'];
+  const { label } = gradeToStars(grade);
   return (
     <span className={`inline-flex items-center rounded-lg border px-2 py-0.5 text-xs font-bold ${cfg.badge}`}>
-      {grade}
+      {label}
     </span>
   );
 }
@@ -321,7 +322,7 @@ export default function EarningsHistoricalPerformance() {
             ))}
           </div>
 
-          {/* Grade filter */}
+          {/* Rating filter */}
           <div className="flex gap-1">
             {GRADES.map(g => {
               const cfg = GRADE_CONFIG[g];
@@ -334,7 +335,7 @@ export default function EarningsHistoricalPerformance() {
                     active ? cfg.badge : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:border-white/20 hover:text-[var(--c-text-secondary)]'
                   }`}
                 >
-                  {g}
+                  {gradeToStars(g).label}
                 </button>
               );
             })}

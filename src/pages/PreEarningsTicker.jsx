@@ -2,16 +2,17 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-import { GRADE_CONFIG, MODEL_CONFIG, METRICS } from '../data/earningsConfig';
+import { GRADE_CONFIG, MODEL_CONFIG, METRICS, gradeToStars } from '../data/earningsConfig';
 import PageGuide from '../components/PageGuide';
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 function GradeBadge({ grade }) {
   const cfg = GRADE_CONFIG[grade] ?? GRADE_CONFIG['D'];
+  const { label } = gradeToStars(grade);
   return (
     <span className={`inline-flex items-center rounded-xl border px-2.5 py-0.5 text-xs font-bold ${cfg.badge}`}>
-      {grade}
+      {label}
     </span>
   );
 }

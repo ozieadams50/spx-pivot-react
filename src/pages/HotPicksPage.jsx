@@ -2,14 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-import { GRADE_CONFIG } from '../data/earningsConfig';
+import { GRADE_CONFIG, gradeToStars } from '../data/earningsConfig';
 import PageGuide from '../components/PageGuide';
 
 function GradeBadge({ grade }) {
   const cfg = GRADE_CONFIG[grade] ?? GRADE_CONFIG['D'];
+  const { label } = gradeToStars(grade);
   return (
     <span className={`inline-flex items-center rounded-xl border px-2 py-0.5 text-[10px] font-bold ${cfg.badge}`}>
-      {grade}
+      {label}
     </span>
   );
 }
@@ -98,7 +99,7 @@ function FullPickCard({ pick, rank, navigate, tickers }) {
         </div>
         <div className="text-right shrink-0">
           <p className="text-2xl font-black text-[var(--c-amber-strong)]">{pick.dynamic_score.toFixed(0)}</p>
-          <p className="text-[9px] text-[var(--c-text-faint)]">{pick.model_score.toFixed(0)} model</p>
+          <p className="text-[9px] text-[var(--c-text-faint)]">score</p>
         </div>
       </div>
 
