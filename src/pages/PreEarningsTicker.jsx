@@ -619,7 +619,6 @@ export default function PreEarningsTicker() {
                 <div className="flex flex-wrap items-center gap-3 mb-1">
                   <h1 className="text-4xl font-black text-[var(--c-text-primary)]">{signal.ticker}</h1>
                   <GradeBadge grade={signal.grade} />
-                  <ModelBadge model={signal.model_type} />
                 </div>
                 {signal.company_name && (
                   <p className="text-base font-semibold text-[var(--c-text-secondary)] mb-0.5">{signal.company_name}</p>

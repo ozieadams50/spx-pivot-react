@@ -419,7 +419,7 @@ export default function EarningsHistoricalPerformance() {
                 <tr className="border-b border-[var(--c-border)] bg-[var(--c-bg-card)]">
                   <Th col="ticker"             label="Ticker"        {...thProps} />
                   <th className="px-2 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-[var(--c-text-dimmed)]"></th>
-                  <Th col="grade"              label="Grade"         {...thProps} />
+                  <Th col="grade"              label="Rating"        {...thProps} />
                   <Th col="model_type"         label="Model"         {...thProps} />
                   <Th col="score"              label="Score"         {...thProps} />
                   <Th col="earnings_date"      label="Earn Date"     {...thProps} />

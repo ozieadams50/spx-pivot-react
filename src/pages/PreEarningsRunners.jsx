@@ -933,7 +933,7 @@ export default function PreEarningsRunners() {
                     <thead>
                       <tr className="border-b border-[var(--c-border)]">
                         <SortTh label="Ticker"    sk="ticker"            {...shProps} className="pl-4 pr-3 text-left" />
-                        <SortTh label="Grade"     sk="grade"             {...shProps} className="px-3 text-center" />
+                        <SortTh label="Rating"    sk="grade"             {...shProps} className="px-3 text-center" />
                         <SortTh label="Score"     sk="score"             {...shProps} className="px-3 text-center" />
                         <SortTh label="Earnings"  sk="earnings_date"     {...shProps} className="px-3 text-center" />
                         <SortTh label="Entry"     sk="entry_date"        {...shProps} className="px-3 text-center" />
