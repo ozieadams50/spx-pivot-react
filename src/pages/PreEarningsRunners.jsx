@@ -106,8 +106,8 @@ function SignalCard({ signal, optionsLoading, onClick }) {
         </div>
       </div>
       <div className="mb-3 flex items-baseline gap-1.5">
-        <span className="text-2xl font-bold text-[var(--c-text-primary)]">{signal.score.toFixed(0)}</span>
-        <span className="text-xs text-[var(--c-text-dimmed)]">/ 82 pts</span>
+        <span className="text-2xl font-bold text-[var(--c-text-primary)]">{signal.dynamic_score != null ? signal.dynamic_score.toFixed(0) : signal.score.toFixed(0)}</span>
+        <span className="text-xs text-[var(--c-text-dimmed)]">score</span>
       </div>
       <div className="mb-3 border-t border-[var(--c-border-subtle)] pt-3">
         <p className="text-xs text-[var(--c-text-muted)] leading-relaxed">
@@ -212,7 +212,7 @@ function SignalRow({ signal, optionsLoading, onClick }) {
         {signal.sector && <span className="text-[10px] text-[var(--c-text-faint)] hidden sm:block">{signal.sector}</span>}
       </td>
       <td className="px-3 py-2.5 text-center"><GradeBadge grade={signal.grade} /></td>
-      <td className="px-3 py-2.5 text-center font-mono text-sm text-[var(--c-text-primary)]">{signal.score.toFixed(0)}</td>
+      <td className="px-3 py-2.5 text-center font-mono text-sm text-[var(--c-text-primary)]">{signal.dynamic_score != null ? signal.dynamic_score.toFixed(0) : signal.score.toFixed(0)}</td>
       <td className="px-3 py-2.5 text-center text-sm text-[var(--c-text-secondary)] whitespace-nowrap">
         {signal.earnings_date}
         {signal.days_to_earnings != null && (

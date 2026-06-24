@@ -378,14 +378,14 @@ function SectionPanel({ meta, ctx, defaultOpen, isAdmin }) {
   );
 }
 
-function DynamicContext({ ticker, isAdmin }) {
+function DynamicContext({ ticker, isAdmin, onContextLoaded }) {
   const [ctx, setCtx]         = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
     apiFetch(`/earnings/ticker-context/${ticker}`)
-      .then(setCtx)
+      .then((data) => { setCtx(data); if (onContextLoaded) onContextLoaded(data); })
       .catch(() => setCtx(null))
       .finally(() => setLoading(false));
   }, [ticker]);
@@ -408,9 +408,12 @@ function DynamicContext({ ticker, isAdmin }) {
   return (
     <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6 space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
-          Dynamic Context
-        </h2>
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
+            Daily Evaluation
+          </h2>
+          <p className="text-[10px] text-[var(--c-text-faint)] mt-0.5">Once selected, the system re-evaluates daily to surface the strongest setups.</p>
+        </div>
         {ctx.compute_date && (
           <span className="text-[10px] text-[var(--c-text-faint)]">as of {ctx.compute_date}</span>
         )}
@@ -503,10 +506,11 @@ export default function PreEarningsTicker() {
   const prevTicker = listIdx > 0 ? tickerList[listIdx - 1] : null;
   const nextTicker = listIdx >= 0 && listIdx < tickerList.length - 1 ? tickerList[listIdx + 1] : null;
 
-  const [details,   setDetails]   = useState([]);
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [loading,   setLoading]   = useState(true);
-  const [error,     setError]     = useState(null);
+  const [details,      setDetails]      = useState([]);
+  const [activeIdx,    setActiveIdx]    = useState(0);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState(null);
+  const [dynamicScore, setDynamicScore] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -563,9 +567,9 @@ export default function PreEarningsTicker() {
           title="Full research report — review before placing any trade."
           description="This is the complete breakdown of why this stock made the list and how strong the current conditions are."
           steps={[
-            { text: 'The star rating and score at the top reflect the overall strength of this setup. Hover any metric card for a plain-language explanation of what it measures.', targetId: 'pg-ticker-header' },
-            { text: 'The key metric cards show live market conditions. Green values mean favorable conditions right now. If most are green, the setup is aligned.', targetId: 'pg-key-metrics' },
-            { text: 'The context section at the bottom gives you a multi-dimensional view of the setup. ⚡ means all key conditions are firing at once — the strongest signal the system can show.', targetId: 'pg-dynamic-context' },
+            { text: 'The star rating and score at the top reflect the overall strength of this setup today. The score updates daily based on current market conditions.', targetId: 'pg-ticker-header' },
+            { text: '"How This Ticker Was Selected" shows the metrics that identified this stock from thousands of candidates. These explain why it made the list.', targetId: 'pg-key-metrics' },
+            { text: '"Daily Evaluation" shows how the system ranks this stock each day against the rest of the field. ⚡ means all key conditions are aligned at once — the strongest signal the system can show.', targetId: 'pg-dynamic-context' },
           ]}
         />
       )}
@@ -626,8 +630,8 @@ export default function PreEarningsTicker() {
                 <p className="text-sm text-[var(--c-text-dimmed)]">{signal.sector ?? ''}</p>
               </div>
               <div className="text-right shrink-0">
-                <p className="text-4xl font-bold text-[var(--c-text-primary)]">{signal.score.toFixed(1)}</p>
-                <p className="text-xs text-[var(--c-text-dimmed)]">out of 82 pts</p>
+                <p className="text-4xl font-bold text-[var(--c-text-primary)]">{dynamicScore != null ? dynamicScore.toFixed(0) : signal.score.toFixed(0)}</p>
+                <p className="text-xs text-[var(--c-text-dimmed)]">score</p>
               </div>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-4 border-t border-[var(--c-border-subtle)] pt-4 sm:grid-cols-4">
@@ -724,9 +728,10 @@ export default function PreEarningsTicker() {
           {/* Monthly returns grid */}
           <MonthlyReturns monthly={signal.monthly_returns} />
 
-          {/* Score breakdown */}
+          {/* How this ticker was selected */}
           <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6">
-            <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">Score Breakdown</h2>
+            <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">How This Ticker Was Selected</h2>
+            <p className="mb-4 text-xs text-[var(--c-text-faint)]">These metrics explain why this stock was identified from thousands of tickers as a pre-earnings opportunity.</p>
             <div className="divide-y divide-white/5">
               {METRICS.map((m) => (
                 <MetricBar
@@ -739,16 +744,10 @@ export default function PreEarningsTicker() {
                 />
               ))}
             </div>
-            <div className="mt-4 flex items-center justify-between border-t border-[var(--c-border)] pt-4">
-              <span className="text-sm font-semibold text-[var(--c-text-muted)]">Total Raw Score</span>
-              <span className="font-mono text-lg font-bold text-[var(--c-text-primary)]">
-                {signal.raw_score?.toFixed(1)} / 82
-              </span>
-            </div>
           </div>
 
           {/* Dynamic Context */}
-          {!isSnapshot && <div id="pg-dynamic-context"><DynamicContext ticker={ticker} isAdmin={isAdmin} /></div>}
+          {!isSnapshot && <div id="pg-dynamic-context"><DynamicContext ticker={ticker} isAdmin={isAdmin} onContextLoaded={(ctx) => { if (ctx?.dynamic_score != null) setDynamicScore(ctx.dynamic_score); }} /></div>}
 
         </div>
       ) : null}
