@@ -305,22 +305,7 @@ export default function EarningsHistoricalPerformance() {
 
         {/* Controls */}
         <div id="pg-hist-filters" className="mb-5 flex flex-wrap items-center gap-3">
-          {/* Model */}
-          <div className="flex rounded-xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-0.5">
-            {['Both', 'Recovery', 'Momentum'].map(m => (
-              <button
-                key={m}
-                onClick={() => setModel(m)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  model === m
-                    ? 'bg-cyan-500/20 text-[var(--c-cyan)]'
-                    : 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'
-                }`}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
+          {/* Model filter removed — API returns best-of automatically */}
 
           {/* Rating filter */}
           <div className="flex gap-1">
@@ -420,7 +405,6 @@ export default function EarningsHistoricalPerformance() {
                   <Th col="ticker"             label="Ticker"        {...thProps} />
                   <th className="px-2 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-[var(--c-text-dimmed)]"></th>
                   <Th col="grade"              label="Rating"        {...thProps} />
-                  <Th col="model_type"         label="Model"         {...thProps} />
                   <Th col="score"              label="Score"         {...thProps} />
                   <Th col="earnings_date"      label="Earn Date"     {...thProps} />
                   <Th col="entry_date"         label="Entry Date"    {...thProps} />
@@ -463,7 +447,6 @@ export default function EarningsHistoricalPerformance() {
                       )}
                     </td>
                     <td className="px-3 py-2.5"><GradeBadge grade={row.grade} /></td>
-                    <td className="px-3 py-2.5"><ModelBadge model={row.model_type} /></td>
                     <td className="px-3 py-2.5 font-mono text-xs text-[var(--c-text-secondary)] tabular-nums">{row.score.toFixed(1)}</td>
                     <td className="px-3 py-2.5 text-xs text-[var(--c-text-secondary)]">{fmtDate(row.earnings_date)}</td>
                     <td className="px-3 py-2.5 text-xs text-[var(--c-text-muted)]">{fmtDate(row.entry_date)}</td>

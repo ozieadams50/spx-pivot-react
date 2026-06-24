@@ -627,21 +627,7 @@ export default function PreEarningsRunners() {
               </p>
             )}
           </div>
-          <div className="flex self-start rounded-2xl border border-[var(--c-border)] bg-black/30 p-1 lg:self-auto">
-            {['Both', 'Recovery', 'Momentum'].map((m) => (
-              <button
-                key={m}
-                onClick={() => setModel(m)}
-                className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
-                  model === m
-                    ? 'bg-violet-500 text-[var(--c-text-primary)] shadow-lg shadow-violet-500/20'
-                    : 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'
-                }`}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
+          <div className="flex self-start rounded-2xl border border-[var(--c-border)] bg-black/30 p-1 lg:self-auto" />
         </div>
       </div>
 
