@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { useVersionCheck } from './hooks/useVersionCheck';
 import { ThemeProvider } from './context/ThemeContext';
 import { canAccess } from './data/accessMatrix';
 import AppLayout from './layouts/AppLayout';
@@ -112,11 +113,17 @@ function AppRoutes() {
   );
 }
 
+function VersionWatcher() {
+  useVersionCheck();
+  return null;
+}
+
 export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
+          <VersionWatcher />
           <AppRoutes />
         </BrowserRouter>
       </AuthProvider>
