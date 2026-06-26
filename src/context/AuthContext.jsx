@@ -44,8 +44,7 @@ export function AuthProvider({ children }) {
         clearInterval(intervalRef.current);
         ACTIVITY_EVENTS.forEach(evt => window.removeEventListener(evt, resetTimer));
         clearAuth();
-        setAuth({ loggedIn: false, userId: null, role: 'subscriber', subscriptions: [], token: null, user: null });
-        setWarning(false);
+        window.location.href = '/login';
       } else if (idle >= TIMEOUT_MS - WARN_MS) {
         setWarning(true);
       } else {
@@ -81,7 +80,7 @@ export function AuthProvider({ children }) {
 
   function logout() {
     clearAuth();
-    setAuth({ loggedIn: false, userId: null, role: 'subscriber', subscriptions: [], token: null, user: null });
+    window.location.href = '/login';
   }
 
   function setRole(role) {
