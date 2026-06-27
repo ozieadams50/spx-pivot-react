@@ -77,6 +77,12 @@ const FULL_NAV = [
         ],
       },
       {
+        title: 'Closing Print', matrixKey: 'admin/closing-print',
+        children: [
+          { title: 'CP Admin', path: '/admin/closing-print', matrixKey: 'admin/closing-print' },
+        ],
+      },
+      {
         title: 'App Mgmt', matrixKey: 'admin/app-mgmt',
         children: [
           { title: 'Manage Apps',  path: '/admin/apps',          matrixKey: 'admin/app-mgmt/manage-apps'   },

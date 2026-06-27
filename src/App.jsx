@@ -38,6 +38,7 @@ import HotPicksPage                  from './pages/HotPicksPage';
 import BreakoutScanner               from './pages/BreakoutScanner';
 import EodMocSignal                  from './pages/EodMocSignal';
 import MocComparisonHistory          from './pages/MocComparisonHistory';
+import ClosingPrintAdmin             from './pages/ClosingPrintAdmin';
 
 function AuthGuard({ children }) {
   const { loggedIn } = useAuth();
@@ -82,7 +83,8 @@ function AppRoutes() {
         <Route path="admin/commentary"         element={<Guard matrixKey="admin/market-sentiment/subscriber-commentary"><SubscriberCommentary /></Guard>} />
         <Route path="admin/sentiment"          element={<Guard matrixKey="admin/market-sentiment/set-market-sentiment"><SetMarketSentiment /></Guard>} />
         <Route path="admin/gex-moc"            element={<Guard matrixKey="admin/market-sentiment/set-gex-moc"><SetGexMoc /></Guard>} />
-        <Route path="admin/moc-comparison"   element={<Guard matrixKey="admin/market-sentiment/moc-comparison"><MocComparisonHistory /></Guard>} />
+        <Route path="admin/moc-comparison"    element={<Guard matrixKey="admin/market-sentiment/moc-comparison"><MocComparisonHistory /></Guard>} />
+        <Route path="admin/closing-print"    element={<Guard matrixKey="admin/closing-print"><ClosingPrintAdmin /></Guard>} />
         <Route path="spx-pivots/sentiment-history"  element={<Guard matrixKey="apps/spx-pivots/sentiment-history"><SentimentHistory /></Guard>} />
         <Route path="spx-pivots/commentary-history" element={<Guard matrixKey="apps/spx-pivots/commentary-history"><CommentaryHistory /></Guard>} />
 
