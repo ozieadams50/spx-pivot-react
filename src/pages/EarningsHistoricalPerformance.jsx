@@ -69,7 +69,6 @@ function OutcomeBadge({ outcome }) {
 }
 
 function displayOutcome(row) {
-  if (row.pre_earn_high == null) return 'PENDING';
   return row.outcome;
 }
 

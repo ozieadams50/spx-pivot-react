@@ -588,6 +588,7 @@ export default function PreEarningsRunners() {
 
   const displayed = useMemo(() => {
     const filtered = deduped.filter((s) =>
+      !s.insufficient_liquidity &&
       activeGrades.has(s.grade) &&
       (!tickerQ || s.ticker.includes(tickerQ.trim())) &&
       (maxDays == null || (s.days_to_earnings != null && s.days_to_earnings <= maxDays)) &&
