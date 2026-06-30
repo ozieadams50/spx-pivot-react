@@ -349,7 +349,7 @@ export default function ClosingPrint() {
       const res = await apiFetch('/cp/live');
       setData(res);
     } catch {
-      setData(null);
+      // keep showing last known data on transient errors — don't blank the screen
     } finally {
       setLoading(false);
       setLastFetch(new Date().toISOString());
