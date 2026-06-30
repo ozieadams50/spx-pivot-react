@@ -74,91 +74,48 @@ function StatCard({ label, value, sub, valueClass = 'text-[var(--c-text-primary)
 
 // ── GEX panel ─────────────────────────────────────────────────────────────────
 
-function GexPanel({ gex, isAdmin }) {
-  if (!gex) {
-    return (
-      <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6 shadow-lg">
-        <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)] mb-3">
-          {isAdmin ? 'GEX Snapshot' : 'Market Maker Positioning'}
-        </p>
-        <p className="text-sm text-[var(--c-text-muted)]">Waiting for data…</p>
-      </div>
-    );
-  }
+function GexPanel({ gex }) {
+  const ratio = gex?.gamma_notional ?? null;
 
-  // GEX Ratio (gamma_notional) drives the status: ≥0.5 Positive, =0.5 Neutral, <0.5 Negative
-  const ratio = gex.gamma_notional;
   const gexStatus = ratio == null ? null
-    : ratio > 0.5  ? 'positive'
-    : ratio < 0.5  ? 'negative'
+    : ratio > 0.5 ? 'positive'
+    : ratio < 0.5 ? 'negative'
     : 'neutral';
 
   const isNeg     = gexStatus === 'negative';
   const isNeutral = gexStatus === 'neutral';
 
-  const badgeCls = isNeg
-    ? 'border-rose-500/30 bg-rose-500/10 text-[var(--c-rose)]'
-    : isNeutral
-    ? 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400'
-    : 'border-emerald-500/30 bg-emerald-500/10 text-[var(--c-emerald)]';
+  const ratioColor   = isNeg ? 'text-[var(--c-rose)]' : isNeutral ? 'text-yellow-400' : 'text-[var(--c-emerald)]';
+  const statusColor  = ratioColor;
+  const glowColor    = isNeg ? 'shadow-rose-500/20' : isNeutral ? 'shadow-yellow-400/20' : 'shadow-emerald-500/20';
+  const borderAccent = isNeg ? 'border-rose-500/30' : isNeutral ? 'border-yellow-400/30' : 'border-emerald-500/30';
+  const bgAccent     = isNeg ? 'bg-rose-500/5'      : isNeutral ? 'bg-yellow-400/5'      : 'bg-emerald-500/5';
 
-  const badgeLabel = gexStatus == null ? '—'
-    : isNeg     ? 'Negative GEX'
-    : isNeutral ? 'Neutral GEX'
-    : 'Positive GEX';
-
-  const ratioColor = isNeg ? 'text-[var(--c-rose)]' : isNeutral ? 'text-yellow-400' : 'text-[var(--c-emerald)]';
+  const statusLabel = gexStatus == null ? 'Waiting…'
+    : isNeg     ? 'Negative'
+    : isNeutral ? 'Neutral'
+    : 'Positive';
 
   return (
-    <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6 shadow-lg">
-      <div className="flex items-center justify-between mb-4">
+    <div className={`rounded-3xl border ${borderAccent} ${bgAccent} p-6 shadow-lg ${glowColor}`}>
+      <div className="flex items-center gap-2 mb-5">
+        <PulsingDot color={isNeg ? 'bg-rose-400' : isNeutral ? 'bg-yellow-400' : 'bg-emerald-400'} />
         <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
-          {isAdmin ? 'GEX Snapshot' : 'Market Maker Positioning'}
+          GEX Ratio
         </p>
-        <span className={`inline-flex items-center rounded-xl border px-3 py-1 text-xs font-bold ${badgeCls}`}>
-          {badgeLabel}
-        </span>
       </div>
 
-      {isAdmin ? (
-        <div className="space-y-0 divide-y divide-[var(--c-border-subtle)]">
-          {[
-            { label: 'GEX Ratio',  value: ratio != null ? fmtNum(ratio, 3) : '—', raw: ratio },
-            { label: 'Net GEX',    value: fmtGex(gex.net_gex),                     raw: gex.net_gex },
-            { label: 'Call GEX',   value: fmtGex(gex.call_gex),                    raw: gex.call_gex },
-            { label: 'Put GEX',    value: fmtGex(gex.put_gex),                     raw: gex.put_gex },
-            { label: 'GEX Flip',   value: fmtNum(gex.gex_flip, 0),                 raw: null },
-            { label: 'Put Wall',   value: fmtNum(gex.put_wall, 0),                 raw: null },
-            { label: 'Call Wall',  value: fmtNum(gex.call_wall, 0),                raw: null },
-          ].map(({ label, value, raw }) => {
-            const valCls = raw == null
-              ? 'text-[var(--c-text-primary)]'
-              : raw < 0
-              ? 'text-[var(--c-rose)]'
-              : 'text-[var(--c-emerald)]';
-            return (
-              <div key={label} className="flex items-center justify-between py-2.5">
-                <span className="text-sm text-[var(--c-text-muted)]">{label}</span>
-                <span className={`text-sm font-mono font-semibold ${valCls}`}>{value}</span>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <p className="text-sm text-[var(--c-text-secondary)] leading-relaxed">
-            {isNeg
-              ? 'Market makers are currently short gamma. Directional moves tend to be amplified — price can trend more easily in the final hour.'
-              : isNeutral
-              ? 'Market makers are near a gamma neutral state. Price action may shift between trending and range-bound behavior into the close.'
-              : 'Market makers are currently long gamma. Directional moves tend to be dampened — price action may be choppy or range-bound into the close.'}
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard label="Key Support"    value={gex.put_wall  ? fmtNum(gex.put_wall,  0) : '—'} />
-            <StatCard label="Key Resistance" value={gex.call_wall ? fmtNum(gex.call_wall, 0) : '—'} />
-          </div>
-        </div>
-      )}
+      <div className="flex flex-col items-center justify-center gap-3 py-4">
+        {/* Large ratio number */}
+        <span className={`text-6xl font-bold font-mono tabular-nums leading-none ${ratio != null ? ratioColor : 'text-[var(--c-text-muted)]'}`}>
+          {ratio != null ? fmtNum(ratio, 2) : '—'}
+        </span>
+
+        {/* Status label */}
+        <span className={`text-xl font-bold uppercase tracking-widest ${statusColor}`}>
+          {statusLabel}
+        </span>
+      </div>
     </div>
   );
 }
@@ -874,7 +831,7 @@ export default function ClosingPrint() {
         <div className="space-y-5">
           {/* GEX + MOC side by side on wide screens */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <GexPanel gex={data.gex} isAdmin={isAdmin} />
+            <GexPanel gex={data.gex} />
             <MocPanel moc={data.moc} isAdmin={isAdmin} />
           </div>
 
