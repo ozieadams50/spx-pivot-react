@@ -86,11 +86,28 @@ function GexPanel({ gex, isAdmin }) {
     );
   }
 
-  const isNeg = gex.status === 'negative';
-  const statusColor = isNeg ? 'text-[var(--c-rose)]' : 'text-[var(--c-emerald)]';
+  // GEX Ratio (gamma_notional) drives the status: ≥0.5 Positive, =0.5 Neutral, <0.5 Negative
+  const ratio = gex.gamma_notional;
+  const gexStatus = ratio == null ? null
+    : ratio > 0.5  ? 'positive'
+    : ratio < 0.5  ? 'negative'
+    : 'neutral';
+
+  const isNeg     = gexStatus === 'negative';
+  const isNeutral = gexStatus === 'neutral';
+
   const badgeCls = isNeg
     ? 'border-rose-500/30 bg-rose-500/10 text-[var(--c-rose)]'
+    : isNeutral
+    ? 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400'
     : 'border-emerald-500/30 bg-emerald-500/10 text-[var(--c-emerald)]';
+
+  const badgeLabel = gexStatus == null ? '—'
+    : isNeg     ? 'Negative GEX'
+    : isNeutral ? 'Neutral GEX'
+    : 'Positive GEX';
+
+  const ratioColor = isNeg ? 'text-[var(--c-rose)]' : isNeutral ? 'text-yellow-400' : 'text-[var(--c-emerald)]';
 
   return (
     <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6 shadow-lg">
@@ -99,12 +116,13 @@ function GexPanel({ gex, isAdmin }) {
           {isAdmin ? 'GEX Snapshot' : 'Market Maker Positioning'}
         </p>
         <span className={`inline-flex items-center rounded-xl border px-3 py-1 text-xs font-bold ${badgeCls}`}>
-          {isNeg ? 'Negative' : 'Positive'}
+          {badgeLabel}
         </span>
       </div>
 
       {isAdmin ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <StatCard label="GEX Ratio"    value={ratio != null ? fmtNum(ratio, 3) : '—'} valueClass={ratioColor} sub="key metric" />
           <StatCard label="Net GEX"      value={fmtGex(gex.net_gex)}        valueClass={isNeg ? 'text-[var(--c-rose)]' : 'text-[var(--c-emerald)]'} />
           <StatCard label="Call GEX"     value={fmtGex(gex.call_gex)}       valueClass="text-[var(--c-emerald)]" />
           <StatCard label="Put GEX"      value={fmtGex(gex.put_gex)}        valueClass="text-[var(--c-rose)]" />
@@ -117,6 +135,8 @@ function GexPanel({ gex, isAdmin }) {
           <p className="text-sm text-[var(--c-text-secondary)] leading-relaxed">
             {isNeg
               ? 'Market makers are currently short gamma. Directional moves tend to be amplified — price can trend more easily in the final hour.'
+              : isNeutral
+              ? 'Market makers are near a gamma neutral state. Price action may shift between trending and range-bound behavior into the close.'
               : 'Market makers are currently long gamma. Directional moves tend to be dampened — price action may be choppy or range-bound into the close.'}
           </p>
           <div className="grid grid-cols-2 gap-3">
