@@ -17,7 +17,7 @@ function getET() {
 
 function inMocWindow() {
   const { total } = getET();
-  return total >= 15 * 60 + 50 && total <= 16 * 60 + 5;
+  return total >= 15 * 60 + 50 && total <= 16 * 60;
 }
 
 function fmtMoc(n) {
@@ -95,13 +95,6 @@ function GexPanel({ gex }) {
     : isNeutral ? 'Neutral'
     : 'Positive';
 
-  // 3:50–4:05 PM ET: evaluate ratio for play signal
-  const { total } = getET();
-  const inPlayWindow = total >= 15 * 60 + 50 && total < 16 * 60 + 5;
-  const playSignal = inPlayWindow && ratio != null
-    ? (ratio < 0.35 ? 'play' : 'noplay')
-    : null;
-
   return (
     <div className={`rounded-3xl border ${borderAccent} ${bgAccent} p-6 shadow-lg`}>
       <div className="flex items-center gap-2 mb-5">
@@ -112,22 +105,9 @@ function GexPanel({ gex }) {
       </div>
 
       <div className="flex flex-col items-center justify-center gap-3 py-4">
-        {/* Positive / Negative / Neutral */}
         <span className={`text-5xl font-bold uppercase tracking-wide leading-none ${gexStatus != null ? statusColor : 'text-[var(--c-text-muted)]'}`}>
           {statusLabel}
         </span>
-
-        {/* 3:50–4:05 PM play signal */}
-        {playSignal === 'play' && (
-          <span className="mt-2 text-lg font-bold text-[var(--c-emerald)] uppercase tracking-widest">
-            Play Imbalance
-          </span>
-        )}
-        {playSignal === 'noplay' && (
-          <span className="mt-2 text-lg font-bold text-[var(--c-rose)] uppercase tracking-widest">
-            No Play Day
-          </span>
-        )}
       </div>
     </div>
   );
@@ -139,7 +119,37 @@ function MocPanel({ moc, isAdmin }) {
   const active = inMocWindow();
 
   if (!active && !moc) {
-    const { h, m } = getET();
+    const { h, m, s } = getET();
+    const nowSec = h * 3600 + m * 60 + s;
+    const COUNTDOWN_START = 15 * 3600 + 30 * 60; // 3:30 PM
+    const COUNTDOWN_END   = 15 * 3600 + 50 * 60; // 3:50 PM
+
+    if (nowSec >= COUNTDOWN_START && nowSec < COUNTDOWN_END) {
+      const secsLeft = COUNTDOWN_END - nowSec;
+      const mins = Math.floor(secsLeft / 60);
+      const secs = secsLeft % 60;
+      const display = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      return (
+        <div className="rounded-3xl border border-amber-500/30 bg-amber-500/5 p-6 shadow-lg">
+          <div className="flex items-center gap-2 mb-5">
+            <PulsingDot color="bg-amber-400" />
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
+              Dealer Imbalance
+            </p>
+          </div>
+          <div className="flex flex-col items-center justify-center gap-2 py-4">
+            <p className="text-xs uppercase tracking-widest text-[var(--c-text-muted)]">
+              Imbalance data in
+            </p>
+            <span className="text-5xl font-bold font-mono tabular-nums text-amber-400 tracking-wider leading-none">
+              {display}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // Before 3:30 PM
     const nowMin = h * 60 + m;
     const target = 15 * 60 + 50;
     const diff = target - nowMin;
@@ -170,11 +180,12 @@ function MocPanel({ moc, isAdmin }) {
     );
   }
 
-  const isBuy = moc.direction === 'BUY';
-  const dirColor = isBuy ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]';
+  const isBuy = moc.spx_moc == null || moc.spx_moc >= 0;
   const dirBadge = isBuy
     ? 'border-emerald-500/30 bg-emerald-500/10 text-[var(--c-emerald)]'
     : 'border-rose-500/30 bg-rose-500/10 text-[var(--c-rose)]';
+
+  const valColor = (n) => n == null ? '' : n >= 0 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]';
 
   return (
     <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6 shadow-lg">
@@ -191,10 +202,19 @@ function MocPanel({ moc, isAdmin }) {
       </div>
 
       {isAdmin ? (
-        <div className="grid grid-cols-3 gap-3">
-          <StatCard label="Net MOC"   value={fmtMoc(moc.net_moc)}  valueClass={dirColor} />
-          <StatCard label="Buy MOC"   value={fmtMoc(moc.buy_moc)}  valueClass="text-[var(--c-emerald)]" />
-          <StatCard label="Sell MOC"  value={fmtMoc(moc.sell_moc)} valueClass="text-[var(--c-rose)]" />
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-[var(--c-text-muted)]">SPX Net MOC</span>
+            <span className={`font-mono font-bold text-base ${valColor(moc.spx_moc)}`}>
+              {fmtMoc(moc.spx_moc)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-[var(--c-text-muted)]">MAG7 Net MOC</span>
+            <span className={`font-mono font-bold text-base ${valColor(moc.mag7_moc)}`}>
+              {fmtMoc(moc.mag7_moc)}
+            </span>
+          </div>
         </div>
       ) : (
         <p className="text-sm text-[var(--c-text-secondary)] leading-relaxed">
