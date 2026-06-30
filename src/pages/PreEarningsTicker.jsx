@@ -378,6 +378,42 @@ function SectionPanel({ meta, ctx, defaultOpen, isAdmin }) {
   );
 }
 
+function InsightPanel({ insightText }) {
+  const [open, setOpen] = useState(false);
+  if (!insightText) return null;
+
+  const bullets = insightText.split('\n').filter(Boolean);
+
+  return (
+    <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)]">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between gap-3 px-6 py-4 hover:bg-[var(--c-hover)] transition-colors text-left rounded-3xl"
+      >
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">Insight</p>
+          {!open && (
+            <p className="text-[10px] text-[var(--c-text-faint)] mt-0.5">
+              Metric-by-metric analysis — what the numbers mean for this setup.
+            </p>
+          )}
+        </div>
+        <span className="text-[var(--c-text-faint)] text-xs shrink-0">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div className="border-t border-[var(--c-border)] px-6 py-4 space-y-3">
+          {bullets.map((line, i) => (
+            <div key={i} className="flex gap-3">
+              <span className="mt-0.5 shrink-0 text-[var(--c-violet)] text-xs">•</span>
+              <p className="text-sm text-[var(--c-text-secondary)] leading-relaxed">{line}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DynamicContext({ ticker, isAdmin, onContextLoaded }) {
   const [ctx, setCtx]         = useState(null);
   const [loading, setLoading] = useState(true);
@@ -721,6 +757,9 @@ export default function PreEarningsTicker() {
             <KeyMetric label="Spot Price"  value={signal.spot_price}        prefix="$"
               tooltip="Spot Price — the current market price of the underlying stock at the time this signal was scored." />
           </div>
+
+          {/* Insight */}
+          <InsightPanel insightText={signal.insight_text} />
 
           {/* Last 8 quarters */}
           <QuarterlyReturns quarters={signal.quarterly_returns} />
