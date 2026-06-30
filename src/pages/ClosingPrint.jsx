@@ -85,36 +85,49 @@ function GexPanel({ gex }) {
   const isNeg     = gexStatus === 'negative';
   const isNeutral = gexStatus === 'neutral';
 
-  const ratioColor   = isNeg ? 'text-[var(--c-rose)]' : isNeutral ? 'text-yellow-400' : 'text-[var(--c-emerald)]';
-  const statusColor  = ratioColor;
-  const glowColor    = isNeg ? 'shadow-rose-500/20' : isNeutral ? 'shadow-yellow-400/20' : 'shadow-emerald-500/20';
-  const borderAccent = isNeg ? 'border-rose-500/30' : isNeutral ? 'border-yellow-400/30' : 'border-emerald-500/30';
-  const bgAccent     = isNeg ? 'bg-rose-500/5'      : isNeutral ? 'bg-yellow-400/5'      : 'bg-emerald-500/5';
+  const statusColor  = isNeg ? 'text-[var(--c-rose)]' : isNeutral ? 'text-yellow-400' : 'text-[var(--c-emerald)]';
+  const borderAccent = isNeg ? 'border-rose-500/30'    : isNeutral ? 'border-yellow-400/30'    : 'border-emerald-500/30';
+  const bgAccent     = isNeg ? 'bg-rose-500/5'         : isNeutral ? 'bg-yellow-400/5'         : 'bg-emerald-500/5';
+  const dotColor     = isNeg ? 'bg-rose-400'           : isNeutral ? 'bg-yellow-400'            : 'bg-emerald-400';
 
   const statusLabel = gexStatus == null ? 'Waiting…'
     : isNeg     ? 'Negative'
     : isNeutral ? 'Neutral'
     : 'Positive';
 
+  // 3:50–4:05 PM ET: evaluate ratio for play signal
+  const { total } = getET();
+  const inPlayWindow = total >= 15 * 60 + 50 && total < 16 * 60 + 5;
+  const playSignal = inPlayWindow && ratio != null
+    ? (ratio < 0.35 ? 'play' : 'noplay')
+    : null;
+
   return (
-    <div className={`rounded-3xl border ${borderAccent} ${bgAccent} p-6 shadow-lg ${glowColor}`}>
+    <div className={`rounded-3xl border ${borderAccent} ${bgAccent} p-6 shadow-lg`}>
       <div className="flex items-center gap-2 mb-5">
-        <PulsingDot color={isNeg ? 'bg-rose-400' : isNeutral ? 'bg-yellow-400' : 'bg-emerald-400'} />
+        <PulsingDot color={dotColor} />
         <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
-          GEX Ratio
+          Dealer Position
         </p>
       </div>
 
       <div className="flex flex-col items-center justify-center gap-3 py-4">
-        {/* Large ratio number */}
-        <span className={`text-6xl font-bold font-mono tabular-nums leading-none ${ratio != null ? ratioColor : 'text-[var(--c-text-muted)]'}`}>
-          {ratio != null ? fmtNum(ratio, 2) : '—'}
-        </span>
-
-        {/* Status label */}
-        <span className={`text-xl font-bold uppercase tracking-widest ${statusColor}`}>
+        {/* Positive / Negative / Neutral */}
+        <span className={`text-5xl font-bold uppercase tracking-wide leading-none ${gexStatus != null ? statusColor : 'text-[var(--c-text-muted)]'}`}>
           {statusLabel}
         </span>
+
+        {/* 3:50–4:05 PM play signal */}
+        {playSignal === 'play' && (
+          <span className="mt-2 text-lg font-bold text-[var(--c-emerald)] uppercase tracking-widest">
+            Play Imbalance
+          </span>
+        )}
+        {playSignal === 'noplay' && (
+          <span className="mt-2 text-lg font-bold text-[var(--c-rose)] uppercase tracking-widest">
+            No Play Day
+          </span>
+        )}
       </div>
     </div>
   );
