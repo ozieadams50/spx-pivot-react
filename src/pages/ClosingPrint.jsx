@@ -237,12 +237,19 @@ function ChainPanel({ chain, isAdmin }) {
   }
   const strikes = Object.keys(byStrike).map(Number).sort((a, b) => b - a);
 
-  // ATM = strike whose call delta is closest to 0.50
-  const atm = strikes.length > 0
-    ? strikes.reduce((best, s) => {
-        const d = byStrike[s]?.C?.delta ?? 0;
-        return Math.abs(d - 0.5) < Math.abs((byStrike[best]?.C?.delta ?? 0) - 0.5) ? s : best;
-      }, strikes[0])
+  // ATM = strike whose call delta is closest to 0.50.
+  // Only consider strikes with a real numeric delta; NaN/null deltas are skipped
+  // to avoid cycling when partial chain data arrives.
+  const validDeltaStrikes = strikes.filter(s => {
+    const d = byStrike[s]?.C?.delta;
+    return d != null && !Number.isNaN(Number(d));
+  });
+  const atm = validDeltaStrikes.length > 0
+    ? validDeltaStrikes.reduce((best, s) => {
+        const d  = Number(byStrike[s].C.delta);
+        const bd = Number(byStrike[best].C.delta);
+        return Math.abs(d - 0.5) < Math.abs(bd - 0.5) ? s : best;
+      }, validDeltaStrikes[0])
     : null;
 
   // Window: ATM ±30 by index (admin) or ±20 pts (subscriber)
