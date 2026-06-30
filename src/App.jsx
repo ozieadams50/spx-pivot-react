@@ -39,6 +39,7 @@ import BreakoutScanner               from './pages/BreakoutScanner';
 import EodMocSignal                  from './pages/EodMocSignal';
 import MocComparisonHistory          from './pages/MocComparisonHistory';
 import ClosingPrintAdmin             from './pages/ClosingPrintAdmin';
+import ClosingPrint                  from './pages/ClosingPrint';
 
 function AuthGuard({ children }) {
   const { loggedIn } = useAuth();
@@ -77,6 +78,9 @@ function AppRoutes() {
 
         {/* EOD-MOC Signal */}
         <Route path="eod-moc"            element={<Guard matrixKey="apps/eod-moc/signal"><EodMocSignal /></Guard>} />
+
+        {/* Closing Print */}
+        <Route path="closing-print"      element={<Guard matrixKey="apps/closing-print/dashboard"><ClosingPrint /></Guard>} />
         <Route path="spx-pivots/charts"  element={<Guard matrixKey="apps/spx-pivots/chart-view"><ChartView /></Guard>} />
 
         {/* Admin — Market Sentiment */}

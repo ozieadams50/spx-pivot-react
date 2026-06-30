@@ -42,6 +42,12 @@ const FULL_NAV = [
         ],
       },
       {
+        title: 'Closing Print', matrixKey: 'apps/closing-print',
+        children: [
+          { title: 'Live Dashboard', path: '/closing-print', matrixKey: 'apps/closing-print/dashboard' },
+        ],
+      },
+      {
         title: 'SPX Backtester', matrixKey: 'apps/spx-backtest',
         children: [
           { title: 'Run Backtest', path: '/spx-backtest', matrixKey: 'apps/spx-backtest/run' },
