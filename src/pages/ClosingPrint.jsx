@@ -146,7 +146,7 @@ function MocPanel({ moc, isAdmin }) {
     return (
       <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6 shadow-lg">
         <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)] mb-3">
-          {isAdmin ? 'MOC Imbalance' : 'Market Close Flow'}
+          Dealer Imbalance
         </p>
         <p className="text-sm text-[var(--c-text-muted)]">
           Active 3:50 – 4:05 PM ET
@@ -182,7 +182,7 @@ function MocPanel({ moc, isAdmin }) {
         <div className="flex items-center gap-2">
           <PulsingDot color="bg-amber-400" />
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
-            {isAdmin ? 'MOC Imbalance' : 'Market Close Flow'}
+            Dealer Imbalance
           </p>
         </div>
         <span className={`inline-flex items-center rounded-xl border px-3 py-1 text-xs font-bold ${dirBadge}`}>
@@ -834,8 +834,8 @@ export default function ClosingPrint() {
         </div>
         <p className="mt-1 text-sm text-[var(--c-text-muted)]">
           {isAdmin
-            ? 'Live GEX metrics, MOC imbalance flow, and SPX option chain — updated every few seconds.'
-            : 'Live market positioning and option flow as the trading day approaches the close.'}
+            ? 'Live dealer metric, imbalance flow and SPX option chain — updated every few seconds.'
+            : 'Live dealer metric, imbalance flow and SPX option chain — updated every few seconds.'}
         </p>
         {lastFetch && (
           <p className="mt-1 text-xs text-[var(--c-text-faint)]">
