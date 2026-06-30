@@ -121,14 +121,28 @@ function GexPanel({ gex, isAdmin }) {
       </div>
 
       {isAdmin ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <StatCard label="GEX Ratio"    value={ratio != null ? fmtNum(ratio, 3) : '—'} valueClass={ratioColor} sub="key metric" />
-          <StatCard label="Net GEX"      value={fmtGex(gex.net_gex)}        valueClass={isNeg ? 'text-[var(--c-rose)]' : 'text-[var(--c-emerald)]'} />
-          <StatCard label="Call GEX"     value={fmtGex(gex.call_gex)}       valueClass="text-[var(--c-emerald)]" />
-          <StatCard label="Put GEX"      value={fmtGex(gex.put_gex)}        valueClass="text-[var(--c-rose)]" />
-          <StatCard label="GEX Flip"     value={fmtNum(gex.gex_flip, 0)}    sub="level" />
-          <StatCard label="Put Wall"     value={fmtNum(gex.put_wall, 0)}    sub="support" />
-          <StatCard label="Call Wall"    value={fmtNum(gex.call_wall, 0)}   sub="resistance" />
+        <div className="space-y-0 divide-y divide-[var(--c-border-subtle)]">
+          {[
+            { label: 'GEX Ratio',  value: ratio != null ? fmtNum(ratio, 3) : '—', raw: ratio },
+            { label: 'Net GEX',    value: fmtGex(gex.net_gex),                     raw: gex.net_gex },
+            { label: 'Call GEX',   value: fmtGex(gex.call_gex),                    raw: gex.call_gex },
+            { label: 'Put GEX',    value: fmtGex(gex.put_gex),                     raw: gex.put_gex },
+            { label: 'GEX Flip',   value: fmtNum(gex.gex_flip, 0),                 raw: null },
+            { label: 'Put Wall',   value: fmtNum(gex.put_wall, 0),                 raw: null },
+            { label: 'Call Wall',  value: fmtNum(gex.call_wall, 0),                raw: null },
+          ].map(({ label, value, raw }) => {
+            const valCls = raw == null
+              ? 'text-[var(--c-text-primary)]'
+              : raw < 0
+              ? 'text-[var(--c-rose)]'
+              : 'text-[var(--c-emerald)]';
+            return (
+              <div key={label} className="flex items-center justify-between py-2.5">
+                <span className="text-sm text-[var(--c-text-muted)]">{label}</span>
+                <span className={`text-sm font-mono font-semibold ${valCls}`}>{value}</span>
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div className="space-y-3">
