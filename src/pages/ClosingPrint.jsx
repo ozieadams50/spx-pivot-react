@@ -399,33 +399,135 @@ function todayLocal() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function ChainSearch() {
-  const now = new Date();
-  const pad = n => String(n).padStart(2, '0');
+// Market hours: 9:30 AM – 4:00 PM
+const HOURS_AM = [9, 10, 11, 12];
+const HOURS_PM = [12, 1, 2, 3, 4];
+const MINUTES  = Array.from({ length: 60 }, (_, i) => i);
 
-  const [strike1, setStrike1] = useState('');
-  const [strike2, setStrike2] = useState('');
-  const [type,    setType]    = useState('both');
+function to24(h12, ampm) {
+  if (ampm === 'AM') return h12 === 12 ? 0 : h12;
+  return h12 === 12 ? 12 : h12 + 12;
+}
+
+function to12(h24) {
+  if (h24 === 0)  return { h: 12, ampm: 'AM' };
+  if (h24 < 12)  return { h: h24, ampm: 'AM' };
+  if (h24 === 12) return { h: 12,  ampm: 'PM' };
+  return { h: h24 - 12, ampm: 'PM' };
+}
+
+function clampToMarket(h24, min) {
+  const t = h24 * 60 + min;
+  if (t < 9 * 60 + 30)  return { h24: 9,  min: 30 };
+  if (t > 16 * 60)       return { h24: 16, min: 0  };
+  return { h24, min };
+}
+
+function AmpmToggle({ value, onChange }) {
+  return (
+    <div className="flex rounded-lg border border-[var(--c-border)] overflow-hidden text-xs font-bold">
+      {['AM', 'PM'].map(ap => (
+        <button
+          key={ap}
+          type="button"
+          onClick={() => onChange(ap)}
+          className={`px-2.5 py-1.5 transition-colors ${
+            value === ap
+              ? 'bg-[var(--c-cyan)] text-black'
+              : 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'
+          }`}
+        >
+          {ap}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function TimePickerGroup({ label, date, onDate, hour, onHour, ampm, onAmpm, minute, onMinute }) {
+  const SEL = 'rounded-lg border border-[var(--c-border)] bg-[var(--c-bg-panel)] px-2 py-1.5 text-sm font-mono text-[var(--c-text-primary)] focus:outline-none focus:border-[var(--c-cyan)] cursor-pointer';
+  const validHours = ampm === 'AM' ? HOURS_AM : HOURS_PM;
+
+  const handleAmpm = (ap) => {
+    onAmpm(ap);
+    const nextHours = ap === 'AM' ? HOURS_AM : HOURS_PM;
+    if (!nextHours.includes(hour)) onHour(nextHours[0]);
+  };
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="text-xs font-semibold text-[var(--c-text-dimmed)] w-8">{label}</span>
+      <input
+        type="date"
+        value={date}
+        onChange={e => onDate(e.target.value)}
+        className={SEL}
+      />
+      <select value={hour} onChange={e => onHour(Number(e.target.value))} className={SEL}>
+        {validHours.map(h => (
+          <option key={h} value={h}>{h}</option>
+        ))}
+      </select>
+      <AmpmToggle value={ampm} onChange={handleAmpm} />
+      <span className="text-[var(--c-text-dimmed)] font-mono">:</span>
+      <select value={minute} onChange={e => onMinute(Number(e.target.value))} className={SEL}>
+        {MINUTES.map(m => (
+          <option key={m} value={m}>{String(m).padStart(2, '0')}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function ChainSearch() {
+  const now     = new Date();
+  const nowC    = clampToMarket(now.getHours(), now.getMinutes());
+  const nowTo12 = to12(nowC.h24);
+  const pad     = n => String(n).padStart(2, '0');
+
+  const [strike1,  setStrike1]  = useState('');
+  const [strike2,  setStrike2]  = useState('');
+  const [s1Err,    setS1Err]    = useState('');
+  const [s2Err,    setS2Err]    = useState('');
+  const [type,     setType]     = useState('both');
+
   const [fromDate, setFromDate] = useState(todayLocal());
-  const [fromH,    setFromH]   = useState(pad(now.getHours()));
-  const [fromM,    setFromM]   = useState('00');
-  const [toDate,   setToDate]  = useState(todayLocal());
-  const [toH,      setToH]     = useState(pad(now.getHours()));
-  const [toM,      setToM]     = useState(pad(now.getMinutes()));
-  const [results,  setResults] = useState(null);
-  const [loading,  setLoading] = useState(false);
-  const [error,    setError]   = useState('');
+  const [fromH,    setFromH]    = useState(9);
+  const [fromAmpm, setFromAmpm] = useState('AM');
+  const [fromM,    setFromM]    = useState(30);
+
+  const [toDate,   setToDate]   = useState(todayLocal());
+  const [toH,      setToH]      = useState(nowTo12.h);
+  const [toAmpm,   setToAmpm]   = useState(nowTo12.ampm);
+  const [toM,      setToM]      = useState(nowC.min);
+
+  const [results,  setResults]  = useState(null);
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState('');
+
+  const validateStrike = (val, setErr) => {
+    if (!val.trim()) { setErr(''); return true; }
+    const n = Number(val);
+    if (isNaN(n) || n % 5 !== 0) {
+      setErr('Must be divisible by 5');
+      return false;
+    }
+    setErr('');
+    return true;
+  };
 
   const handleSearch = async () => {
-    if (!strike1.trim()) { setError('Enter at least one strike.'); return; }
+    const v1 = validateStrike(strike1, setS1Err);
+    const v2 = validateStrike(strike2, setS2Err);
+    if (!strike1.trim()) { setS1Err('Enter at least one strike'); return; }
+    if (!v1 || !v2) return;
     setError('');
     setLoading(true);
     try {
       const strikes = [strike1.trim(), strike2.trim()].filter(Boolean).join(',');
       const types   = type === 'both' ? 'C,P' : type === 'call' ? 'C' : 'P';
-      // Build ISO strings from local date + hour + minute
-      const from = `${fromDate}T${pad(fromH)}:${pad(fromM)}:00`;
-      const to   = `${toDate}T${pad(toH)}:${pad(toM)}:59`;
+      const from = `${fromDate}T${pad(to24(fromH, fromAmpm))}:${pad(fromM)}:00`;
+      const to   = `${toDate}T${pad(to24(toH, toAmpm))}:${pad(toM)}:59`;
       const qs = new URLSearchParams({ from_dt: from, to_dt: to, strikes, types });
       const rows = await apiFetch(`/cp/chain/search?${qs}`);
       setResults(rows);
@@ -436,7 +538,6 @@ function ChainSearch() {
     }
   };
 
-  // Pivot flat rows into { time → { strike → { C/P → {bid,ask} } } }
   const pivoted = results ? (() => {
     const map = {};
     results.forEach(r => {
@@ -447,99 +548,98 @@ function ChainSearch() {
     return map;
   })() : null;
 
-  const allStrikes = strike1 ? [
-    ...(strike1.trim() ? [parseFloat(strike1)] : []),
-    ...(strike2.trim() ? [parseFloat(strike2)] : []),
-  ] : [];
+  const allStrikes = [
+    ...(strike1.trim() && !s1Err ? [parseFloat(strike1)] : []),
+    ...(strike2.trim() && !s2Err ? [parseFloat(strike2)] : []),
+  ];
 
-  const numInput = 'w-24 rounded-lg border border-[var(--c-border)] bg-[var(--c-bg-panel)] px-2 py-1.5 text-sm font-mono text-[var(--c-text-primary)] focus:outline-none focus:border-[var(--c-cyan)]';
-  const smallNum = 'w-14 rounded-lg border border-[var(--c-border)] bg-[var(--c-bg-panel)] px-2 py-1.5 text-sm font-mono text-[var(--c-text-primary)] text-center focus:outline-none focus:border-[var(--c-cyan)]';
+  const strikeCls = err =>
+    `w-36 rounded-lg border px-3 py-1.5 text-sm font-mono bg-[var(--c-bg-panel)] text-[var(--c-text-primary)] focus:outline-none transition-colors ${
+      err ? 'border-[var(--c-rose)]' : 'border-[var(--c-border)] focus:border-[var(--c-cyan)]'
+    }`;
 
   return (
     <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6 shadow-lg">
-      <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)] mb-4">
+      <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)] mb-5">
         Option Price History Search
       </p>
 
-      {/* Form */}
-      <div className="space-y-4">
-        {/* Strikes */}
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-[var(--c-text-muted)] w-16">Strike 1</label>
+      <div className="space-y-5">
+        {/* Row 1: Strikes + Type */}
+        <div className="flex flex-wrap items-start gap-5">
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] uppercase tracking-wider text-[var(--c-text-dimmed)]">Strike 1</label>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               placeholder="e.g. 7500"
               value={strike1}
-              onChange={e => setStrike1(e.target.value)}
-              className={numInput}
+              onChange={e => { setStrike1(e.target.value); validateStrike(e.target.value, setS1Err); }}
+              className={strikeCls(s1Err)}
             />
+            {s1Err && <span className="text-[10px] text-[var(--c-rose)]">{s1Err}</span>}
           </div>
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-[var(--c-text-muted)] w-16">Strike 2</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] uppercase tracking-wider text-[var(--c-text-dimmed)]">Strike 2 <span className="normal-case font-normal">(optional)</span></label>
             <input
-              type="number"
-              placeholder="optional"
+              type="text"
+              inputMode="numeric"
+              placeholder="e.g. 7505"
               value={strike2}
-              onChange={e => setStrike2(e.target.value)}
-              className={numInput}
+              onChange={e => { setStrike2(e.target.value); validateStrike(e.target.value, setS2Err); }}
+              className={strikeCls(s2Err)}
             />
+            {s2Err && <span className="text-[10px] text-[var(--c-rose)]">{s2Err}</span>}
           </div>
-          {/* Type selector */}
-          <div className="flex items-center gap-1 rounded-lg border border-[var(--c-border)] overflow-hidden">
-            {[['call','Call'],['put','Put'],['both','Both']].map(([val, label]) => (
-              <button
-                key={val}
-                onClick={() => setType(val)}
-                className={`px-3 py-1.5 text-xs font-semibold transition-colors ${
-                  type === val
-                    ? val === 'call'  ? 'bg-emerald-600 text-white'
-                    : val === 'put'   ? 'bg-rose-600 text-white'
-                    :                   'bg-[var(--c-cyan)] text-black'
-                    : 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] uppercase tracking-wider text-[var(--c-text-dimmed)]">Type</label>
+            <div className="flex rounded-lg border border-[var(--c-border)] overflow-hidden">
+              {[['call','Call'],['put','Put'],['both','Both']].map(([val, label]) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setType(val)}
+                  className={`px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    type === val
+                      ? val === 'call' ? 'bg-emerald-600 text-white'
+                      : val === 'put'  ? 'bg-rose-600 text-white'
+                      :                  'bg-[var(--c-cyan)] text-black'
+                      : 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Time range */}
-        <div className="flex flex-wrap items-center gap-6">
-          {/* From */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-[var(--c-text-muted)] w-8">From</span>
-            <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)}
-              className="rounded-lg border border-[var(--c-border)] bg-[var(--c-bg-panel)] px-2 py-1.5 text-sm text-[var(--c-text-primary)] focus:outline-none focus:border-[var(--c-cyan)]"
-            />
-            <input type="number" min="0" max="23" value={fromH} onChange={e => setFromH(e.target.value.padStart(2,'0'))}
-              className={smallNum} placeholder="HH" />
-            <span className="text-[var(--c-text-dimmed)]">:</span>
-            <input type="number" min="0" max="59" value={fromM} onChange={e => setFromM(e.target.value.padStart(2,'0'))}
-              className={smallNum} placeholder="MM" />
-          </div>
-          {/* To */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-[var(--c-text-muted)] w-8">To</span>
-            <input type="date" value={toDate} onChange={e => setToDate(e.target.value)}
-              className="rounded-lg border border-[var(--c-border)] bg-[var(--c-bg-panel)] px-2 py-1.5 text-sm text-[var(--c-text-primary)] focus:outline-none focus:border-[var(--c-cyan)]"
-            />
-            <input type="number" min="0" max="23" value={toH} onChange={e => setToH(e.target.value.padStart(2,'0'))}
-              className={smallNum} placeholder="HH" />
-            <span className="text-[var(--c-text-dimmed)]">:</span>
-            <input type="number" min="0" max="59" value={toM} onChange={e => setToM(e.target.value.padStart(2,'0'))}
-              className={smallNum} placeholder="MM" />
-          </div>
-          <button
-            onClick={handleSearch}
-            disabled={loading}
-            className="px-5 py-1.5 rounded-lg bg-[var(--c-cyan)] text-black text-sm font-bold
-                       hover:opacity-90 disabled:opacity-50 transition-opacity"
-          >
-            {loading ? 'Searching…' : 'Search'}
-          </button>
+        {/* Row 2: Time range */}
+        <div className="flex flex-col gap-3">
+          <TimePickerGroup
+            label="From"
+            date={fromDate} onDate={setFromDate}
+            hour={fromH}   onHour={setFromH}
+            ampm={fromAmpm} onAmpm={setFromAmpm}
+            minute={fromM} onMinute={setFromM}
+          />
+          <TimePickerGroup
+            label="To"
+            date={toDate} onDate={setToDate}
+            hour={toH}    onHour={setToH}
+            ampm={toAmpm} onAmpm={setToAmpm}
+            minute={toM}  onMinute={setToM}
+          />
         </div>
+
+        <button
+          onClick={handleSearch}
+          disabled={loading}
+          className="px-6 py-2 rounded-lg bg-[var(--c-cyan)] text-black text-sm font-bold
+                     hover:opacity-90 disabled:opacity-50 transition-opacity"
+        >
+          {loading ? 'Searching…' : 'Search'}
+        </button>
       </div>
 
       {error && <p className="mt-3 text-sm text-[var(--c-rose)]">{error}</p>}
@@ -556,10 +656,12 @@ function ChainSearch() {
                   <tr className="text-[10px] uppercase tracking-wider text-[var(--c-text-dimmed)]">
                     <th className="py-2 pl-3 text-left">Time (Local)</th>
                     {allStrikes.map(s => (
-                      <th key={`c-hdr-${s}`} colSpan={type === 'both' ? 2 : 1}
-                          className="py-2 text-center text-[var(--c-emerald)]">
-                        {s.toLocaleString()} Call{type === 'both' ? '' : ''}
-                      </th>
+                      type !== 'put' && (
+                        <th key={`c-hdr-${s}`} colSpan={2}
+                            className="py-2 text-center text-[var(--c-emerald)]">
+                          {s.toLocaleString()} Call
+                        </th>
+                      )
                     ))}
                     {allStrikes.map(s => (
                       type !== 'call' && (
@@ -573,23 +675,27 @@ function ChainSearch() {
                   <tr className="text-[10px] uppercase tracking-wider text-[var(--c-text-dimmed)] border-b border-[var(--c-border-subtle)]">
                     <th className="py-1 pl-3 text-left" />
                     {allStrikes.map(s => (
-                      type !== 'put' && <>
-                        <th key={`cb-${s}`} className="py-1 text-right pr-2 text-[var(--c-emerald)]">Bid</th>
-                        <th key={`ca-${s}`} className="py-1 text-right pr-4 text-[var(--c-emerald)]">Ask</th>
-                      </>
+                      type !== 'put' && (
+                        <>
+                          <th key={`cb-${s}`} className="py-1 text-right pr-2 text-[var(--c-emerald)]">Bid</th>
+                          <th key={`ca-${s}`} className="py-1 text-right pr-4 text-[var(--c-emerald)]">Ask</th>
+                        </>
+                      )
                     ))}
                     {allStrikes.map(s => (
-                      type !== 'call' && <>
-                        <th key={`pb-${s}`} className="py-1 text-right pr-2 text-[var(--c-rose)]">Bid</th>
-                        <th key={`pa-${s}`} className="py-1 text-right pr-4 text-[var(--c-rose)]">Ask</th>
-                      </>
+                      type !== 'call' && (
+                        <>
+                          <th key={`pb-${s}`} className="py-1 text-right pr-2 text-[var(--c-rose)]">Bid</th>
+                          <th key={`pa-${s}`} className="py-1 text-right pr-4 text-[var(--c-rose)]">Ask</th>
+                        </>
+                      )
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {Object.entries(pivoted).map(([ts, strikeMap]) => {
                     const localTime = new Date(ts).toLocaleTimeString('en-US', {
-                      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+                      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
                     });
                     const localDate = new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                     return (
