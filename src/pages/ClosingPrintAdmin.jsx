@@ -165,11 +165,101 @@ function SignalAdmin({ token }) {
   );
 }
 
+// ── EOD Config Editor (inline per subscriber) ─────────────────────────────────
+function EODConfigEditor({ token, sub, onSaved }) {
+  const [form, setForm] = useState({
+    default_debit:  sub.default_debit  ?? 1.00,
+    take_profit:    sub.take_profit    ?? 3.00,
+    stop_loss:      sub.stop_loss      ?? 0.40,
+    stop_limit:     sub.stop_limit     ?? 0.00,
+    risk_type:      sub.risk_type      ?? 'contracts',
+    risk_value:     sub.risk_value     ?? 1,
+    strike_offset:  sub.strike_offset  ?? 0,
+    one_trade_max:  sub.one_trade_max  ?? 1,
+  });
+  const [saving, setSaving] = useState(false);
+  const [msg,    setMsg]    = useState('');
+
+  async function save() {
+    setSaving(true); setMsg('');
+    const r = await fetch(`${API}/cp/admin/subscribers/${sub.id}`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        default_debit:  parseFloat(form.default_debit)  || 0,
+        take_profit:    parseFloat(form.take_profit)     || 0,
+        stop_loss:      parseFloat(form.stop_loss)       || 0,
+        stop_limit:     parseFloat(form.stop_limit)      || 0,
+        risk_type:      form.risk_type,
+        risk_value:     parseFloat(form.risk_value)      || 1,
+        strike_offset:  parseInt(form.strike_offset)     || 0,
+        one_trade_max:  parseInt(form.one_trade_max)     || 1,
+      }),
+    });
+    if (r.ok) { setMsg('Saved'); onSaved?.(); }
+    else setMsg('Error: ' + await r.text());
+    setSaving(false);
+  }
+
+  function Inp({ field, label, step = '0.01', min = '0' }) {
+    return (
+      <div>
+        <label className="block text-xs text-gray-400 mb-1">{label}</label>
+        <input
+          type="number" step={step} min={min}
+          className="w-full bg-gray-900 text-white border border-gray-700 rounded px-3 py-2 text-sm"
+          value={form[field]}
+          onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-700">
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">End of Day Configuration</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+        <Inp field="default_debit" label="Default Entry ($)" />
+        <Inp field="take_profit"   label="Take Profit ($)" />
+        <Inp field="stop_loss"     label="Stop Loss Trigger ($)" />
+        <Inp field="stop_limit"    label="Stop Loss Limit ($)" />
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Position Size Type</label>
+          <select
+            className="w-full bg-gray-900 text-white border border-gray-700 rounded px-3 py-2 text-sm"
+            value={form.risk_type}
+            onChange={e => setForm(f => ({ ...f, risk_type: e.target.value }))}
+          >
+            <option value="contracts">Contracts</option>
+            <option value="dollar">Dollar at Risk</option>
+          </select>
+        </div>
+        <Inp field="risk_value"    label={form.risk_type === 'contracts' ? 'Num Contracts' : 'Dollar at Risk ($)'}
+             step={form.risk_type === 'contracts' ? '1' : '100'} min="1" />
+        <Inp field="strike_offset" label="Strike Offset (ATM=0)" step="1" min="0" />
+        <Inp field="one_trade_max" label="Max Trades / Day" step="1" min="1" />
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={save} disabled={saving}
+          className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold rounded transition"
+        >
+          {saving ? 'Saving…' : 'Save EOD Config'}
+        </button>
+        {msg && <span className={`text-sm ${msg.startsWith('Error') ? 'text-red-400' : 'text-green-400'}`}>{msg}</span>}
+      </div>
+    </div>
+  );
+}
+
 // ── Subscriber list ───────────────────────────────────────────────────────────
 function SubscriberList({ token, refresh }) {
-  const [subs, setSubs] = useState([]);
-  const [code, setCode] = useState({});   // sid → code string after purchase sim
-  const [msg,  setMsg]  = useState({});
+  const [subs,    setSubs]    = useState([]);
+  const [code,    setCode]    = useState({});   // sid → code string after purchase sim
+  const [msg,     setMsg]     = useState({});
+  const [showEod, setShowEod] = useState({});   // sid → bool
 
   const load = useCallback(async () => {
     const r = await fetch(`${API}/cp/admin/subscribers`, { headers: { Authorization: `Bearer ${token}` } });
@@ -235,8 +325,17 @@ function SubscriberList({ token, refresh }) {
                 {label}
               </button>
             ))}
+            <button
+              onClick={() => setShowEod(x => ({ ...x, [s.id]: !x[s.id] }))}
+              className="px-3 py-1 text-xs bg-indigo-800 hover:bg-indigo-700 text-white rounded border border-indigo-600 transition"
+            >
+              {showEod[s.id] ? 'Hide EOD Config' : 'EOD Config'}
+            </button>
           </div>
           {msg[s.id] && <p className="mt-2 text-xs text-gray-300 font-mono break-all">{msg[s.id]}</p>}
+          {showEod[s.id] && (
+            <EODConfigEditor token={token} sub={s} onSaved={load} />
+          )}
         </div>
       ))}
     </div>
