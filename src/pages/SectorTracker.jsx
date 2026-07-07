@@ -159,7 +159,7 @@ function CrossoverRow({ item }) {
       <span className={`shrink-0 rounded-lg border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
         bullish ? 'border-emerald-500/30 text-[var(--c-emerald)]' : 'border-rose-500/30 text-[var(--c-rose)]'
       }`}>
-        {bullish ? 'Golden Cross' : 'Death Cross'}
+        {bullish ? 'Bullish Cross' : 'Bearish Cross'}
       </span>
 
       <span className="text-xs text-[var(--c-text-muted)]">
@@ -226,6 +226,81 @@ function SmaCrossoverPanel({ etf }) {
         <div className="space-y-2">
           {data.crossovers.map((item) => (
             <CrossoverRow key={item.ticker} item={item} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── All-sectors SMA crossover panel ────────────────────────────────────────────
+
+function AllSectorsCrossoverPanel({ onSelect }) {
+  const [data,    setData]    = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState(null);
+
+  useEffect(() => {
+    apiFetch('/sectors/sma-crossovers')
+      .then(setData)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const totalCount = useMemo(
+    () => data?.reduce((sum, s) => sum + s.crossovers.length, 0) ?? 0,
+    [data],
+  );
+
+  return (
+    <div className="mt-10">
+      <div className="mb-3 flex items-center gap-2">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
+          20D / 50D SMA Crossovers — All Sectors
+        </h2>
+        <span className="text-[10px] text-[var(--c-text-faint)]">last 3 trading days</span>
+      </div>
+
+      {loading && (
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-14 animate-pulse rounded-xl bg-[var(--c-hover)]" />
+          ))}
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-4 text-sm text-[var(--c-rose-strong)]">
+          Failed to load crossovers: {error}
+        </div>
+      )}
+
+      {!loading && !error && data && totalCount === 0 && (
+        <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-card)] px-6 py-8 text-center text-sm text-[var(--c-text-dimmed)]">
+          No 20D/50D SMA crossovers across any sector in the last 3 trading days.
+        </div>
+      )}
+
+      {!loading && !error && data && totalCount > 0 && (
+        <div className="space-y-6">
+          {data.filter((s) => s.crossovers.length > 0).map((s) => (
+            <div key={s.etf_ticker}>
+              <button
+                onClick={() => onSelect(s.etf_ticker)}
+                className="mb-2 flex items-center gap-2 text-left hover:opacity-80"
+              >
+                <span className="text-sm font-bold text-[var(--c-text-primary)]">{s.sector}</span>
+                <span className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-bold text-[var(--c-violet)]">
+                  {s.etf_ticker}
+                </span>
+                <span className="text-[10px] text-[var(--c-text-faint)]">{s.crossovers.length} crossing →</span>
+              </button>
+              <div className="space-y-2">
+                {s.crossovers.map((item) => (
+                  <CrossoverRow key={item.ticker} item={item} />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -486,6 +561,8 @@ export default function SectorTracker() {
             </div>
           )}
           </div>
+
+          <AllSectorsCrossoverPanel onSelect={setSelectedEtf} />
         </>
       )}
     </div>
