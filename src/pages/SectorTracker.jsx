@@ -122,10 +122,10 @@ function Legend() {
           />
         ))}
       </div>
-      <span className="text-[10px] text-[var(--c-text-faint)]">← underperform · outperform →</span>
+      <span className="text-[10px] text-[var(--c-text-secondary)]">← underperform · outperform →</span>
       <div className="flex items-center gap-1.5 ml-2">
         <span className="h-2.5 w-2.5 rounded-full bg-violet-400" />
-        <span className="text-[10px] text-[var(--c-text-dimmed)]">in our Pre-Earnings signals</span>
+        <span className="text-[10px] text-[var(--c-text-secondary)]">in our Pre-Earnings signals</span>
       </div>
     </div>
   );
