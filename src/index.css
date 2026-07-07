@@ -21,8 +21,8 @@
   --c-text-primary: #ffffff;
   --c-text-secondary: #cbd5e1;
   --c-text-muted: #94a3b8;
-  --c-text-dimmed: #64748b;
-  --c-text-faint: #475569;
+  --c-text-dimmed: #cbd5e1;
+  --c-text-faint: #cbd5e1;
 
   /* Borders */
   --c-border: rgba(255, 255, 255, 0.1);
@@ -72,8 +72,8 @@
   --c-text-primary: #0f172a;
   --c-text-secondary: #475569;
   --c-text-muted: #64748b;
-  --c-text-dimmed: #94a3b8;
-  --c-text-faint: #cbd5e1;
+  --c-text-dimmed: #475569;
+  --c-text-faint: #475569;
 
   --c-border: #e2e8f0;
   --c-border-subtle: #f1f5f9;
