@@ -39,14 +39,17 @@ function countdownTo(targetH, targetM) {
 }
 
 // Play Day requires:
-//   1. Dealer Position = Negative (GEX status = 'negative')
-//   2. |SPX MOC| >= $1B
+//   1. GEX Ratio < 0.35
+//   2. |SPX MOC| >= $1.5B
 //   3. MAG7 MOC same sign as SPX MOC
 // Very: |SPX MOC| > $2B AND |MAG7 MOC| > $1B
-function evalSignal(gexStatus, spxMoc, mag7Moc) {
-  if (gexStatus !== 'negative')                              return { play: false, reason: 'gex_not_negative' };
+const PLAY_GEX_RATIO_MAX = 0.35;
+const PLAY_SPX_MOC_MIN   = 1.5e9;
+
+function evalSignal(gexRatio, spxMoc, mag7Moc) {
+  if (gexRatio == null || gexRatio >= PLAY_GEX_RATIO_MAX)    return { play: false, reason: 'gex_not_play' };
   if (spxMoc == null || mag7Moc == null)                     return { play: false, reason: 'moc_missing' };
-  if (Math.abs(spxMoc) < 1e9)                               return { play: false, reason: 'spx_too_small' };
+  if (Math.abs(spxMoc) < PLAY_SPX_MOC_MIN)                  return { play: false, reason: 'spx_too_small' };
   if (Math.sign(spxMoc) !== Math.sign(mag7Moc))             return { play: false, reason: 'direction_mismatch' };
 
   const bullish = spxMoc > 0;
@@ -199,9 +202,16 @@ function SignalBanner({ signal, gexStatus, spxMoc, mag7Moc, isAdmin }) {
     return (
       <div className="space-y-5">
         <div className="rounded-3xl bg-gradient-to-r from-zinc-700/60 to-zinc-600/60 p-10 text-center shadow-xl">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-white/50">
-            EOD Signal · 3:55 PM ET
-          </p>
+          <div className="mb-4 flex items-center justify-center gap-2">
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
+              EOD Signal · 3:55 PM ET
+            </p>
+            {spxMoc != null && (
+              <span className="text-[10px] font-mono text-white/40">
+                SPX MOC {fmtMoc(spxMoc)}
+              </span>
+            )}
+          </div>
           <h2 className="text-6xl font-black tracking-tight text-white/80 md:text-7xl">
             NO PLAY DAY
           </h2>
@@ -232,13 +242,14 @@ function SignalBanner({ signal, gexStatus, spxMoc, mag7Moc, isAdmin }) {
 }
 
 const SIM_SCENARIOS = [
-  { label: 'No Play — GEX Positive',      gexRatio: 0.77,  spxMoc:  2.74e9,  mag7Moc:  0.648e9 },
-  { label: 'No Play — SPX Too Small',      gexRatio: 0.30,  spxMoc:  0.5e9,   mag7Moc:  0.3e9  },
-  { label: 'No Play — Direction Mismatch', gexRatio: 0.30,  spxMoc:  1.8e9,   mag7Moc: -0.9e9  },
-  { label: 'Play Day — Bullish',           gexRatio: 0.30,  spxMoc:  1.5e9,   mag7Moc:  0.8e9  },
-  { label: 'Play Day — Bearish',           gexRatio: 0.30,  spxMoc: -1.5e9,   mag7Moc: -0.8e9  },
-  { label: 'Play Day — Very Bullish',      gexRatio: 0.30,  spxMoc:  2.74e9,  mag7Moc:  1.2e9  },
-  { label: 'Play Day — Very Bearish',      gexRatio: 0.30,  spxMoc: -2.74e9,  mag7Moc: -1.2e9  },
+  { label: 'No Play — GEX Ratio Too High',    gexRatio: 0.77, spxMoc:  2.74e9, mag7Moc:  0.648e9 },
+  { label: 'No Play — SPX Too Small',          gexRatio: 0.30, spxMoc:  0.5e9,  mag7Moc:  0.3e9  },
+  { label: 'No Play — Below New $1.5B Floor',  gexRatio: 0.30, spxMoc:  1.2e9,  mag7Moc:  0.7e9  },
+  { label: 'No Play — Direction Mismatch',     gexRatio: 0.30, spxMoc:  1.8e9,  mag7Moc: -0.9e9  },
+  { label: 'Play Day — Bullish',               gexRatio: 0.30, spxMoc:  1.5e9,  mag7Moc:  0.8e9  },
+  { label: 'Play Day — Bearish',               gexRatio: 0.30, spxMoc: -1.5e9,  mag7Moc: -0.8e9  },
+  { label: 'Play Day — Very Bullish',          gexRatio: 0.30, spxMoc:  2.74e9, mag7Moc:  1.2e9  },
+  { label: 'Play Day — Very Bearish',          gexRatio: 0.30, spxMoc: -2.74e9, mag7Moc: -1.2e9  },
 ];
 
 function SimControls({ idx, onPrev, onNext, onExit }) {
@@ -321,7 +332,7 @@ export default function EodMocSignal() {
   const gexStatus  = gexRatio == null ? null : gexRatio > 0.5 ? 'positive' : gexRatio < 0.5 ? 'negative' : 'neutral';
   const spxMoc     = simMode ? sim.spxMoc  : (cpData?.moc?.spx_moc  ?? null);
   const mag7Moc    = simMode ? sim.mag7Moc : (cpData?.moc?.mag7_moc ?? null);
-  const signal     = evalSignal(gexStatus, spxMoc, mag7Moc);
+  const signal     = evalSignal(gexRatio, spxMoc, mag7Moc);
 
   if (loading) {
     return (
@@ -354,7 +365,7 @@ export default function EodMocSignal() {
         description="This page delivers a directional trade signal in the final minutes of each trading day."
         steps={[
           { text: 'At 3:55 PM ET, the system evaluates whether today qualifies as a Play Day based on dealer positioning and MOC imbalance.' },
-          { text: 'A Play Day requires Negative Dealer Position, SPX MOC over $1B, and MAG7 confirming the same direction.' },
+          { text: 'A Play Day requires Negative Dealer Position, SPX MOC over $1.5B, and MAG7 confirming the same direction.' },
           { text: 'The signal shows Bullish or Bearish — with Very Bullish or Very Bearish when both SPX and MAG7 flows are especially large.' },
         ]}
       />

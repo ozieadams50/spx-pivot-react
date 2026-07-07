@@ -108,6 +108,11 @@ function GexPanel({ gex }) {
         <span className={`text-5xl font-bold uppercase tracking-wide leading-none ${gexStatus != null ? statusColor : 'text-[var(--c-text-muted)]'}`}>
           {statusLabel}
         </span>
+        {ratio != null && (
+          <span className="text-sm font-mono text-[var(--c-text-muted)]">
+            GEX Ratio {ratio.toFixed(2)}
+          </span>
+        )}
       </div>
     </div>
   );
