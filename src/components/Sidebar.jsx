@@ -85,7 +85,8 @@ const FULL_NAV = [
       {
         title: 'Closing Print', matrixKey: 'admin/closing-print',
         children: [
-          { title: 'CP Admin', path: '/admin/closing-print', matrixKey: 'admin/closing-print' },
+          { title: 'CP Admin',     path: '/admin/closing-print', matrixKey: 'admin/closing-print'            },
+          { title: 'VIX Signals',  path: '/admin/vix-signals',   matrixKey: 'admin/closing-print/vix-signals' },
         ],
       },
       {

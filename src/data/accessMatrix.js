@@ -1,5 +1,5 @@
 const KEY     = 'access_matrix';
-const VERSION = 13;
+const VERSION = 14;
 
 // Flat list of every navigable item — used by both Sidebar and ManageAccess
 export const MENU_ITEMS = [
@@ -27,6 +27,7 @@ export const MENU_ITEMS = [
   { key: 'apps/closing-print',                        label: 'Closing Print',           level: 1 },
   { key: 'apps/closing-print/dashboard',              label: 'Live Dashboard',          level: 2 },
   { key: 'admin/closing-print',                              label: 'Closing Print Admin',     level: 1 },
+  { key: 'admin/closing-print/vix-signals',                 label: 'VIX Signals',             level: 2 },
   { key: 'admin',                                           label: 'Admin',                   level: 0 },
   { key: 'admin/market-sentiment',                          label: 'Market Sentiment',        level: 1 },
   { key: 'admin/market-sentiment/subscriber-commentary',    label: 'Subscriber Commentary',   level: 2 },
@@ -73,6 +74,7 @@ export const DEFAULT_MATRIX = {
   'apps/closing-print':                             { subscriber: true,  admin: true,  superuser: true  },
   'apps/closing-print/dashboard':                   { subscriber: true,  admin: true,  superuser: true  },
   'admin/closing-print':                            { subscriber: false, admin: true,  superuser: true  },
+  'admin/closing-print/vix-signals':                { subscriber: false, admin: true,  superuser: true  },
   'admin':                                          { subscriber: false, admin: true,  superuser: true  },
   'admin/market-sentiment':                         { subscriber: false, admin: true,  superuser: true  },
   'admin/market-sentiment/subscriber-commentary':   { subscriber: false, admin: true,  superuser: true  },

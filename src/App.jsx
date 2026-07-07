@@ -40,6 +40,7 @@ import EodMocSignal                  from './pages/EodMocSignal';
 import MocComparisonHistory          from './pages/MocComparisonHistory';
 import ClosingPrintAdmin             from './pages/ClosingPrintAdmin';
 import ClosingPrint                  from './pages/ClosingPrint';
+import VixSignals                    from './pages/VixSignals';
 
 function AuthGuard({ children }) {
   const { loggedIn } = useAuth();
@@ -89,6 +90,7 @@ function AppRoutes() {
         <Route path="admin/gex-moc"            element={<Guard matrixKey="admin/market-sentiment/set-gex-moc"><SetGexMoc /></Guard>} />
         <Route path="admin/moc-comparison"    element={<Guard matrixKey="admin/market-sentiment/moc-comparison"><MocComparisonHistory /></Guard>} />
         <Route path="admin/closing-print"    element={<Guard matrixKey="admin/closing-print"><ClosingPrintAdmin /></Guard>} />
+        <Route path="admin/vix-signals"      element={<Guard matrixKey="admin/closing-print/vix-signals"><VixSignals /></Guard>} />
         <Route path="spx-pivots/sentiment-history"  element={<Guard matrixKey="apps/spx-pivots/sentiment-history"><SentimentHistory /></Guard>} />
         <Route path="spx-pivots/commentary-history" element={<Guard matrixKey="apps/spx-pivots/commentary-history"><CommentaryHistory /></Guard>} />
 
