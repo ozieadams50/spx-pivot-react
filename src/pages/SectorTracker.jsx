@@ -131,6 +131,108 @@ function Legend() {
   );
 }
 
+// ── SMA crossover panel ────────────────────────────────────────────────────────
+
+function daysAgoLabel(n) {
+  if (n === 0) return 'Today';
+  if (n === 1) return '1 trading day ago';
+  return `${n} trading days ago`;
+}
+
+function CrossoverRow({ item }) {
+  const bullish = item.direction === 'bullish';
+  return (
+    <div className={`flex flex-wrap items-center gap-3 rounded-xl border p-3 ${
+      bullish ? 'border-emerald-500/25 bg-emerald-500/5' : 'border-rose-500/25 bg-rose-500/5'
+    }`}>
+      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${
+        bullish ? 'bg-emerald-500/20 text-[var(--c-emerald)]' : 'bg-rose-500/20 text-[var(--c-rose)]'
+      }`}>
+        {bullish ? '↑' : '↓'}
+      </span>
+
+      <div className="w-24 shrink-0">
+        <p className="text-sm font-bold text-[var(--c-text-primary)]">{item.ticker}</p>
+        {item.name && <p className="truncate text-[10px] text-[var(--c-text-faint)]">{item.name}</p>}
+      </div>
+
+      <span className={`shrink-0 rounded-lg border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+        bullish ? 'border-emerald-500/30 text-[var(--c-emerald)]' : 'border-rose-500/30 text-[var(--c-rose)]'
+      }`}>
+        {bullish ? 'Golden Cross' : 'Death Cross'}
+      </span>
+
+      <span className="text-xs text-[var(--c-text-muted)]">
+        {daysAgoLabel(item.days_ago)} · {item.cross_date}
+      </span>
+
+      <span className="ml-auto shrink-0 font-mono text-xs text-[var(--c-text-dimmed)]">
+        20D {item.sma20.toFixed(2)} <span className="text-[var(--c-text-faint)]">/</span> 50D {item.sma50.toFixed(2)}
+      </span>
+
+      {item.weight != null && (
+        <span className="w-14 shrink-0 text-right font-mono text-xs text-[var(--c-text-dimmed)]">
+          {item.weight.toFixed(1)}%
+        </span>
+      )}
+    </div>
+  );
+}
+
+function SmaCrossoverPanel({ etf }) {
+  const [data,    setData]    = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    apiFetch(`/sectors/${etf}/sma-crossovers`)
+      .then(setData)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [etf]);
+
+  return (
+    <div className="mt-8">
+      <div className="mb-3 flex items-center gap-2">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
+          20D / 50D SMA Crossovers
+        </h2>
+        <span className="text-[10px] text-[var(--c-text-faint)]">last 3 trading days</span>
+      </div>
+
+      {loading && (
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-14 animate-pulse rounded-xl bg-[var(--c-hover)]" />
+          ))}
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 px-6 py-4 text-sm text-[var(--c-rose-strong)]">
+          Failed to load crossovers: {error}
+        </div>
+      )}
+
+      {!loading && !error && data && data.crossovers.length === 0 && (
+        <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-card)] px-6 py-8 text-center text-sm text-[var(--c-text-dimmed)]">
+          No 20D/50D SMA crossovers in the last 3 trading days.
+        </div>
+      )}
+
+      {!loading && !error && data && data.crossovers.length > 0 && (
+        <div className="space-y-2">
+          {data.crossovers.map((item) => (
+            <CrossoverRow key={item.ticker} item={item} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Heat map view ─────────────────────────────────────────────────────────────
 
 function HeatMap({ etf, onBack }) {
@@ -265,6 +367,8 @@ function HeatMap({ etf, onBack }) {
           </p>
         </>
       )}
+
+      {!loading && data && <SmaCrossoverPanel etf={etf} />}
     </div>
   );
 }
