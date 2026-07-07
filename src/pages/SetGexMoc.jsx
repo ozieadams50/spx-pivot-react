@@ -51,7 +51,7 @@ function FJComparisonSection({ date }) {
   return (
     <div className="mt-5 max-w-2xl rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-6 shadow-lg">
       <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">MOC Source Comparison</p>
-      <p className="mb-4 text-xs text-[var(--c-text-muted)]">Enter FinancialJuice MOC values at 3:50 and 3:55 PM. Polygon values are captured automatically.</p>
+      <p className="mb-4 text-xs text-[var(--c-text-muted)]">Enter FinancialJuice MOC values at 3:50 and 3:55 PM. The Auto column is captured automatically.</p>
 
       <div className="mb-4 grid grid-cols-2 gap-4">
         <div>
@@ -102,7 +102,7 @@ function FJComparisonSection({ date }) {
             </thead>
             <tbody>
               <tr className="border-b border-[var(--c-border-subtle)]">
-                <td className="px-4 py-2.5 font-medium text-[var(--c-text-primary)]">Polygon</td>
+                <td className="px-4 py-2.5 font-medium text-[var(--c-text-primary)]">Auto</td>
                 <td className={`px-4 py-2.5 text-right font-mono font-medium ${clr(polygon.polygon_spx_350)}`}>{fmt(polygon.polygon_spx_350)}</td>
                 <td className={`px-4 py-2.5 text-right font-mono font-medium ${clr(polygon.polygon_mag7_350)}`}>{fmt(polygon.polygon_mag7_350)}</td>
                 <td className={`px-4 py-2.5 text-right font-mono font-medium ${clr(polygon.polygon_spx_355)}`}>{fmt(polygon.polygon_spx_355)}</td>

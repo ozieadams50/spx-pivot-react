@@ -39,7 +39,7 @@ export default function MocComparisonHistory() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">MOC Comparison History</h1>
         <p className="mt-1 text-sm text-[var(--c-text-muted)]">
-          Side-by-side comparison of Polygon NOI vs FinancialJuice MOC values at 3:50 and 3:55 PM ET.
+          Side-by-side comparison of automated vs. manually-entered MOC values at 3:50 and 3:55 PM ET.
         </p>
       </div>
 
@@ -88,11 +88,11 @@ export default function MocComparisonHistory() {
                   <th className="px-4 py-3 text-center" rowSpan={2}>Direction</th>
                 </tr>
                 <tr className="border-b border-[var(--c-border)] text-[10px] font-semibold uppercase tracking-widest text-[var(--c-text-faint)]">
-                  <th className="px-4 py-2 text-right">Polygon</th>
+                  <th className="px-4 py-2 text-right">Auto</th>
                   <th className="px-4 py-2 text-right">FJ</th>
-                  <th className="px-4 py-2 text-right">Polygon</th>
+                  <th className="px-4 py-2 text-right">Auto</th>
                   <th className="px-4 py-2 text-right">FJ</th>
-                  <th className="px-4 py-2 text-right">Polygon</th>
+                  <th className="px-4 py-2 text-right">Auto</th>
                   <th className="px-4 py-2 text-right">FJ</th>
                 </tr>
               </thead>

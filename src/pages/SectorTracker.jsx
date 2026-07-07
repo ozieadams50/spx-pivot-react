@@ -438,7 +438,7 @@ function HeatMap({ etf, onBack }) {
             ))}
           </div>
           <p className="mt-4 text-[10px] text-slate-700">
-            Holdings sourced from SSGA · Returns via Polygon · {data.holdings.length} holdings shown
+            Holdings sourced from SSGA · {data.holdings.length} holdings shown
           </p>
         </>
       )}
