@@ -119,13 +119,34 @@ function filterNav(items, role, matrix) {
   }, []);
 }
 
-function LeafItem({ title, path, onClose }) {
-  const location = useLocation();
-  const [linkPath, linkSearch] = path.includes('?') ? path.split('?') : [path, null];
-  const active = linkSearch
-    ? location.pathname === linkPath && location.search.includes(linkSearch)
-    : location.pathname === linkPath && !location.search;
+// Finds which of several nav paths best matches the current location — exact
+// matches (and satisfied search-param requirements) outrank prefix matches,
+// and among prefix matches the longest (most specific) path wins. This lets a
+// sub-route like /earnings/sectors/XLV keep "Sector Tracker" highlighted and
+// expanded instead of "Summary" (/earnings), which is also a valid prefix.
+function bestMatchPath(pathname, search, paths) {
+  let best = null;
+  let bestScore = -1;
+  for (const p of paths) {
+    const [linkPath, linkSearch] = p.includes('?') ? p.split('?') : [p, null];
+    let score = -1;
+    if (linkSearch) {
+      if (pathname === linkPath && search.includes(linkSearch)) score = linkPath.length + 1;
+    } else if (pathname === linkPath) {
+      score = linkPath.length + 0.5;
+    } else if (linkPath !== '/' && pathname.startsWith(`${linkPath}/`)) {
+      score = linkPath.length;
+    }
+    if (score > bestScore) { bestScore = score; best = p; }
+  }
+  return best;
+}
 
+function collectPaths(children) {
+  return (children ?? []).flatMap((c) => (c.path ? [c.path] : collectPaths(c.children)));
+}
+
+function LeafItem({ title, path, active, onClose }) {
   return (
     <NavLink
       to={path}
@@ -142,14 +163,20 @@ function LeafItem({ title, path, onClose }) {
 }
 
 function GroupItem({ group, onClose }) {
-  const location  = useLocation();
-  const hasActive = group.children?.some((c) => c.path ? location.pathname === c.path : false);
-  const [open, setOpen] = useState(hasActive);
+  const location    = useLocation();
+  const descendants = collectPaths(group.children);
+  const activePath  = bestMatchPath(location.pathname, location.search, descendants);
+  const hasActive   = activePath != null;
+
+  // null = no manual toggle yet, so `open` tracks route changes automatically;
+  // once the user clicks the header, their choice sticks regardless of route.
+  const [manualOpen, setManualOpen] = useState(null);
+  const open = manualOpen ?? hasActive;
 
   return (
     <div className="mb-2">
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setManualOpen(!open)}
         className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm text-[var(--c-text-secondary)] hover:bg-[var(--c-hover)]"
       >
         <span>{group.title}</span>
@@ -159,7 +186,7 @@ function GroupItem({ group, onClose }) {
         <div className="ml-3 mt-1 space-y-0.5 border-l border-[var(--c-border-subtle)] pl-3">
           {group.children.map((child) =>
             child.path ? (
-              <LeafItem key={child.title} title={child.title} path={child.path} onClose={onClose} />
+              <LeafItem key={child.title} title={child.title} path={child.path} active={child.path === activePath} onClose={onClose} />
             ) : (
               <GroupItem key={child.title} group={child} onClose={onClose} />
             )

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import PageGuide from '../components/PageGuide';
 
@@ -451,10 +451,12 @@ function HeatMap({ etf, onBack }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function SectorTracker() {
+  const { etf: selectedEtf } = useParams();
+  const navigate = useNavigate();
+
   const [perf,        setPerf]        = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
-  const [selectedEtf, setSelectedEtf] = useState(null);
   const [sortKey,     setSortKey]     = useState('return');
 
   useEffect(() => {
@@ -503,7 +505,7 @@ export default function SectorTracker() {
       )}
 
       {selectedEtf ? (
-        <HeatMap etf={selectedEtf} onBack={() => setSelectedEtf(null)} />
+        <HeatMap etf={selectedEtf} onBack={() => navigate('/earnings/sectors')} />
       ) : (
         <>
           <PageGuide
@@ -555,14 +557,14 @@ export default function SectorTracker() {
                   d={d}
                   rank={i + 1}
                   maxAbs={maxAbs}
-                  onSelect={setSelectedEtf}
+                  onSelect={(etf) => navigate(`/earnings/sectors/${etf}`)}
                 />
               ))}
             </div>
           )}
           </div>
 
-          <AllSectorsCrossoverPanel onSelect={setSelectedEtf} />
+          <AllSectorsCrossoverPanel onSelect={(etf) => navigate(`/earnings/sectors/${etf}`)} />
         </>
       )}
     </div>
