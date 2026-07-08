@@ -542,13 +542,6 @@ export default function PreEarningsRunners() {
     });
   };
 
-  const byGrade = GRADES.map((g) => {
-    const group = signals.filter((s) => s.grade === g);
-    const avg   = group.length ? group.reduce((a, s) => a + s.score, 0) / group.length : null;
-    return { grade: g, count: group.length, avgScore: avg };
-  });
-  const uniqueTickers = new Set(signals.map((s) => s.ticker)).size;
-
   // Merge options + short float data
   const enriched = useMemo(() =>
     signals.map((s) => {
@@ -575,6 +568,16 @@ export default function PreEarningsRunners() {
     }
     return [...map.values()];
   }, [enriched]);
+
+  // Same source (and liquidity filter) as the detail list, so bucket counts
+  // can never disagree with what clicking into a bucket actually shows.
+  const eligible = useMemo(() => deduped.filter((s) => !s.insufficient_liquidity), [deduped]);
+  const byGrade = useMemo(() => GRADES.map((g) => {
+    const group = eligible.filter((s) => s.grade === g);
+    const avg   = group.length ? group.reduce((a, s) => a + s.score, 0) / group.length : null;
+    return { grade: g, count: group.length, avgScore: avg };
+  }), [eligible]);
+  const uniqueTickers = eligible.length;
 
   const allSectors = useMemo(() =>
     [...new Set(deduped.map((s) => s.sector).filter(Boolean))].sort(),
