@@ -26,8 +26,12 @@ function signedFmt(v) {
 
 // ── Bar chart ─────────────────────────────────────────────────────────────────
 
-function SectorBar({ d, rank, maxAbs, onSelect }) {
-  const pct    = d.perf_1m ?? 0;
+function periodValue(d, period) {
+  return period === '30d' ? d.perf_1m : period === '5d' ? d.perf_5d : d.perf_1d;
+}
+
+function SectorBar({ d, rank, maxAbs, period, onSelect }) {
+  const pct    = periodValue(d, period) ?? 0;
   const barPct = maxAbs > 0 ? (Math.abs(pct) / maxAbs) * 100 : 0;
   const isTop3 = rank <= 3;
   const pos    = pct >= 0;
@@ -64,7 +68,7 @@ function SectorBar({ d, rank, maxAbs, onSelect }) {
       </div>
 
       <span className={`w-16 shrink-0 text-right font-mono text-sm font-bold ${pos ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]'}`}>
-        {signedFmt(d.perf_1m)}
+        {signedFmt(periodValue(d, period))}
       </span>
       {d.weight != null && (
         <span className="w-12 shrink-0 text-right font-mono text-xs text-[var(--c-text-dimmed)]">
@@ -458,6 +462,7 @@ export default function SectorTracker() {
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
   const [sortKey,     setSortKey]     = useState('return');
+  const [period,      setPeriod]      = useState('30d');
 
   useEffect(() => {
     apiFetch('/sectors/performance')
@@ -471,16 +476,18 @@ export default function SectorTracker() {
       return [...perf].sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0));
     }
     return [...perf].sort((a, b) => {
-      if (a.perf_1m == null && b.perf_1m == null) return 0;
-      if (a.perf_1m == null) return 1;
-      if (b.perf_1m == null) return -1;
-      return b.perf_1m - a.perf_1m;
+      const av = periodValue(a, period);
+      const bv = periodValue(b, period);
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      return bv - av;
     });
-  }, [perf, sortKey]);
+  }, [perf, sortKey, period]);
 
   const maxAbs = useMemo(
-    () => Math.max(1, ...perf.map((d) => Math.abs(d.perf_1m ?? 0))),
-    [perf],
+    () => Math.max(1, ...perf.map((d) => Math.abs(periodValue(d, period) ?? 0))),
+    [perf, period],
   );
 
   return (
@@ -494,7 +501,7 @@ export default function SectorTracker() {
         <p className="mt-2 text-sm text-[var(--c-text-muted)]">
           {selectedEtf
             ? 'SPDR ETF holdings heat map · 30-day, 5-day, and 1-day returns'
-            : '30-day return by SPDR sector ETF · click a sector to explore holdings'}
+            : '30-day, 5-day, or 1-day return by SPDR sector ETF · click a sector to explore holdings'}
         </p>
       </div>
 
@@ -515,17 +522,32 @@ export default function SectorTracker() {
             description="Sector momentum matters. A stock in a strong sector has a better chance of following through on its setup."
             steps={[
               { text: 'Bars show each S&P 500 sector\'s recent performance — green = gaining, red = losing. The top sectors are highlighted, showing where momentum is strongest.', targetId: 'pg-sector-bars' },
-              { text: 'Use the Return / Weight toggle to switch between ranking by performance vs. index weight.', targetId: 'pg-sector-sort' },
+              { text: 'Use the Return / Weight toggle to switch between ranking by performance vs. index weight, and the 30 Day / 5 Day / 1 Day toggle to change the return period.', targetId: 'pg-sector-sort' },
               'Click any sector row to drill into the individual holdings. Stocks with a violet dot are in our active signals.',
             ]}
           />
 
-          <div id="pg-sector-sort" className="mb-3 flex items-center justify-between">
+          <div id="pg-sector-sort" className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
-              {sortKey === 'weight' ? 'Sectors by S&P 500 Weight' : 'Sectors by 30-Day Return'}
+              {sortKey === 'weight'
+                ? 'Sectors by S&P 500 Weight'
+                : `Sectors by ${period === '30d' ? '30-Day' : period === '5d' ? '5-Day' : '1-Day'} Return`}
             </h2>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="text-xs text-[var(--c-text-faint)]">Top 3 highlighted · click to view holdings →</span>
+              <div className="flex rounded-xl border border-[var(--c-border)] bg-black/30 p-0.5 text-xs font-semibold">
+                {[['30d', '30 Day'], ['5d', '5 Day'], ['1d', '1 Day']].map(([val, label]) => (
+                  <button
+                    key={val}
+                    onClick={() => setPeriod(val)}
+                    className={`rounded-lg px-3 py-1.5 transition-all ${
+                      period === val ? 'bg-violet-500 text-[var(--c-text-primary)] shadow-lg shadow-violet-500/20' : 'text-[var(--c-text-muted)] hover:text-[var(--c-text-primary)]'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
               <div className="flex rounded-xl border border-[var(--c-border)] bg-black/30 p-0.5 text-xs font-semibold">
                 {[['return', 'Return'], ['weight', 'Weight']].map(([val, label]) => (
                   <button
@@ -557,6 +579,7 @@ export default function SectorTracker() {
                   d={d}
                   rank={i + 1}
                   maxAbs={maxAbs}
+                  period={period}
                   onSelect={(etf) => navigate(`/earnings/sectors/${etf}`)}
                 />
               ))}
