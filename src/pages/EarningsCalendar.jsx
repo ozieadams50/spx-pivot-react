@@ -148,9 +148,9 @@ function DayColumn({ date, dayIndex, signals, isToday, navigate }) {
         )}
       </div>
 
-      <div className="flex flex-wrap content-start gap-2 p-2" style={{ minHeight: '96px' }}>
+      <div className="grid grid-cols-3 justify-items-center gap-2 p-2" style={{ minHeight: '96px' }}>
         {!hasSignals ? (
-          <p className="w-full pt-3 text-center text-[10px] text-slate-700">no signals</p>
+          <p className="col-span-3 w-full pt-3 text-center text-[10px] text-slate-700">no signals</p>
         ) : (
           signals.map((s) => (
             <TickerCard

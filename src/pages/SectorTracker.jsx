@@ -79,12 +79,12 @@ function SectorBar({ d, rank, maxAbs, onSelect }) {
 // ── Heat map tile ─────────────────────────────────────────────────────────────
 
 function HeatTile({ h, period, onClick }) {
-  const pct = period === '30d' ? h.perf_1m : h.perf_5d;
+  const pct = period === '30d' ? h.perf_1m : period === '5d' ? h.perf_5d : h.perf_1d;
   const Tag = onClick ? 'button' : 'div';
   return (
     <Tag
       onClick={onClick}
-      title={`${h.ticker}${h.name ? ` — ${h.name}` : ''}\n30d: ${signedFmt(h.perf_1m)}  5d: ${signedFmt(h.perf_5d)}${h.weight != null ? `\nWeight: ${h.weight.toFixed(2)}%` : ''}${onClick ? '\nClick to view Pre-Earnings detail' : ''}`}
+      title={`${h.ticker}${h.name ? ` — ${h.name}` : ''}\n30d: ${signedFmt(h.perf_1m)}  5d: ${signedFmt(h.perf_5d)}  1d: ${signedFmt(h.perf_1d)}${h.weight != null ? `\nWeight: ${h.weight.toFixed(2)}%` : ''}${onClick ? '\nClick to view Pre-Earnings detail' : ''}`}
       className={`relative w-full text-left rounded-xl p-2.5 transition-all hover:scale-110 hover:z-10 ${
         onClick ? 'cursor-pointer hover:brightness-125 hover:ring-2 hover:ring-white/30' : 'cursor-default'
       } ${
@@ -338,8 +338,8 @@ function HeatMap({ etf, onBack }) {
       if (sortKey === 'weight') {
         return (b.weight ?? -1) - (a.weight ?? -1);
       }
-      const av = period === '30d' ? a.perf_1m : a.perf_5d;
-      const bv = period === '30d' ? b.perf_1m : b.perf_5d;
+      const av = period === '30d' ? a.perf_1m : period === '5d' ? a.perf_5d : a.perf_1d;
+      const bv = period === '30d' ? b.perf_1m : period === '5d' ? b.perf_5d : b.perf_1d;
       if (av == null && bv == null) return 0;
       if (av == null) return 1;
       if (bv == null) return -1;
@@ -389,7 +389,7 @@ function HeatMap({ etf, onBack }) {
             ))}
           </div>
           <div className="flex rounded-xl border border-[var(--c-border)] bg-black/30 p-0.5 text-xs font-semibold">
-            {[['30d', '30 Day'], ['5d', '5 Day']].map(([val, label]) => (
+            {[['30d', '30 Day'], ['5d', '5 Day'], ['1d', '1 Day']].map(([val, label]) => (
               <button
                 key={val}
                 onClick={() => setPeriod(val)}
@@ -493,7 +493,7 @@ export default function SectorTracker() {
         <h1 className="text-3xl font-bold text-[var(--c-text-primary)] sm:text-4xl">Sector Tracker</h1>
         <p className="mt-2 text-sm text-[var(--c-text-muted)]">
           {selectedEtf
-            ? 'SPDR ETF holdings heat map · 30-day and 5-day returns'
+            ? 'SPDR ETF holdings heat map · 30-day, 5-day, and 1-day returns'
             : '30-day return by SPDR sector ETF · click a sector to explore holdings'}
         </p>
       </div>
