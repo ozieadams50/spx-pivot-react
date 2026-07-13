@@ -23,6 +23,13 @@ const BADGE_STYLES = {
   Conservative: 'bg-emerald-500/20 text-[var(--c-emerald-strong)] border-emerald-500/30',
 };
 
+// Delta ranges for Weekly trades when SPX IV is between 12-17%
+const WEEKLY_DELTA = {
+  Aggressive:   '23-25',
+  Moderate:     '16-18',
+  Conservative: '12-13',
+};
+
 const SENTIMENT_STYLES = {
   'Bullish':              'text-[var(--c-emerald)]',
   'Bullish (default)':    'text-[var(--c-emerald)]/70',
@@ -440,6 +447,9 @@ export default function SPXPivots() {
                 <thead className="bg-[var(--c-hover)] text-xs uppercase tracking-[0.2em] text-[var(--c-text-muted)]">
                   <tr>
                     <th className="px-4 py-4 text-center">Risk</th>
+                    {tradeMode === 'Weekly Trade' && (
+                      <th className="px-4 py-4 text-center">Delta</th>
+                    )}
                     <th className="px-4 py-4 text-center">Level</th>
                     <th className="px-4 py-4 text-center">Pivot</th>
                     <th className="px-4 py-4 text-center">Short Put</th>
@@ -451,7 +461,7 @@ export default function SPXPivots() {
                   {loading
                     ? Array.from({ length: 3 }).map((_, i) => (
                         <tr key={i} className="border-t border-[var(--c-border-subtle)]">
-                          {Array.from({ length: 6 }).map((__, j) => (
+                          {Array.from({ length: tradeMode === 'Weekly Trade' ? 7 : 6 }).map((__, j) => (
                             <td key={j} className="px-4 py-4">
                               <div className="h-4 animate-pulse rounded bg-[var(--c-hover-strong)]" />
                             </td>
@@ -471,6 +481,9 @@ export default function SPXPivots() {
                               {row.risk}
                             </div>
                           </td>
+                          {tradeMode === 'Weekly Trade' && (
+                            <td className="px-4 py-4 text-center font-mono text-[var(--c-text-secondary)]">{WEEKLY_DELTA[row.risk]}</td>
+                          )}
                           <td className="px-4 py-4 text-center text-[var(--c-text-secondary)]">{row.level}</td>
                           <td className="px-4 py-4 text-center font-mono">{row.pivot}</td>
                           <td className="px-4 py-4 text-center font-mono font-semibold text-[var(--c-text-primary)]">{row.short}</td>
