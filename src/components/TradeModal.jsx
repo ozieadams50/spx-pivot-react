@@ -78,13 +78,14 @@ const PREMIUM_KEY = {
   Conservative: 'bull_put_s2',
 };
 
-export default function TradeModal({ selectedStrategy, setSelectedStrategy, execCards, activeStrategy, premiums, onClose }) {
+export default function TradeModal({ selectedStrategy, setSelectedStrategy, execCards, activeStrategy, premiums, deltaMap, onClose }) {
   const premKey       = PREMIUM_KEY[selectedStrategy];
   const buckets       = premiums?.by_vix_bucket ?? [];
   const currentBucket = premiums?.current_vix_bucket;
   const currentVix    = premiums?.current_vix;
   const recData       = (currentBucket && buckets.find(b => b.vix_range === currentBucket)?.spreads?.[premKey])
                         ?? premiums?.overall?.spreads?.[premKey];
+  const targetDelta   = deltaMap?.[selectedStrategy];
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
       <div className="max-h-[95vh] w-full max-w-5xl overflow-auto rounded-[32px] border border-[var(--c-border)] bg-[var(--c-bg-dropdown)] shadow-2xl">
@@ -154,6 +155,11 @@ export default function TradeModal({ selectedStrategy, setSelectedStrategy, exec
                       <p className="text-2xl font-bold text-[var(--c-emerald)]">${recData.mean.toFixed(2)}</p>
                     </div>
                   </div>
+                  {targetDelta && (
+                    <p className="mt-3 border-t border-emerald-500/20 pt-3 text-[10px] text-[var(--c-emerald)]/70">
+                      Target Delta: <span className="font-semibold text-[var(--c-emerald)]">{targetDelta}</span> at IV 12–18% — the delta level expected to yield this premium range
+                    </p>
+                  )}
                 </div>
               )}
 

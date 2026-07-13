@@ -517,6 +517,7 @@ export default function SPXPivots() {
           execCards={data.execCards}
           activeStrategy={activeExec}
           premiums={premiums}
+          deltaMap={deltaMap}
           onClose={() => setShowModal(false)}
         />
       )}
