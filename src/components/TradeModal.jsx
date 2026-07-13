@@ -148,7 +148,6 @@ export default function TradeModal({ selectedStrategy, setSelectedStrategy, exec
                       <p className="text-2xl font-bold tracking-tight text-[var(--c-text-primary)]">
                         ${recData.p25}–${recData.p75}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-[var(--c-emerald)]/70">p25–p75 range · 5-wide spread</p>
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] text-[var(--c-text-dimmed)]">Mean</p>
