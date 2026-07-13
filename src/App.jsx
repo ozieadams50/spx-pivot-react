@@ -78,7 +78,7 @@ function AppRoutes() {
         {/* Breakout Scanner */}
         <Route path="breakout-scanner"   element={<Guard matrixKey="apps/breakout-scanner/dashboard"><BreakoutScanner /></Guard>} />
 
-        {/* EOD-MOC Signal */}
+        {/* EOD-Accounting */}
         <Route path="eod-moc"            element={<Guard matrixKey="apps/eod-moc/signal"><EodMocSignal /></Guard>} />
 
         {/* Closing Print */}

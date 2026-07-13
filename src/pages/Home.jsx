@@ -30,7 +30,7 @@ export default function Home() {
         steps={[
           { text: 'Pre-Earnings Runners identifies stocks with the highest probability of rising before their earnings announcement and ranks them daily. If you\'re new, start with Hot Picks — that\'s today\'s top-ranked list.', targetId: 'pg-pre-earnings-card' },
           { text: 'SPX Pivots gives you today\'s key S&P 500 price levels and a ready-to-use Bull Put Spread trade recommendation — updated daily with current market sentiment factored in. Start here for SPX options trades.', targetId: 'pg-spx-pivots-card' },
-          { text: 'EOD-MOC Signal activates at 3:50 PM ET. The system evaluates market conditions to determine if there\'s a directional edge into the close, then delivers a specific SPX options spread recommendation with exact strikes. Check it in the final minutes of the trading day.', targetId: 'pg-eod-moc-card' },
+          { text: 'EOD-Accounting activates at 3:50 PM ET. The system evaluates market conditions to determine if there\'s a directional edge into the close, then delivers a specific SPX options spread recommendation with exact strikes. Check it in the final minutes of the trading day.', targetId: 'pg-eod-moc-card' },
           { text: 'SPX Backtester lets you test any Bull Put Spread strategy against years of historical data before risking real money. Adjust the parameters, run the simulation, and check the win rate and profit factor before committing to a setup.', targetId: 'pg-spx-backtest-card' },
         ]}
       />
@@ -68,7 +68,7 @@ export default function Home() {
           <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">Daily, weekly, and monthly pivot levels with Bull Put Spread recommendations.</p>
         </Link>
 
-        {/* EOD-MOC Signal */}
+        {/* EOD-Accounting */}
         <Link
           id="pg-eod-moc-card"
           to="/eod-moc"
@@ -79,7 +79,7 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-[var(--c-text-primary)] group-hover:text-[var(--c-amber)] transition-colors">EOD-MOC Signal</h3>
+          <h3 className="text-lg font-semibold text-[var(--c-text-primary)] group-hover:text-[var(--c-amber)] transition-colors">EOD-Accounting</h3>
           <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">End-of-day 0DTE spread signal based on dealer positioning and market-on-close imbalance flow.</p>
         </Link>
 

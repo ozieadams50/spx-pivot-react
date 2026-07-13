@@ -22,7 +22,7 @@ export const MENU_ITEMS = [
   { key: 'apps/pre-earnings/hot-picks',              label: 'Hot Picks',              level: 2 },
   { key: 'apps/breakout-scanner',                     label: 'Breakout Scanner',        level: 1 },
   { key: 'apps/breakout-scanner/dashboard',          label: 'Dashboard',               level: 2 },
-  { key: 'apps/eod-moc',                             label: 'EOD-MOC Signal',          level: 1 },
+  { key: 'apps/eod-moc',                             label: 'EOD-Accounting',          level: 1 },
   { key: 'apps/eod-moc/signal',                      label: 'Signal',                  level: 2 },
   { key: 'apps/closing-print',                        label: 'Closing Print',           level: 1 },
   { key: 'apps/closing-print/dashboard',              label: 'Live Dashboard',          level: 2 },

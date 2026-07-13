@@ -185,7 +185,7 @@ export default function SetGexMoc() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">Set GEX &amp; MOC</h1>
         <p className="mt-1 text-sm text-[var(--c-text-muted)]">
-          Enter today's Gamma Exposure ratio and Market on Close imbalance. These drive the EOD-MOC Signal page.
+          Enter today's Gamma Exposure ratio and Market on Close imbalance. These drive the EOD-Accounting page.
         </p>
       </div>
 

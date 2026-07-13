@@ -350,7 +350,7 @@ export default function EodMocSignal() {
           Quantified Edge
         </span>
         <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">
-          {isAdmin ? 'EOD-MOC Signal' : 'End of Day MOC Signal'}
+          {isAdmin ? 'EOD-Accounting' : 'End of Day Accounting'}
         </h1>
         <p className="mt-1 text-sm text-[var(--c-text-muted)]">
           {isAdmin
@@ -362,7 +362,7 @@ export default function EodMocSignal() {
       <PageGuide
         guideKey="eod-moc"
         accent="amber"
-        title="How the EOD-MOC Signal works"
+        title="How EOD-Accounting works"
         description="This page delivers a directional trade signal in the final minutes of each trading day."
         steps={[
           { text: 'At 3:55 PM ET, the system evaluates whether today qualifies as a Play Day based on dealer positioning and MOC imbalance.' },
