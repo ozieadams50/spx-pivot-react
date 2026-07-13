@@ -366,8 +366,8 @@ export default function EodMocSignal() {
         description="This page delivers a directional trade signal in the final minutes of each trading day."
         steps={[
           { text: 'At 3:55 PM ET, the system evaluates whether today qualifies as a Play Day based on dealer positioning and market order flow.' },
-          { text: 'A Play Day requires a negative dealer gamma reading, SPX MOC over $1.5B, and MAG7 confirming the same direction — a Call when both are positive, a Put when both are negative.' },
-          { text: 'The signal shows Bullish or Bearish — with Very Bullish or Very Bearish when both SPX and MAG7 flows are especially large.' },
+          { text: 'A Play Day is only confirmed when several independent market conditions all line up in the same direction — Call when they point bullish, Put when they point bearish.' },
+          { text: 'The signal shows Bullish or Bearish, upgraded to Very Bullish or Very Bearish when the underlying conditions are especially strong.' },
         ]}
       />
 
