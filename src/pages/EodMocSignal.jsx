@@ -354,7 +354,7 @@ export default function EodMocSignal() {
         </h1>
         <p className="mt-1 text-sm text-[var(--c-text-muted)]">
           {isAdmin
-            ? 'End-of-day directional signal based on dealer gamma exposure and market-on-close imbalance flow.'
+            ? 'End-of-day directional signal based on dealer positioning and market daily order flow.'
             : "End-of-day directional signal based on dealer's option position exposure and market balance flow."}
         </p>
       </div>
@@ -365,7 +365,7 @@ export default function EodMocSignal() {
         title="How EOD-Accounting works"
         description="This page delivers a directional trade signal in the final minutes of each trading day."
         steps={[
-          { text: 'At 3:55 PM ET, the system evaluates whether today qualifies as a Play Day based on dealer positioning and MOC imbalance.' },
+          { text: 'At 3:55 PM ET, the system evaluates whether today qualifies as a Play Day based on dealer positioning and market order flow.' },
           { text: 'A Play Day requires a negative dealer gamma reading, SPX MOC over $1.5B, and MAG7 confirming the same direction — a Call when both are positive, a Put when both are negative.' },
           { text: 'The signal shows Bullish or Bearish — with Very Bullish or Very Bearish when both SPX and MAG7 flows are especially large.' },
         ]}
