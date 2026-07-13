@@ -208,11 +208,6 @@ function SignalBanner({ signal, spxMoc, mag7Moc, isAdmin }) {
             <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
               EOD Signal · 3:55 PM ET
             </p>
-            {spxMoc != null && (
-              <span className="text-[10px] font-mono text-white/40">
-                SPX MOC {fmtMoc(spxMoc)}
-              </span>
-            )}
           </div>
           <h2 className="text-6xl font-black tracking-tight text-white/80 md:text-7xl">
             NO PLAY DAY
