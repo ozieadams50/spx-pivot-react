@@ -25,9 +25,9 @@ const BADGE_STYLES = {
 
 // Delta ranges for Weekly trades when SPX IV is between 12-17%
 const WEEKLY_DELTA = {
-  Aggressive:   '23-25',
-  Moderate:     '16-18',
-  Conservative: '12-13',
+  Aggressive:   '23-25%',
+  Moderate:     '16-18%',
+  Conservative: '12-13%',
 };
 
 const SENTIMENT_STYLES = {
