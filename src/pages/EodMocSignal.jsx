@@ -123,7 +123,7 @@ function WaitingState({ isAdmin, spxMoc }) {
         <h2 className="mb-3 text-xl font-bold text-[var(--c-text-primary)]">Waiting for Signal Window</h2>
         <p className="mx-auto max-w-lg text-sm leading-relaxed text-[var(--c-text-secondary)]">
           {isAdmin
-            ? 'The EOD-MOC signal evaluates at 3:55 PM ET using live dealer positioning and market-on-close imbalance data.'
+            ? 'The EOD-Accounting signal evaluates live dealer positioning and market order flow data.'
             : "The End of Day signal activates at 3:55 PM ET when Market Maker positioning and overall market balances are confirmed."}
         </p>
         {cd && (
