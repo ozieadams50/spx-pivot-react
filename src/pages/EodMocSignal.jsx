@@ -27,11 +27,11 @@ function fmtMoc(n) {
   return `${sign}$${abs.toLocaleString()}`;
 }
 
-function tradeTypeLabel(gexStatus) {
-  if (gexStatus === 'positive') return 'Call';
-  if (gexStatus === 'negative') return 'Put';
-  if (gexStatus === 'neutral')  return 'Neutral';
-  return '--';
+function tradeTypeLabel(spxMoc) {
+  if (spxMoc == null) return '--';
+  if (spxMoc > 0) return 'Call';
+  if (spxMoc < 0) return 'Put';
+  return 'Neutral';
 }
 
 function countdownTo(targetH, targetM) {
@@ -108,7 +108,7 @@ function LiveSPXBar({ spxData }) {
   );
 }
 
-function WaitingState({ isAdmin, gexStatus }) {
+function WaitingState({ isAdmin, spxMoc }) {
   const [cd, setCd] = useState(() => countdownTo(15, 55));
 
   useEffect(() => {
@@ -136,19 +136,19 @@ function WaitingState({ isAdmin, gexStatus }) {
         )}
       </div>
 
-      {isAdmin && gexStatus && (
+      {isAdmin && spxMoc != null && (
         <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-6 shadow-lg">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
             Current Trade Type
           </p>
           <span className={`inline-flex items-center rounded-xl border px-3 py-1 text-sm font-bold ${
-            gexStatus === 'negative'
+            spxMoc < 0
               ? 'border-rose-500/30 bg-rose-500/10 text-[var(--c-rose)]'
-              : gexStatus === 'neutral'
+              : spxMoc === 0
                 ? 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400'
                 : 'border-emerald-500/30 bg-emerald-500/10 text-[var(--c-emerald)]'
           }`}>
-            {tradeTypeLabel(gexStatus)}
+            {tradeTypeLabel(spxMoc)}
           </span>
         </div>
       )}
@@ -156,12 +156,7 @@ function WaitingState({ isAdmin, gexStatus }) {
   );
 }
 
-function AdminDataRow({ gexStatus, spxMoc, mag7Moc }) {
-  const gexColor = gexStatus === 'negative' ? 'text-[var(--c-rose)]'
-    : gexStatus === 'neutral' ? 'text-yellow-400'
-    : gexStatus === 'positive' ? 'text-[var(--c-emerald)]'
-    : 'text-[var(--c-text-dimmed)]';
-
+function AdminDataRow({ spxMoc, mag7Moc }) {
   const mocColor = (n) => n == null
     ? 'text-[var(--c-text-dimmed)]'
     : n >= 0 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]';
@@ -179,8 +174,8 @@ function AdminDataRow({ gexStatus, spxMoc, mag7Moc }) {
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-muted)] mb-2">
             Trade Type
           </p>
-          <p className={`text-3xl font-black leading-none ${gexColor}`}>
-            {tradeTypeLabel(gexStatus)}
+          <p className={`text-3xl font-black leading-none ${mocColor(spxMoc)}`}>
+            {tradeTypeLabel(spxMoc)}
           </p>
         </div>
         <div className="rounded-2xl border border-[var(--c-border-subtle)] bg-[var(--c-bg-card)] p-4">
@@ -204,7 +199,7 @@ function AdminDataRow({ gexStatus, spxMoc, mag7Moc }) {
   );
 }
 
-function SignalBanner({ signal, gexStatus, spxMoc, mag7Moc, isAdmin }) {
+function SignalBanner({ signal, spxMoc, mag7Moc, isAdmin }) {
   if (!signal.play) {
     return (
       <div className="space-y-5">
@@ -223,7 +218,7 @@ function SignalBanner({ signal, gexStatus, spxMoc, mag7Moc, isAdmin }) {
             NO PLAY DAY
           </h2>
         </div>
-        {isAdmin && <AdminDataRow gexStatus={gexStatus} spxMoc={spxMoc} mag7Moc={mag7Moc} />}
+        {isAdmin && <AdminDataRow spxMoc={spxMoc} mag7Moc={mag7Moc} />}
       </div>
     );
   }
@@ -243,7 +238,7 @@ function SignalBanner({ signal, gexStatus, spxMoc, mag7Moc, isAdmin }) {
           {label}
         </h2>
       </div>
-      {isAdmin && <AdminDataRow gexStatus={gexStatus} spxMoc={spxMoc} mag7Moc={mag7Moc} />}
+      {isAdmin && <AdminDataRow spxMoc={spxMoc} mag7Moc={mag7Moc} />}
     </div>
   );
 }
@@ -336,7 +331,6 @@ export default function EodMocSignal() {
 
   const sim        = SIM_SCENARIOS[simIdx];
   const gexRatio   = simMode ? sim.gexRatio : (cpData?.gex?.gamma_notional ?? null);
-  const gexStatus  = gexRatio == null ? null : gexRatio > 0.5 ? 'positive' : gexRatio < 0.5 ? 'negative' : 'neutral';
   const spxMoc     = simMode ? sim.spxMoc  : (cpData?.moc?.spx_moc  ?? null);
   const mag7Moc    = simMode ? sim.mag7Moc : (cpData?.moc?.mag7_moc ?? null);
   const signal     = evalSignal(gexRatio, spxMoc, mag7Moc);
@@ -372,7 +366,7 @@ export default function EodMocSignal() {
         description="This page delivers a directional trade signal in the final minutes of each trading day."
         steps={[
           { text: 'At 3:55 PM ET, the system evaluates whether today qualifies as a Play Day based on dealer positioning and MOC imbalance.' },
-          { text: 'A Play Day requires a Put trade type, SPX MOC over $1.5B, and MAG7 confirming the same direction.' },
+          { text: 'A Play Day requires a negative dealer gamma reading, SPX MOC over $1.5B, and MAG7 confirming the same direction — a Call when both are positive, a Put when both are negative.' },
           { text: 'The signal shows Bullish or Bearish — with Very Bullish or Very Bearish when both SPX and MAG7 flows are especially large.' },
         ]}
       />
@@ -400,8 +394,8 @@ export default function EodMocSignal() {
       )}
 
       {past355
-        ? <SignalBanner signal={signal} gexStatus={gexStatus} spxMoc={spxMoc} mag7Moc={mag7Moc} isAdmin={isAdmin} />
-        : <WaitingState isAdmin={isAdmin} gexStatus={gexStatus} />
+        ? <SignalBanner signal={signal} spxMoc={spxMoc} mag7Moc={mag7Moc} isAdmin={isAdmin} />
+        : <WaitingState isAdmin={isAdmin} spxMoc={spxMoc} />
       }
     </div>
   );
