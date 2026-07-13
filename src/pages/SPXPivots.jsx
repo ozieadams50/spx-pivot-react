@@ -23,11 +23,18 @@ const BADGE_STYLES = {
   Conservative: 'bg-emerald-500/20 text-[var(--c-emerald-strong)] border-emerald-500/30',
 };
 
-// Delta ranges for Weekly trades when SPX IV is between 12-17%
-const WEEKLY_DELTA = {
-  Aggressive:   '23-25%',
-  Moderate:     '16-18%',
-  Conservative: '12-13%',
+// Delta ranges by risk level, shown on the Weekly and Daily trade tables
+const DELTA_BY_MODE = {
+  weekly: {
+    Aggressive:   '23-25%',
+    Moderate:     '16-18%',
+    Conservative: '12-13%',
+  },
+  daily: {
+    Aggressive:   '37-40%',
+    Moderate:     '25-27%',
+    Conservative: '16-20%',
+  },
 };
 
 const SENTIMENT_STYLES = {
@@ -245,6 +252,7 @@ export default function SPXPivots() {
   const data           = pivotData;
   const activeExec     = data?.execCards?.[selectedStrategy];
   const sentimentClass = SENTIMENT_STYLES[data?.sentiment] ?? 'text-[var(--c-text-secondary)]';
+  const deltaMap       = DELTA_BY_MODE[MODE_MAP[tradeMode]];
 
   return (
     <div className="mx-auto max-w-7xl p-3 sm:p-4 lg:p-8">
@@ -447,7 +455,7 @@ export default function SPXPivots() {
                 <thead className="bg-[var(--c-hover)] text-xs uppercase tracking-[0.2em] text-[var(--c-text-muted)]">
                   <tr>
                     <th className="px-4 py-4 text-center">Risk</th>
-                    {tradeMode === 'Weekly Trade' && (
+                    {deltaMap && (
                       <th className="px-4 py-4 text-center">Delta</th>
                     )}
                     <th className="px-4 py-4 text-center">Level</th>
@@ -461,7 +469,7 @@ export default function SPXPivots() {
                   {loading
                     ? Array.from({ length: 3 }).map((_, i) => (
                         <tr key={i} className="border-t border-[var(--c-border-subtle)]">
-                          {Array.from({ length: tradeMode === 'Weekly Trade' ? 7 : 6 }).map((__, j) => (
+                          {Array.from({ length: deltaMap ? 7 : 6 }).map((__, j) => (
                             <td key={j} className="px-4 py-4">
                               <div className="h-4 animate-pulse rounded bg-[var(--c-hover-strong)]" />
                             </td>
@@ -481,8 +489,8 @@ export default function SPXPivots() {
                               {row.risk}
                             </div>
                           </td>
-                          {tradeMode === 'Weekly Trade' && (
-                            <td className="px-4 py-4 text-center font-mono text-[var(--c-text-secondary)]">{WEEKLY_DELTA[row.risk]}</td>
+                          {deltaMap && (
+                            <td className="px-4 py-4 text-center font-mono text-[var(--c-text-secondary)]">{deltaMap[row.risk]}</td>
                           )}
                           <td className="px-4 py-4 text-center text-[var(--c-text-secondary)]">{row.level}</td>
                           <td className="px-4 py-4 text-center font-mono">{row.pivot}</td>
