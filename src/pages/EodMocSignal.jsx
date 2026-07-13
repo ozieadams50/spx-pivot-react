@@ -180,7 +180,7 @@ function AdminDataRow({ spxMoc, mag7Moc }) {
         </div>
         <div className="rounded-2xl border border-[var(--c-border-subtle)] bg-[var(--c-bg-card)] p-4">
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-muted)] mb-2">
-            SPX Net MOC
+            SPX Net Credit/Debit
           </p>
           <p className={`text-3xl font-black font-mono leading-none ${mocColor(spxMoc)}`}>
             {fmtMoc(spxMoc)}
@@ -188,7 +188,7 @@ function AdminDataRow({ spxMoc, mag7Moc }) {
         </div>
         <div className="rounded-2xl border border-[var(--c-border-subtle)] bg-[var(--c-bg-card)] p-4">
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-muted)] mb-2">
-            MAG7 Net MOC
+            MAG7 Net Credit/Debit
           </p>
           <p className={`text-3xl font-black font-mono leading-none ${mocColor(mag7Moc)}`}>
             {fmtMoc(mag7Moc)}
