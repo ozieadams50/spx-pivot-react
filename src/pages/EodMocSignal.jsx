@@ -27,6 +27,13 @@ function fmtMoc(n) {
   return `${sign}$${abs.toLocaleString()}`;
 }
 
+function tradeTypeLabel(gexStatus) {
+  if (gexStatus === 'positive') return 'Call';
+  if (gexStatus === 'negative') return 'Put';
+  if (gexStatus === 'neutral')  return 'Neutral';
+  return '--';
+}
+
 function countdownTo(targetH, targetM) {
   const et = getETTime();
   const nowSec    = et.h * 3600 + et.m * 60 + et.s;
@@ -132,7 +139,7 @@ function WaitingState({ isAdmin, gexStatus }) {
       {isAdmin && gexStatus && (
         <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-6 shadow-lg">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
-            Current Dealer Position
+            Current Trade Type
           </p>
           <span className={`inline-flex items-center rounded-xl border px-3 py-1 text-sm font-bold ${
             gexStatus === 'negative'
@@ -141,7 +148,7 @@ function WaitingState({ isAdmin, gexStatus }) {
                 ? 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400'
                 : 'border-emerald-500/30 bg-emerald-500/10 text-[var(--c-emerald)]'
           }`}>
-            {gexStatus.charAt(0).toUpperCase() + gexStatus.slice(1)}
+            {tradeTypeLabel(gexStatus)}
           </span>
         </div>
       )}
@@ -170,10 +177,10 @@ function AdminDataRow({ gexStatus, spxMoc, mag7Moc }) {
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-2xl border border-[var(--c-border-subtle)] bg-[var(--c-bg-card)] p-4">
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-muted)] mb-2">
-            Dealer Position
+            Trade Type
           </p>
-          <p className={`text-3xl font-black capitalize leading-none ${gexColor}`}>
-            {gexStatus ?? '--'}
+          <p className={`text-3xl font-black leading-none ${gexColor}`}>
+            {tradeTypeLabel(gexStatus)}
           </p>
         </div>
         <div className="rounded-2xl border border-[var(--c-border-subtle)] bg-[var(--c-bg-card)] p-4">
@@ -365,7 +372,7 @@ export default function EodMocSignal() {
         description="This page delivers a directional trade signal in the final minutes of each trading day."
         steps={[
           { text: 'At 3:55 PM ET, the system evaluates whether today qualifies as a Play Day based on dealer positioning and MOC imbalance.' },
-          { text: 'A Play Day requires Negative Dealer Position, SPX MOC over $1.5B, and MAG7 confirming the same direction.' },
+          { text: 'A Play Day requires a Put trade type, SPX MOC over $1.5B, and MAG7 confirming the same direction.' },
           { text: 'The signal shows Bullish or Bearish — with Very Bullish or Very Bearish when both SPX and MAG7 flows are especially large.' },
         ]}
       />
