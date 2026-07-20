@@ -5,7 +5,7 @@ import { apiFetch } from '../lib/api';
 
 const AuthContext = createContext(null);
 
-const TIMEOUT_MS  = 2 * 60 * 60 * 1000;   // 2 hours
+const TIMEOUT_MS  = 60 * 60 * 1000;        // 1 hour
 const WARN_MS     = 5 * 60 * 1000;         // warn 5 min before logout
 const CHECK_EVERY = 30 * 1000;             // check every 30 seconds
 
