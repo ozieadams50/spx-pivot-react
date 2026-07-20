@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { apiFetch } from '../lib/api';
@@ -75,7 +75,12 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-[var(--c-text-secondary)]">Password</label>
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="text-xs font-medium text-[var(--c-text-secondary)]">Password</label>
+                <Link to="/forgot-password" className="text-xs text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]">
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}

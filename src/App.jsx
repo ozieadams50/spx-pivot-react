@@ -29,6 +29,8 @@ import ManageRoles from './pages/ManageRoles';
 import AddRole from './pages/AddRole';
 import ManageAccess from './pages/ManageAccess';
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import PreEarningsRunners          from './pages/PreEarningsRunners';
 import PreEarningsTicker           from './pages/PreEarningsTicker';
 import EarningsCalendar            from './pages/EarningsCalendar';
@@ -58,6 +60,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
         <Route index element={<Home />} />
 

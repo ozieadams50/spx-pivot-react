@@ -20,7 +20,8 @@ export async function apiFetch(path, options = {}) {
 
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
 
-  if (res.status === 401 && path !== '/auth/login') {
+  const PUBLIC_PATHS = ['/auth/login', '/auth/forgot-password', '/auth/reset-password'];
+  if (res.status === 401 && !PUBLIC_PATHS.includes(path)) {
     forceLogout();
     return;
   }
