@@ -223,12 +223,16 @@ function SignalBanner({ signal, spxMoc, mag7Moc, isAdmin }) {
   const bannerGrad = bullish
     ? 'bg-gradient-to-r from-emerald-700/80 to-emerald-500/80'
     : 'bg-gradient-to-r from-rose-700/80 to-rose-500/80';
+  const netDebitCaption = bullish ? 'Call Net Debit' : 'Put Net Debit';
 
   return (
     <div className="space-y-5">
       <div className={`rounded-3xl ${bannerGrad} p-10 text-center shadow-xl`}>
         <p className="mb-3 text-2xl font-black uppercase tracking-widest text-white/70">
           Play Day
+        </p>
+        <p className="mb-3 text-3xl font-black tracking-tight text-white md:text-4xl">
+          {netDebitCaption}
         </p>
         <h2 className="text-6xl font-black tracking-tight text-white md:text-7xl">
           {label}
