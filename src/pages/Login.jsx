@@ -75,12 +75,7 @@ export default function Login() {
             </div>
 
             <div>
-              <div className="mb-1.5 flex items-center justify-between">
-                <label className="text-xs font-medium text-[var(--c-text-secondary)]">Password</label>
-                <Link to="/forgot-password" className="text-xs text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]">
-                  Forgot password?
-                </Link>
-              </div>
+              <label className="mb-1.5 block text-xs font-medium text-[var(--c-text-secondary)]">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -109,6 +104,12 @@ export default function Login() {
                   )}
                 </button>
               </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Link to="/forgot-password" className="text-xs text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]">
+                Forgot password?
+              </Link>
             </div>
 
             {error && (

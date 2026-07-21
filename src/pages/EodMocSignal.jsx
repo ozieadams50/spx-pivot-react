@@ -52,6 +52,7 @@ function countdownTo(targetH, targetM) {
 // Very: |SPX MOC| > $2B AND |MAG7 MOC| > $1B
 const PLAY_GEX_RATIO_MAX = 0.35;
 const PLAY_SPX_MOC_MIN   = 1.5e9;
+const SIM_TIMEOUT_MS     = 60_000;
 
 function evalSignal(gexRatio, spxMoc, mag7Moc) {
   if (gexRatio == null || gexRatio >= PLAY_GEX_RATIO_MAX)    return { play: false, reason: 'gex_not_play' };
@@ -287,6 +288,22 @@ function SimControls({ idx, onPrev, onNext, onExit }) {
   );
 }
 
+function SimWatermark({ onExit }) {
+  return (
+    <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center overflow-hidden">
+      <div className="select-none whitespace-nowrap text-[8vw] font-black uppercase tracking-widest text-amber-500/10 -rotate-[20deg]">
+        SIMULATED DATA · SIMULATED DATA
+      </div>
+      <button
+        onClick={onExit}
+        className="pointer-events-auto fixed bottom-6 right-6 z-50 animate-pulse rounded-2xl border border-amber-500/50 bg-amber-500 px-5 py-3 text-sm font-bold uppercase tracking-widest text-black shadow-2xl transition-colors hover:bg-amber-400"
+      >
+        Exit Simulation Mode
+      </button>
+    </div>
+  );
+}
+
 export default function EodMocSignal() {
   const { role } = useAuth();
   const isAdmin = role === 'admin' || role === 'superuser';
@@ -320,6 +337,12 @@ export default function EodMocSignal() {
     const id = setInterval(() => setTick(t => t + 1), 1000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    if (!simMode) return;
+    const id = setTimeout(() => setSimMode(false), SIM_TIMEOUT_MS);
+    return () => clearTimeout(id);
+  }, [simMode, simIdx]);
 
   const et      = getETTime();
   const past355 = simMode || et.totalMinutes >= 15 * 60 + 55;
@@ -380,12 +403,15 @@ export default function EodMocSignal() {
       )}
 
       {isAdmin && simMode && (
-        <SimControls
-          idx={simIdx}
-          onPrev={() => setSimIdx(i => (i - 1 + SIM_SCENARIOS.length) % SIM_SCENARIOS.length)}
-          onNext={() => setSimIdx(i => (i + 1) % SIM_SCENARIOS.length)}
-          onExit={() => setSimMode(false)}
-        />
+        <>
+          <SimControls
+            idx={simIdx}
+            onPrev={() => setSimIdx(i => (i - 1 + SIM_SCENARIOS.length) % SIM_SCENARIOS.length)}
+            onNext={() => setSimIdx(i => (i + 1) % SIM_SCENARIOS.length)}
+            onExit={() => setSimMode(false)}
+          />
+          <SimWatermark onExit={() => setSimMode(false)} />
+        </>
       )}
 
       {past355
