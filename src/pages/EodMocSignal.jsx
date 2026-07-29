@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import PageGuide from '../components/PageGuide';
@@ -43,6 +43,49 @@ function countdownTo(targetH, targetM) {
   const mins = Math.floor(diff / 60);
   const secs = diff % 60;
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+// Two-window Play Day flow:
+//   pre   — before 3:50 PM ET: nothing to show yet
+//   scalp — 3:50:00-3:54:59: live point-in-time signal, no memory
+//   final — 3:55:00-3:59:59: "Final Session" — once the Play criteria are
+//           met at any point in this window, the signal latches (server-side,
+//           see cp_moc_peak) instead of re-evaluating live on every poll, so
+//           a value that crosses the threshold and recedes isn't missed
+//   post  — 4:00 PM ET onward: same result as final, special background gone
+function windowPhase(et) {
+  const t = et.totalMinutes;
+  if (t < 15 * 60 + 50) return 'pre';
+  if (t < 15 * 60 + 55) return 'scalp';
+  if (t < 16 * 60)      return 'final';
+  return 'post';
+}
+
+function WindowBadge({ phase }) {
+  // Hooks must run unconditionally on every render regardless of phase.
+  const [cd, setCd] = useState(() => countdownTo(15, 55));
+  useEffect(() => {
+    const id = setInterval(() => setCd(countdownTo(15, 55)), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (phase === 'scalp') {
+    return (
+      <div className="mb-4 flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-[var(--c-cyan)]">
+        <PulsingDot color="bg-cyan-400" />
+        Scalp Session{cd ? ` · closes in ${cd}` : ''}
+      </div>
+    );
+  }
+  if (phase === 'final' || phase === 'post') {
+    return (
+      <div className="mb-4 flex items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-amber-400">
+        <PulsingDot color="bg-amber-400" />
+        {phase === 'final' ? 'Final Session' : 'Final Session · Closed'}
+      </div>
+    );
+  }
+  return null;
 }
 
 // Play Day requires:
@@ -110,10 +153,10 @@ function LiveSPXBar({ spxData }) {
 }
 
 function WaitingState({ isAdmin, spxMoc }) {
-  const [cd, setCd] = useState(() => countdownTo(15, 55));
+  const [cd, setCd] = useState(() => countdownTo(15, 50));
 
   useEffect(() => {
-    const id = setInterval(() => setCd(countdownTo(15, 55)), 1000);
+    const id = setInterval(() => setCd(countdownTo(15, 50)), 1000);
     return () => clearInterval(id);
   }, []);
 
@@ -124,13 +167,13 @@ function WaitingState({ isAdmin, spxMoc }) {
         <h2 className="mb-3 text-xl font-bold text-[var(--c-text-primary)]">Waiting for Signal Window</h2>
         <p className="mx-auto max-w-lg text-sm leading-relaxed text-[var(--c-text-secondary)]">
           {isAdmin
-            ? 'The EOD-Accounting signal evaluates live dealer positioning and market order flow data.'
-            : "The End of Day signal activates at 3:55 PM ET when Market Maker positioning and overall market balances are confirmed."}
+            ? 'The Scalp Session opens at 3:50 PM ET, followed by the Final Session at 3:55 PM ET.'
+            : "The trading signal window opens at 3:50 PM ET when Market Maker positioning and overall market balances are confirmed."}
         </p>
         {cd && (
           <div className="mt-6">
             <p className="mb-1 text-xs font-medium uppercase tracking-widest text-[var(--c-text-dimmed)]">
-              Time until 3:55 PM ET
+              Time until 3:50 PM ET
             </p>
             <p className="text-4xl font-bold font-mono text-[var(--c-cyan)]">{cd}</p>
           </div>
@@ -200,14 +243,16 @@ function AdminDataRow({ spxMoc, mag7Moc }) {
   );
 }
 
-function SignalBanner({ signal, spxMoc, mag7Moc, isAdmin }) {
+function SignalBanner({ signal, spxMoc, mag7Moc, isAdmin, phase, peakLocked }) {
+  const windowLabel = phase === 'scalp' ? 'Scalp Session · 3:50 PM ET' : 'Final Session · 3:55 PM ET';
+
   if (!signal.play) {
     return (
       <div className="space-y-5">
         <div className="rounded-3xl bg-gradient-to-r from-zinc-700/60 to-zinc-600/60 p-10 text-center shadow-xl">
           <div className="mb-4 flex items-center justify-center gap-2">
             <p className="text-xs font-semibold uppercase tracking-widest text-white/50">
-              EOD Signal · 3:55 PM ET
+              {windowLabel}
             </p>
           </div>
           <h2 className="text-6xl font-black tracking-tight text-white/80 md:text-7xl">
@@ -229,7 +274,7 @@ function SignalBanner({ signal, spxMoc, mag7Moc, isAdmin }) {
     <div className="space-y-5">
       <div className={`rounded-3xl ${bannerGrad} p-10 text-center shadow-xl`}>
         <p className="mb-3 text-2xl font-black uppercase tracking-widest text-white/70">
-          Play Day
+          Play Day{peakLocked ? ' · Locked' : ''}
         </p>
         <p className="mb-3 text-3xl font-black tracking-tight text-white md:text-4xl">
           {netDebitCaption}
@@ -348,14 +393,50 @@ export default function EodMocSignal() {
     return () => clearTimeout(id);
   }, [simMode, simIdx]);
 
-  const et      = getETTime();
-  const past355 = simMode || et.totalMinutes >= 15 * 60 + 55;
+  const et    = getETTime();
+  const phase = simMode ? 'final' : windowPhase(et);
 
   const sim        = SIM_SCENARIOS[simIdx];
   const gexRatio   = simMode ? sim.gexRatio : (cpData?.gex?.gamma_notional ?? null);
   const spxMoc     = simMode ? sim.spxMoc  : (cpData?.moc?.spx_moc  ?? null);
   const mag7Moc    = simMode ? sim.mag7Moc : (cpData?.moc?.mag7_moc ?? null);
-  const signal     = evalSignal(gexRatio, spxMoc, mag7Moc);
+
+  // Final Session (and after): once cp_moc_peak has a row for today, the
+  // signal is frozen on those first-crossing values — it does not revert to
+  // No Play just because the current live poll shows a receded number.
+  const mocPeak    = !simMode && cpData?.moc_peak ? cpData.moc_peak : null;
+  const peakLocked = (phase === 'final' || phase === 'post') && mocPeak != null;
+  const signal     = peakLocked
+    ? evalSignal(mocPeak.gex_ratio, mocPeak.spx_moc, mocPeak.mag7_moc)
+    : evalSignal(gexRatio, spxMoc, mag7Moc);
+
+  // One-time flash when Scalp Session hands off to Final Session, so the
+  // transition is noticeable even if you're not staring at the countdown.
+  const prevPhaseRef = useRef(phase);
+  const [flash, setFlash] = useState(false);
+  useEffect(() => {
+    const cameFromScalp = prevPhaseRef.current === 'scalp' && phase === 'final';
+    prevPhaseRef.current = phase;
+    if (cameFromScalp) {
+      setFlash(true);
+      const id = setTimeout(() => setFlash(false), 2500);
+      return () => clearTimeout(id);
+    }
+  }, [phase]);
+
+  // Final Session background wash (this page's content area only): neutral
+  // amber while still watching, shifts to emerald/rose once the peak-latch
+  // fires, gone entirely by 4:00 PM (phase 'post') regardless of outcome.
+  let bgWashClass = '';
+  if (phase === 'final') {
+    if (signal.play) {
+      bgWashClass = signal.bullish
+        ? 'bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent'
+        : 'bg-gradient-to-br from-rose-500/15 via-rose-500/5 to-transparent';
+    } else {
+      bgWashClass = 'bg-gradient-to-br from-amber-500/10 via-transparent to-transparent';
+    }
+  }
 
   if (loading) {
     return (
@@ -366,7 +447,7 @@ export default function EodMocSignal() {
   }
 
   return (
-    <div className="p-6 md:p-8">
+    <div className={`p-6 md:p-8 transition-colors duration-700 ${bgWashClass} ${flash ? 'animate-pulse' : ''}`}>
       <div className="mb-6">
         <span className="mb-2 inline-flex items-center rounded-lg border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[var(--c-violet)]">
           Quantified Edge
@@ -385,11 +466,11 @@ export default function EodMocSignal() {
         guideKey="eod-moc"
         accent="amber"
         title="How EOD-Accounting works"
-        description="This page delivers a directional trade signal in the final minutes of each trading day."
+        description="This page delivers directional trade signals across two windows in the final minutes of each trading day."
         steps={[
-          { text: 'At 3:55 PM ET, the system evaluates whether today qualifies as a Play Day based on dealer positioning and market order flow.' },
-          { text: 'A Play Day is only confirmed when several independent market conditions all line up in the same direction — Call when they point bullish, Put when they point bearish.' },
-          { text: 'The signal shows Bullish or Bearish, upgraded to Very Bullish or Very Bearish when the underlying conditions are especially strong.' },
+          { text: 'Scalp Session (3:50-3:54 PM ET): a live read of current conditions, updated in real time — no memory of what came before.' },
+          { text: 'Final Session (3:55-4:00 PM ET): once conditions line up even briefly, the signal locks in for the rest of the window instead of reverting if things pull back.' },
+          { text: 'A Play Day is only confirmed when several independent market conditions all line up in the same direction — Call when they point bullish, Put when they point bearish, upgraded to Very Bullish/Bearish when especially strong.' },
         ]}
       />
 
@@ -418,9 +499,21 @@ export default function EodMocSignal() {
         </>
       )}
 
-      {past355
-        ? <SignalBanner signal={signal} spxMoc={spxMoc} mag7Moc={mag7Moc} isAdmin={isAdmin} />
-        : <WaitingState isAdmin={isAdmin} spxMoc={spxMoc} />
+      {phase === 'pre'
+        ? <WaitingState isAdmin={isAdmin} spxMoc={spxMoc} />
+        : (
+          <>
+            <WindowBadge phase={phase} />
+            <SignalBanner
+              signal={signal}
+              spxMoc={peakLocked ? mocPeak.spx_moc : spxMoc}
+              mag7Moc={peakLocked ? mocPeak.mag7_moc : mag7Moc}
+              isAdmin={isAdmin}
+              phase={phase}
+              peakLocked={peakLocked}
+            />
+          </>
+        )
       }
     </div>
   );
