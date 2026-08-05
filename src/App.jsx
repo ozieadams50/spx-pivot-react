@@ -40,6 +40,7 @@ import HotPicksPage                  from './pages/HotPicksPage';
 import BreakoutScanner               from './pages/BreakoutScanner';
 import EodMocSignal                  from './pages/EodMocSignal';
 import MocComparisonHistory          from './pages/MocComparisonHistory';
+import ModelCompareChart             from './pages/ModelCompareChart';
 import ClosingPrintAdmin             from './pages/ClosingPrintAdmin';
 import ClosingPrint                  from './pages/ClosingPrint';
 import VixSignals                    from './pages/VixSignals';
@@ -94,6 +95,10 @@ function AppRoutes() {
         <Route path="admin/sentiment"          element={<Guard matrixKey="admin/market-sentiment/set-market-sentiment"><SetMarketSentiment /></Guard>} />
         <Route path="admin/gex-moc"            element={<Guard matrixKey="admin/market-sentiment/set-gex-moc"><SetGexMoc /></Guard>} />
         <Route path="admin/moc-comparison"    element={<Guard matrixKey="admin/market-sentiment/moc-comparison"><MocComparisonHistory /></Guard>} />
+
+        {/* Admin — Pre-Earnings */}
+        <Route path="admin/pre-earnings/model-compare" element={<Guard matrixKey="admin/pre-earnings/model-compare"><ModelCompareChart /></Guard>} />
+
         <Route path="admin/closing-print"    element={<Guard matrixKey="admin/closing-print"><ClosingPrintAdmin /></Guard>} />
         <Route path="admin/vix-signals"      element={<Guard matrixKey="admin/closing-print/vix-signals"><VixSignals /></Guard>} />
         <Route path="spx-pivots/sentiment-history"  element={<Guard matrixKey="apps/spx-pivots/sentiment-history"><SentimentHistory /></Guard>} />

@@ -68,6 +68,12 @@ const FULL_NAV = [
         ],
       },
       {
+        title: 'Pre-Earnings', matrixKey: 'admin/pre-earnings',
+        children: [
+          { title: 'Model Refit Compare', path: '/admin/pre-earnings/model-compare', matrixKey: 'admin/pre-earnings/model-compare' },
+        ],
+      },
+      {
         title: 'User Mgmt', matrixKey: 'admin/user-mgmt',
         children: [
           { title: 'Manage Users', path: '/admin/users',     matrixKey: 'admin/user-mgmt/manage-users' },
