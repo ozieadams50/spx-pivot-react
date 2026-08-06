@@ -401,11 +401,15 @@ export default function EodMocSignal() {
   const spxMoc     = simMode ? sim.spxMoc  : (cpData?.moc?.spx_moc  ?? null);
   const mag7Moc    = simMode ? sim.mag7Moc : (cpData?.moc?.mag7_moc ?? null);
 
-  // Final Session (and after): once cp_moc_peak has a row for today, the
-  // signal is frozen on those first-crossing values — it does not revert to
-  // No Play just because the current live poll shows a receded number.
-  const mocPeak    = !simMode && cpData?.moc_peak ? cpData.moc_peak : null;
-  const peakLocked = (phase === 'final' || phase === 'post') && mocPeak != null;
+  // Both Scalp and Final Session latch once their own window's peak row
+  // exists for today (Final: cp_moc_peak, Scalp: cp_moc_peak_scalp — two
+  // independent server-side tables) — the signal is frozen on those
+  // first-crossing values, it does not revert to No Play just because the
+  // current live poll shows a receded number.
+  const mocPeakFinal = !simMode && cpData?.moc_peak       ? cpData.moc_peak       : null;
+  const mocPeakScalp = !simMode && cpData?.moc_peak_scalp ? cpData.moc_peak_scalp : null;
+  const mocPeak    = phase === 'scalp' ? mocPeakScalp : mocPeakFinal;
+  const peakLocked = (phase === 'scalp' || phase === 'final' || phase === 'post') && mocPeak != null;
   const signal     = peakLocked
     ? evalSignal(mocPeak.gex_ratio, mocPeak.spx_moc, mocPeak.mag7_moc)
     : evalSignal(gexRatio, spxMoc, mag7Moc);
@@ -424,11 +428,12 @@ export default function EodMocSignal() {
     }
   }, [phase]);
 
-  // Final Session background wash (this page's content area only): neutral
-  // amber while still watching, shifts to emerald/rose once the peak-latch
-  // fires, gone entirely by 4:00 PM (phase 'post') regardless of outcome.
+  // Scalp/Final Session background wash (this page's content area only):
+  // neutral amber while still watching, shifts to emerald/rose once the
+  // peak-latch fires (either session, each independently), gone entirely by
+  // 4:00 PM (phase 'post') regardless of outcome.
   let bgWashClass = '';
-  if (phase === 'final') {
+  if (phase === 'final' || phase === 'scalp') {
     if (signal.play) {
       bgWashClass = signal.bullish
         ? 'bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-transparent'
