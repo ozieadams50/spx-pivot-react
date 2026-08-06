@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import TradeModal from '../components/TradeModal';
 import { apiFetch } from '../lib/api';
 import PageGuide from '../components/PageGuide';
+import { useAuth } from '../context/AuthContext';
 
 const TRADE_MODES = ['Monthly Trade', 'Weekly Trade', 'Daily Trade'];
 
@@ -187,7 +188,94 @@ function transformPivotData(api, mode) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+const MSB_LABEL     = { 'MSB+': 'Bullish Break', 'MSB-': 'Bearish Break', none: 'None' };
+const SQUEEZE_LABEL = {
+  squeeze_on: 'Squeezing', squeeze_released_bull: 'Released Bullish',
+  squeeze_released_bear: 'Released Bearish', none: 'None',
+};
+const ORB_LABEL  = { bull: 'Bullish Breakout', bear: 'Bearish Breakout', none: 'No Break' };
+const VIX_LABEL  = {
+  walking_up: 'Walking Up (bearish)', walking_down: 'Walking Down (calm)',
+  rejecting_up: 'Spike Rejected (bullish)', rejecting_down: 'Low Rejected',
+  neutral: 'Neutral', unknown: 'Insufficient Data',
+};
+
+function TrendDayBanner() {
+  const [data,     setData]     = useState(null);
+  const [expanded, setExpanded] = useState(false);
+  const [error,    setError]    = useState(null);
+
+  useEffect(() => {
+    function load() {
+      apiFetch('/trend-day/live').then(setData).catch((err) => setError(err.message));
+    }
+    load();
+    const id = setInterval(load, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (error || !data?.signal) return null;
+
+  const s = data.signal;
+  const sampleSize = data.weights?.sample_size ?? 0;
+  const score = s.composite_score ?? 0;
+  const lean  = s.direction_lean;
+  const leanColor = lean === 'bullish' ? 'text-[var(--c-emerald)]' : lean === 'bearish' ? 'text-[var(--c-rose)]' : 'text-[var(--c-text-secondary)]';
+  const borderColor = lean === 'bullish' ? 'border-emerald-500/30' : lean === 'bearish' ? 'border-rose-500/30' : 'border-[var(--c-border)]';
+  const macdAvg = [s.macd_15m, s.macd_5m, s.macd_1m].filter((v) => v != null);
+  const macdAvgVal = macdAvg.length ? (macdAvg.reduce((a, b) => a + b, 0) / macdAvg.length) : null;
+
+  return (
+    <div className={`mb-6 rounded-3xl border bg-black/30 p-5 ${borderColor}`}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-4">
+          <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-amber-400">
+            Admin Only — Trend Day (Beta)
+          </span>
+          <p className={`text-xl font-bold capitalize ${leanColor}`}>
+            {lean === 'neutral' ? 'No Clear Trend' : `${lean} Trend Lean`}
+          </p>
+          <p className="text-sm text-[var(--c-text-dimmed)]">Score {score > 0 ? '+' : ''}{score.toFixed(1)}</p>
+        </div>
+        <button onClick={() => setExpanded((v) => !v)}
+          className="rounded-xl border border-[var(--c-border)] px-4 py-1.5 text-xs font-semibold text-[var(--c-text-secondary)] transition hover:bg-[var(--c-hover)]">
+          {expanded ? 'Hide Details' : 'View Details'}
+        </button>
+      </div>
+
+      <p className="mt-2 text-xs text-[var(--c-text-muted)]">
+        {sampleSize > 0
+          ? `Weights refit on ${sampleSize} labeled trading day${sampleSize === 1 ? '' : 's'}.`
+          : 'Based on 0 labeled trading days — heuristic weights, building confidence.'}
+      </p>
+
+      {expanded && (
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            ['MSB',      MSB_LABEL[s.msb_state] ?? s.msb_state],
+            ['Squeeze',  SQUEEZE_LABEL[s.squeeze_state] ?? s.squeeze_state],
+            ['ORB',      ORB_LABEL[s.orb_break] ?? s.orb_break],
+            ['VIX',      VIX_LABEL[s.vix_behavior] ?? s.vix_behavior],
+            ['GEX Ratio', s.gex_ratio != null ? s.gex_ratio.toFixed(2) : '—'],
+            ['% of EM Consumed', s.em_consumed_pct != null ? `${s.em_consumed_pct > 0 ? '+' : ''}${s.em_consumed_pct.toFixed(0)}%` : '—'],
+            ['MACD (avg 15m/5m/1m)', macdAvgVal != null ? macdAvgVal.toFixed(2) : '—'],
+            ['Mag7 Tick', s.mag7_tick != null ? `${s.mag7_tick > 0 ? '+' : ''}${s.mag7_tick.toFixed(2)}%` : '—'],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-xl border border-[var(--c-border-subtle)] bg-black/20 px-3 py-2.5">
+              <p className="text-[10px] uppercase tracking-widest text-[var(--c-text-dimmed)]">{label}</p>
+              <p className="mt-0.5 text-sm font-semibold text-[var(--c-text-primary)]">{value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 export default function SPXPivots() {
+  const { role } = useAuth();
+  const isAdmin = role === 'admin' || role === 'superuser';
   const [tradeMode,        setTradeMode]        = useState('Weekly Trade');
   const [selectedStrategy, setSelectedStrategy] = useState('Moderate');
   const [showModal,        setShowModal]        = useState(false);
@@ -300,6 +388,8 @@ export default function SPXPivots() {
           </div>
         </div>
       </div>
+
+      {isAdmin && <TrendDayBanner />}
 
       <PageGuide
         guideKey="spx-pivots"
