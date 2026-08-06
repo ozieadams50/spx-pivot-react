@@ -8,11 +8,13 @@ function getET() {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',
     hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false,
+    weekday: 'short',
   }).formatToParts(new Date());
   const h = parseInt(parts.find(p => p.type === 'hour')?.value ?? '0', 10);
   const m = parseInt(parts.find(p => p.type === 'minute')?.value ?? '0', 10);
   const s = parseInt(parts.find(p => p.type === 'second')?.value ?? '0', 10);
-  return { h, m, s, total: h * 60 + m };
+  const weekday = parts.find(p => p.type === 'weekday')?.value ?? '';
+  return { h, m, s, total: h * 60 + m, weekday };
 }
 
 function inMocWindow() {
@@ -83,6 +85,47 @@ function fmtEtClock(isoStr) {
   }).format(new Date(isoStr));
 }
 
+function fmtHM(totalMin) {
+  const h24  = Math.floor(totalMin / 60) % 24;
+  const m    = totalMin % 60;
+  const ampm = h24 >= 12 ? 'PM' : 'AM';
+  const h12  = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${ampm} ET`;
+}
+
+// Mirrors collectors/gexstream.py's SNAPSHOT_TIMES (closing-print repo) —
+// keep in sync if that list ever changes. Expressed as minutes-since-midnight
+// ET for easy comparison against getET().total.
+const GEX_SNAPSHOT_TIMES_MIN = [
+  9 * 60 + 30, 10 * 60 + 30, 11 * 60 + 30, 12 * 60 + 30,
+  13 * 60 + 30, 14 * 60 + 30, 15 * 60 + 30,
+  15 * 60 + 45, 15 * 60 + 50, 15 * 60 + 55,
+];
+
+function nextGexUpdate() {
+  const { total, weekday } = getET();
+  const isWeekday = weekday !== 'Sat' && weekday !== 'Sun';
+  if (isWeekday) {
+    const next = GEX_SNAPSHOT_TIMES_MIN.find(t => t > total);
+    if (next != null) return fmtHM(next);
+  }
+  return `${fmtHM(9 * 60 + 30)} (next trading day)`;
+}
+
+// MOC only actually collects 3:50-4:00 PM ET (config.MOC_START/END_HOUR in
+// closing-print) — the 9:25-9:32 AM window mentioned in that repo's docs
+// exists on FinancialJuice's site but isn't wired into the active config.
+const MOC_WINDOW_START_MIN = 15 * 60 + 50;
+const MOC_WINDOW_END_MIN   = 16 * 60;
+
+function nextMocUpdate() {
+  const { total, weekday } = getET();
+  const isWeekday = weekday !== 'Sat' && weekday !== 'Sun';
+  if (isWeekday && total < MOC_WINDOW_START_MIN) return fmtHM(MOC_WINDOW_START_MIN);
+  if (isWeekday && total <= MOC_WINDOW_END_MIN)  return null; // actively updating right now
+  return `${fmtHM(MOC_WINDOW_START_MIN)} (next trading day)`;
+}
+
 // ── Small atoms ───────────────────────────────────────────────────────────────
 
 function PulsingDot({ color = 'bg-emerald-400' }) {
@@ -151,6 +194,9 @@ function GexPanel({ gex }) {
             As of {asOf} · updates hourly
           </span>
         )}
+        <span className="text-[10px] text-[var(--c-text-faint)]">
+          Next update {nextGexUpdate()}
+        </span>
       </div>
     </div>
   );
@@ -192,7 +238,7 @@ function MocPanel({ moc, isAdmin }) {
       );
     }
 
-    // Before 3:30 PM
+    // Before 3:30 PM (or any other time the window isn't open today)
     const nowMin = h * 60 + m;
     const target = 15 * 60 + 50;
     const diff = target - nowMin;
@@ -202,7 +248,7 @@ function MocPanel({ moc, isAdmin }) {
           Dealer Imbalance
         </p>
         <p className="text-sm text-[var(--c-text-muted)]">
-          Active 3:50 – 4:05 PM ET
+          Next update {nextMocUpdate()}
           {diff > 0 ? ` · ${Math.floor(diff / 60)}h ${diff % 60}m away` : ''}
         </p>
       </div>
@@ -243,6 +289,12 @@ function MocPanel({ moc, isAdmin }) {
           {isBuy ? 'Buy Side' : 'Sell Side'}
         </span>
       </div>
+
+      {moc.updated_at && (
+        <p className="text-[10px] text-[var(--c-text-faint)] mb-3">
+          As of {fmtEtClock(moc.updated_at)} · updating live
+        </p>
+      )}
 
       {isAdmin ? (
         <div className="space-y-2.5">
