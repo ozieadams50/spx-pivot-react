@@ -81,6 +81,7 @@ function fmtEtClock(isoStr) {
   if (!isoStr) return null;
   return new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York',
+    month: 'short', day: 'numeric',
     hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short',
   }).format(new Date(isoStr));
 }
