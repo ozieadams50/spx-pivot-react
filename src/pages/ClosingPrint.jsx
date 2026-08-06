@@ -954,11 +954,10 @@ export default function ClosingPrint() {
           }
         </div>
         <p className="mt-1 text-sm text-[var(--c-text-muted)]">
-          {isAdmin
-            ? 'Live dealer metric, imbalance flow and SPX option chain — updated every few seconds.'
-            : 'Live dealer metric, imbalance flow and SPX option chain — updated every few seconds.'}
+          Dealer positioning, order-flow imbalance and the SPX option chain —
+          GEX updates hourly, imbalance flow updates live 3:50–4:00 PM ET, option chain every minute.
         </p>
-        {lastFetch && (
+        {lastFetch && inMocWindow() && (
           <p className="mt-1 text-xs text-[var(--c-text-faint)]">
             Last updated {ago(lastFetch)}
             {data?.updated_at && ` · data from ${ago(data.updated_at)}`}
