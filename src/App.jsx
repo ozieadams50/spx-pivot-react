@@ -6,6 +6,7 @@ import { canAccess } from './data/accessMatrix';
 import AppLayout from './layouts/AppLayout';
 import Home from './pages/Home';
 import SPXPivots from './pages/SPXPivots';
+import KeyLevels from './pages/KeyLevels';
 import SPXBacktest from './pages/SPXBacktest';
 import Placeholder from './pages/Placeholder';
 import ChartView from './pages/ChartView';
@@ -68,6 +69,7 @@ function AppRoutes() {
 
         {/* SPX Pivots */}
         <Route path="spx-pivots"         element={<SPXPivots />} />
+        <Route path="spx-pivots/key-levels" element={<Guard matrixKey="apps/spx-pivots/key-levels"><KeyLevels /></Guard>} />
         <Route path="spx-backtest"       element={<Guard matrixKey="apps/spx-backtest/run"><SPXBacktest /></Guard>} />
         <Route path="spx-pivots/history" element={<Guard matrixKey="apps/spx-pivots/history"><HistoricalPerformance /></Guard>} />
 

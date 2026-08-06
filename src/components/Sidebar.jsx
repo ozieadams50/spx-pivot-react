@@ -12,6 +12,7 @@ const FULL_NAV = [
         title: 'SPX Pivots', matrixKey: 'apps/spx-pivots',
         children: [
           { title: 'Current Pivots',        path: '/spx-pivots',         matrixKey: 'apps/spx-pivots/current-pivots'         },
+          { title: 'Key Levels',            path: '/spx-pivots/key-levels', matrixKey: 'apps/spx-pivots/key-levels'          },
           { title: 'Historical Performance', path: '/spx-pivots/history', matrixKey: 'apps/spx-pivots/historical-performance' },
           { title: 'Chart View',             path: '/spx-pivots/charts',  matrixKey: 'apps/spx-pivots/chart-view'             },
           { title: 'Sentiment History',      path: '/spx-pivots/sentiment-history',  matrixKey: 'apps/spx-pivots/sentiment-history'  },

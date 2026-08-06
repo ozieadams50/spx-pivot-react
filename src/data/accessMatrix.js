@@ -1,5 +1,5 @@
 const KEY     = 'access_matrix';
-const VERSION = 15;
+const VERSION = 16;
 
 // Flat list of every navigable item — used by both Sidebar and ManageAccess
 export const MENU_ITEMS = [
@@ -7,6 +7,7 @@ export const MENU_ITEMS = [
   { key: 'apps',                                            label: 'Apps',                    level: 0 },
   { key: 'apps/spx-pivots',                                 label: 'SPX Pivots',              level: 1 },
   { key: 'apps/spx-pivots/current-pivots',                  label: 'Current Pivots',          level: 2 },
+  { key: 'apps/spx-pivots/key-levels',                      label: 'Key Levels',              level: 2 },
   { key: 'apps/spx-pivots/historical-performance',          label: 'Historical Performance',  level: 2 },
   { key: 'apps/spx-pivots/chart-view',                      label: 'Chart View',              level: 2 },
   { key: 'apps/spx-pivots/sentiment-history',                label: 'Sentiment History',       level: 2 },
@@ -56,6 +57,7 @@ export const DEFAULT_MATRIX = {
   'apps':                                           { subscriber: true,  admin: true,  superuser: true  },
   'apps/spx-pivots':                                { subscriber: true,  admin: true,  superuser: true  },
   'apps/spx-pivots/current-pivots':                 { subscriber: true,  admin: true,  superuser: true  },
+  'apps/spx-pivots/key-levels':                     { subscriber: true,  admin: true,  superuser: true  },
   'apps/spx-pivots/historical-performance':         { subscriber: true,  admin: true,  superuser: true  },
   'apps/spx-pivots/chart-view':                     { subscriber: true,  admin: true,  superuser: true  },
   'apps/spx-pivots/sentiment-history':             { subscriber: true,  admin: true,  superuser: true  },
