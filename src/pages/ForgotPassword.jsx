@@ -31,7 +31,7 @@ export default function ForgotPassword() {
     <div className="flex min-h-screen items-center justify-center bg-[var(--c-bg-page)] px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-[var(--c-text-primary)]">SPX Control Center</h1>
+          <h1 className="text-3xl font-bold text-[var(--c-text-primary)]">Quantified Edge</h1>
           <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">Institutional Market Intelligence Platform</p>
         </div>
 

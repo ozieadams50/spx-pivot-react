@@ -210,7 +210,7 @@ function MobileNav({ nav, onClose }) {
       <div className="fixed inset-0 z-40 bg-[var(--c-bg-modal-overlay)] lg:hidden" onClick={onClose} />
       <div className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-[var(--c-border)] bg-[var(--c-bg-nav)] lg:hidden">
         <div className="flex items-center justify-between border-b border-[var(--c-border)] p-5">
-          <h2 className="text-lg font-bold text-[var(--c-text-primary)]">SPX Control Center</h2>
+          <h2 className="text-lg font-bold text-[var(--c-text-primary)]">Quantified Edge</h2>
           <button
             onClick={onClose}
             className="rounded-xl border border-[var(--c-border)] p-2 text-[var(--c-text-muted)] hover:bg-[var(--c-hover)] hover:text-[var(--c-text-primary)]"
@@ -276,7 +276,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       }`}
     >
       <div className="flex items-center justify-between border-b border-[var(--c-border)] p-5">
-        {!collapsed && <h2 className="text-lg font-bold text-[var(--c-text-primary)]">SPX Control Center</h2>}
+        {!collapsed && <h2 className="text-lg font-bold text-[var(--c-text-primary)]">Quantified Edge</h2>}
         <button
           onClick={onToggle}
           className="ml-auto rounded-xl border border-[var(--c-border)] p-2 text-[var(--c-text-muted)] hover:bg-[var(--c-hover)] hover:text-[var(--c-text-primary)]"
