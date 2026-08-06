@@ -93,7 +93,7 @@ export default function TopNavigation({ title, subtitle, onMobileMenuOpen }) {
           </button>
           <div>
             <h1 className="text-lg font-semibold text-[var(--c-text-primary)] sm:text-xl">
-              {title || 'SPX Options Trading Dashboard'}
+              {title || 'Quantified Edge Trading Dashboard'}
             </h1>
             <p className="text-xs text-[var(--c-text-dimmed)]">
               {subtitle || 'Institutional Market Intelligence Platform'}
