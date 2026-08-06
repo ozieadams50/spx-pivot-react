@@ -88,20 +88,27 @@ function WindowBadge({ phase }) {
   return null;
 }
 
-// Play Day requires:
-//   1. GEX Ratio < 0.35
-//   2. |SPX MOC| >= $1.5B
-//   3. MAG7 MOC same sign as SPX MOC
-// Very: |SPX MOC| > $2B AND |MAG7 MOC| > $1B
-const PLAY_GEX_RATIO_MAX = 0.35;
-const PLAY_SPX_MOC_MIN   = 1.5e9;
-const SIM_TIMEOUT_MS     = 60_000;
+// Play Day requires MAG7 MOC same sign as SPX MOC, plus one of two paths:
+//   Path A: GEX Ratio <  0.35 AND |SPX MOC| >= $1.5B
+//   Path B: GEX Ratio >= 0.35 AND |SPX MOC| >  $3.5B
+// Very: |SPX MOC| > $2B AND |MAG7 MOC| > $1B (unchanged, applies either path --
+// Path B's own $3.5B floor already exceeds $2B, so a Path B Play Day is "Very"
+// unless MAG7 MOC specifically stays under $1B while SPX MOC alone clears $3.5B).
+// Mirrors api/closing_print.py's _is_play_day() -- keep both in lockstep.
+const PLAY_GEX_RATIO_MAX    = 0.35;
+const PLAY_SPX_MOC_MIN      = 1.5e9;
+const PLAY_GEX_HIGH_MOC_MIN = 3.5e9;
+const SIM_TIMEOUT_MS        = 60_000;
 
 function evalSignal(gexRatio, spxMoc, mag7Moc) {
-  if (gexRatio == null || gexRatio >= PLAY_GEX_RATIO_MAX)    return { play: false, reason: 'gex_not_play' };
+  if (gexRatio == null)                                      return { play: false, reason: 'gex_missing' };
   if (spxMoc == null || mag7Moc == null)                     return { play: false, reason: 'moc_missing' };
-  if (Math.abs(spxMoc) < PLAY_SPX_MOC_MIN)                  return { play: false, reason: 'spx_too_small' };
   if (Math.sign(spxMoc) !== Math.sign(mag7Moc))             return { play: false, reason: 'direction_mismatch' };
+
+  const meetsMoc = gexRatio < PLAY_GEX_RATIO_MAX
+    ? Math.abs(spxMoc) >= PLAY_SPX_MOC_MIN
+    : Math.abs(spxMoc) >  PLAY_GEX_HIGH_MOC_MIN;
+  if (!meetsMoc) return { play: false, reason: 'spx_too_small' };
 
   const bullish = spxMoc > 0;
   const veryBig = Math.abs(spxMoc) > 2e9 && Math.abs(mag7Moc) > 1e9;
@@ -293,10 +300,12 @@ const SIM_SCENARIOS = [
   { label: 'No Play — SPX Too Small',          gexRatio: 0.30, spxMoc:  0.5e9,  mag7Moc:  0.3e9  },
   { label: 'No Play — Below New $1.5B Floor',  gexRatio: 0.30, spxMoc:  1.2e9,  mag7Moc:  0.7e9  },
   { label: 'No Play — Direction Mismatch',     gexRatio: 0.30, spxMoc:  1.8e9,  mag7Moc: -0.9e9  },
+  { label: 'No Play — Path B Below $3.5B Floor', gexRatio: 0.60, spxMoc:  2.5e9, mag7Moc:  0.7e9 },
   { label: 'Play Day — Bullish',               gexRatio: 0.30, spxMoc:  1.5e9,  mag7Moc:  0.8e9  },
   { label: 'Play Day — Bearish',               gexRatio: 0.30, spxMoc: -1.5e9,  mag7Moc: -0.8e9  },
   { label: 'Play Day — Very Bullish',          gexRatio: 0.30, spxMoc:  2.74e9, mag7Moc:  1.2e9  },
   { label: 'Play Day — Very Bearish',          gexRatio: 0.30, spxMoc: -2.74e9, mag7Moc: -1.2e9  },
+  { label: 'Play Day — Path B (High GEX, Large MOC)', gexRatio: 0.60, spxMoc:  3.6e9, mag7Moc:  0.6e9 },
 ];
 
 function SimControls({ idx, onPrev, onNext, onExit }) {
