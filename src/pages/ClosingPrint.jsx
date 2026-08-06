@@ -72,6 +72,17 @@ function ago(isoStr) {
   return `${Math.floor(diff / 3600)}h ago`;
 }
 
+// GEX reads on an hourly-ish schedule, unlike MOC/chain which push every few
+// seconds — the panel needs its own explicit "as of" stamp so the generic
+// Live badge doesn't imply a freshness GEX doesn't have.
+function fmtEtClock(isoStr) {
+  if (!isoStr) return null;
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short',
+  }).format(new Date(isoStr));
+}
+
 // ── Small atoms ───────────────────────────────────────────────────────────────
 
 function PulsingDot({ color = 'bg-emerald-400' }) {
@@ -97,6 +108,7 @@ function StatCard({ label, value, sub, valueClass = 'text-[var(--c-text-primary)
 
 function GexPanel({ gex }) {
   const ratio = gex?.gamma_notional ?? null;
+  const asOf  = fmtEtClock(gex?.updated_at);
 
   const gexStatus = ratio == null ? null
     : ratio > 0.5 ? 'positive'
@@ -132,6 +144,11 @@ function GexPanel({ gex }) {
         {ratio != null && (
           <span className="text-sm font-mono text-[var(--c-text-muted)]">
             GEX Ratio {ratio.toFixed(2)}
+          </span>
+        )}
+        {asOf && (
+          <span className="text-[10px] text-[var(--c-text-faint)]">
+            As of {asOf} · updates hourly
           </span>
         )}
       </div>
