@@ -20,6 +20,27 @@ function inMocWindow() {
   return total >= 15 * 60 + 50 && total <= 16 * 60;
 }
 
+// Convert an ET wall-clock time (as picked in the search UI) to a true UTC
+// ISO string, handling EDT/EST automatically for the given date. Needed
+// because cp_chain_history.snapshot_at is stored in UTC — sending the picked
+// time naively (no conversion) silently queries the wrong 4-hour window.
+function etWallClockToUtcISO(dateStr, hour24, minute, second = 0) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const utcGuess = new Date(Date.UTC(y, m - 1, d, hour24, minute, second));
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(utcGuess).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+  const etHour = parts.hour === '24' ? 0 : Number(parts.hour); // some engines report midnight as "24"
+  const etAsIfUtc = Date.UTC(
+    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+    etHour, Number(parts.minute), Number(parts.second),
+  );
+  const offsetMs = utcGuess.getTime() - etAsIfUtc;
+  return new Date(utcGuess.getTime() + offsetMs).toISOString();
+}
+
 function fmtMoc(n) {
   if (n == null) return '—';
   const abs = Math.abs(n);
@@ -519,7 +540,6 @@ function ChainSearch() {
   const now     = new Date();
   const nowC    = clampToMarket(now.getHours(), now.getMinutes());
   const nowTo12 = to12(nowC.h24);
-  const pad     = n => String(n).padStart(2, '0');
 
   const [strike1,  setStrike1]  = useState('');
   const [strike2,  setStrike2]  = useState('');
@@ -562,8 +582,10 @@ function ChainSearch() {
     try {
       const strikes = [strike1.trim(), strike2.trim()].filter(Boolean).join(',');
       const types   = type === 'both' ? 'C,P' : type === 'call' ? 'C' : 'P';
-      const from = `${fromDate}T${pad(to24(fromH, fromAmpm))}:${pad(fromM)}:00`;
-      const to   = `${toDate}T${pad(to24(toH, toAmpm))}:${pad(toM)}:59`;
+      // Pickers are ET wall-clock (market hours) — convert to true UTC before
+      // querying, since snapshot_at is stored in UTC.
+      const from = etWallClockToUtcISO(fromDate, to24(fromH, fromAmpm), fromM, 0);
+      const to   = etWallClockToUtcISO(toDate,   to24(toH,   toAmpm),   toM,   59);
       const qs = new URLSearchParams({ from_dt: from, to_dt: to, strikes, types });
       const rows = await apiFetch(`/cp/chain/search?${qs}`);
       setResults(rows);
@@ -690,7 +712,7 @@ function ChainSearch() {
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-[var(--c-bg-panel)] z-10">
                   <tr className="text-[10px] uppercase tracking-wider text-[var(--c-text-dimmed)]">
-                    <th className="py-2 pl-3 text-left">Time (Local)</th>
+                    <th className="py-2 pl-3 text-left">Time (ET)</th>
                     {allStrikes.map(s => (
                       type !== 'put' && (
                         <th key={`c-hdr-${s}`} colSpan={2}
@@ -730,14 +752,18 @@ function ChainSearch() {
                 </thead>
                 <tbody>
                   {Object.entries(pivoted).map(([ts, strikeMap]) => {
-                    const localTime = new Date(ts).toLocaleTimeString('en-US', {
-                      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
-                    });
-                    const localDate = new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    // Explicit America/New_York — not the browser's local timezone.
+                    // timeZoneName: 'short' reports "EDT"/"EST" correctly per date.
+                    const etLabel = new Intl.DateTimeFormat('en-US', {
+                      timeZone: 'America/New_York',
+                      month: 'short', day: 'numeric',
+                      hour: '2-digit', minute: '2-digit', second: '2-digit',
+                      hour12: true, timeZoneName: 'short',
+                    }).format(new Date(ts));
                     return (
                       <tr key={ts} className="border-t border-[var(--c-border-subtle)] hover:bg-[var(--c-bg-panel)]/40">
                         <td className="py-1.5 pl-3 font-mono text-[var(--c-text-muted)]">
-                          {localDate} {localTime}
+                          {etLabel}
                         </td>
                         {allStrikes.map(s => {
                           const c = strikeMap[s]?.C;
