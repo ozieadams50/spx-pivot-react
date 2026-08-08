@@ -1,5 +1,5 @@
 const KEY     = 'access_matrix';
-const VERSION = 16;
+const VERSION = 17;
 
 // Flat list of every navigable item — used by both Sidebar and ManageAccess
 export const MENU_ITEMS = [
@@ -14,6 +14,8 @@ export const MENU_ITEMS = [
   { key: 'apps/spx-pivots/commentary-history',               label: 'Commentary History',       level: 2 },
   { key: 'apps/spx-backtest',                               label: 'SPX Backtester',          level: 1 },
   { key: 'apps/spx-backtest/run',                           label: 'Run Backtest',            level: 2 },
+  { key: 'apps/squeeze-scanner',                            label: 'QE Squeeze Scanner',      level: 1 },
+  { key: 'apps/squeeze-scanner/dashboard',                  label: 'Dashboard',               level: 2 },
   { key: 'apps/pre-earnings',                      label: 'Pre-Earnings Runners',  level: 1 },
   { key: 'apps/pre-earnings/summary',              label: 'Summary',               level: 2 },
   { key: 'apps/pre-earnings/all-signals',          label: 'All Signals',           level: 2 },
@@ -64,6 +66,8 @@ export const DEFAULT_MATRIX = {
   'apps/spx-pivots/commentary-history':            { subscriber: true,  admin: true,  superuser: true  },
   'apps/spx-backtest':                              { subscriber: false, admin: true,  superuser: true  },
   'apps/spx-backtest/run':                          { subscriber: false, admin: true,  superuser: true  },
+  'apps/squeeze-scanner':                           { subscriber: true,  admin: true,  superuser: true  },
+  'apps/squeeze-scanner/dashboard':                 { subscriber: true,  admin: true,  superuser: true  },
   'apps/pre-earnings':                              { subscriber: true,  admin: true,  superuser: true  },
   'apps/pre-earnings/summary':                      { subscriber: true,  admin: true,  superuser: true  },
   'apps/pre-earnings/all-signals':                  { subscriber: true,  admin: true,  superuser: true  },

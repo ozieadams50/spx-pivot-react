@@ -54,6 +54,12 @@ const FULL_NAV = [
           { title: 'Run Backtest', path: '/spx-backtest', matrixKey: 'apps/spx-backtest/run' },
         ],
       },
+      {
+        title: 'QE Squeeze Scanner', matrixKey: 'apps/squeeze-scanner',
+        children: [
+          { title: 'Dashboard', path: '/squeeze-scanner', matrixKey: 'apps/squeeze-scanner/dashboard' },
+        ],
+      },
     ],
   },
   {
