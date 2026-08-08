@@ -205,16 +205,25 @@ export default function SqueezeScanner() {
   const [sortKey, setSortKey] = useState('ticker');
   const [sortDir, setSortDir] = useState('asc');
 
-  useEffect(() => {
-    setLoading(true);
+  const fetchTickers = (showSkeleton) => {
+    if (showSkeleton) setLoading(true);
     setError(null);
-    apiFetch('/squeeze-scanner/tickers')
+    return apiFetch('/squeeze-scanner/tickers')
       .then((data) => {
         setRows(data?.tickers ?? []);
         setUpdatedAt(data?.updatedAt ?? null);
       })
       .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+      .finally(() => { if (showSkeleton) setLoading(false); });
+  };
+
+  // Backend refreshes every 15 min; poll a bit faster so a tab left open
+  // doesn't sit on a stale (or empty, e.g. if first loaded before the
+  // collector's first run of the day) snapshot indefinitely.
+  useEffect(() => {
+    fetchTickers(true);
+    const id = setInterval(() => fetchTickers(false), 5 * 60 * 1000);
+    return () => clearInterval(id);
   }, []);
 
   const handleSort = (key) => {
@@ -258,13 +267,21 @@ export default function SqueezeScanner() {
             {updatedAt ? `Last updated ${updatedAt}` : 'Loading…'}
           </p>
         </div>
-        <button
-          onClick={handleExport}
-          disabled={sorted.length === 0}
-          className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-[var(--c-cyan-strong)] transition hover:bg-cyan-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          Export to Excel
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => fetchTickers(false)}
+            className="rounded-lg border border-[var(--c-border)] px-3 py-1.5 text-xs font-medium text-[var(--c-text-secondary)] transition hover:bg-[var(--c-hover)]"
+          >
+            Refresh
+          </button>
+          <button
+            onClick={handleExport}
+            disabled={sorted.length === 0}
+            className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-[var(--c-cyan-strong)] transition hover:bg-cyan-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Export to Excel
+          </button>
+        </div>
       </div>
 
       <FilterBar
