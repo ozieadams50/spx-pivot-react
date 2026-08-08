@@ -11,14 +11,22 @@ const DIRECTION_OPTS = [
 ];
 
 const TIMEFRAME_COLS = [
-  { key: 'sqz_5', label: '5' },
-  { key: 'sqz_15', label: '15' },
-  { key: 'sqz_30', label: '30' },
-  { key: 'sqz_60', label: '60' },
-  { key: 'sqz_1d', label: '1D' },
-  { key: 'sqz_1w', label: '1W' },
-  { key: 'sqz_1m', label: '1M' },
-];
+  { key: 'sqz_5', label: '5', tf: '5-minute' },
+  { key: 'sqz_15', label: '15', tf: '15-minute' },
+  { key: 'sqz_30', label: '30', tf: '30-minute' },
+  { key: 'sqz_60', label: '60', tf: '60-minute (hourly)' },
+  { key: 'sqz_1d', label: '1D', tf: 'Daily' },
+  { key: 'sqz_1w', label: '1W', tf: 'Weekly' },
+  { key: 'sqz_1m', label: '1M', tf: 'Monthly' },
+].map((c) => ({ ...c, tooltip: `How many ${c.tf} bars in a row this ticker has been squeezing (price compression) right now. Blank means it isn't squeezing on this timeframe.` }));
+
+const IDEAL_SQUEEZE_TOOLTIP = 'A squeeze (price compression) forming inside an already-established trend, in the direction shown. Bull = building inside an uptrend, Bear = building inside a downtrend.';
+const STACKED_EMA_TOOLTIP = 'Three short-term trend averages (9/13/21-day EMAs) lined up in order — fastest-on-top for Bull, slowest-on-top for Bear. A simple trend-alignment check on its own, separate from Ideal Squeeze.';
+const RSI_TOOLTIP = 'Relative Strength Index (14-day) — a 0-100 momentum reading measured against the size of this ticker’s own up days versus down days over its last 14 daily closes, not against other tickers or the market. Below 40 = oversold, 65-80 = strong momentum.';
+const RANGE_52W_TOOLTIP = 'Where the Close sits within this ticker’s own trailing 52-week high/low range. 100% = at the 52-week high, 0% = at the 52-week low.';
+const CLOSE_TOOLTIP = 'The previous trading day’s official closing price. Stays fixed all day until that day’s own close is finalized after the market close.';
+const LAST_TOOLTIP = 'The most recent price available as of the last scan (updates every 15 minutes). Runs roughly 15-30 minutes behind real time due to the market data plan’s delay.';
+const NET_CHG_TOOLTIP = 'Change from the previous day’s Close to the current Last price.';
 
 const EXPORT_COLUMNS = [
   { key: 'ticker', header: 'Symbol' },
@@ -95,11 +103,12 @@ function SqzCount({ value }) {
 
 // ── Sortable header cell (same pattern as PreEarningsRunners.jsx) ──────────
 
-function SortTh({ label, sk, sortKey, sortDir, onSort, className = '' }) {
+function SortTh({ label, sk, sortKey, sortDir, onSort, className = '', tooltip }) {
   const active = sortKey === sk;
   return (
     <th
       onClick={() => onSort(sk)}
+      title={tooltip}
       className={`cursor-pointer select-none py-2 text-[10px] uppercase tracking-widest leading-tight transition-colors ${
         active ? 'text-[var(--c-violet-strong)]' : 'text-[var(--c-text-dimmed)] hover:text-[var(--c-text-secondary)]'
       } ${className}`}
@@ -181,17 +190,17 @@ function FiltersPanel({
             label="Ideal Squeeze"
             value={idealFilter}
             onChange={setIdealFilter}
-            tooltip="A squeeze (price compression) forming inside an already-established trend, in the direction shown. Bull = building inside an uptrend, Bear = building inside a downtrend."
+            tooltip={IDEAL_SQUEEZE_TOOLTIP}
           />
 
           <DirectionToggle
             label="Stacked EMA"
             value={stackedFilter}
             onChange={setStackedFilter}
-            tooltip="Three short-term trend averages lined up in order (fastest on top for Bull, slowest on top for Bear) — a simple trend-alignment check."
+            tooltip={STACKED_EMA_TOOLTIP}
           />
 
-          <div title="Momentum reading, 0-100. Below 40 = oversold, above 65-80 = strong momentum.">
+          <div title={RSI_TOOLTIP}>
             <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">RSI</span>
             <div className="mt-1.5 flex items-center gap-1.5">
               <input
@@ -206,7 +215,7 @@ function FiltersPanel({
             </div>
           </div>
 
-          <div title="Where price sits within its 52-week high/low range. 100% = at the 52-week high.">
+          <div title={RANGE_52W_TOOLTIP}>
             <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">52W Range % ≥</span>
             <input
               type="number" value={range52wMin} onChange={(e) => setRange52wMin(e.target.value)} placeholder="0"
@@ -441,16 +450,16 @@ export default function SqueezeScanner() {
                 <SortTh label="Symbol" sk="ticker" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[64px] pl-3 pr-2 text-left" />
                 <SortTh label="Name" sk="name" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[150px] px-2 text-left" />
                 <SortTh label="Sector" sk="sector" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[100px] px-2 text-left" />
-                <SortTh label="Close" sk="close" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[64px] px-2 text-center" />
-                <SortTh label="Last" sk="last" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[64px] px-2 text-center" />
-                <SortTh label="Net Chg $" sk="net_chg" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" />
-                <SortTh label="Net Chg %" sk="net_chg_pct" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" />
-                <SortTh label="RSI" sk="rsi" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[48px] px-2 text-center" />
-                <SortTh label="52W Range %" sk="range_52w_pct" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" />
-                <SortTh label="Ideal Squeeze" sk="ideal_squeeze" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[80px] px-2 text-center" />
-                <SortTh label="Stacked EMA" sk="stacked_ema" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[80px] px-2 text-center" />
+                <SortTh label="Close" sk="close" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[64px] px-2 text-center" tooltip={CLOSE_TOOLTIP} />
+                <SortTh label="Last" sk="last" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[64px] px-2 text-center" tooltip={LAST_TOOLTIP} />
+                <SortTh label="Net Chg $" sk="net_chg" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" tooltip={NET_CHG_TOOLTIP} />
+                <SortTh label="Net Chg %" sk="net_chg_pct" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" tooltip={NET_CHG_TOOLTIP} />
+                <SortTh label="RSI" sk="rsi" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[48px] px-2 text-center" tooltip={RSI_TOOLTIP} />
+                <SortTh label="52W Range %" sk="range_52w_pct" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" tooltip={RANGE_52W_TOOLTIP} />
+                <SortTh label="Ideal Squeeze" sk="ideal_squeeze" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[80px] px-2 text-center" tooltip={IDEAL_SQUEEZE_TOOLTIP} />
+                <SortTh label="Stacked EMA" sk="stacked_ema" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[80px] px-2 text-center" tooltip={STACKED_EMA_TOOLTIP} />
                 {TIMEFRAME_COLS.map((c) => (
-                  <SortTh key={c.key} label={c.label} sk={c.key} sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[38px] px-1 text-center" />
+                  <SortTh key={c.key} label={c.label} sk={c.key} sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[38px] px-1 text-center" tooltip={c.tooltip} />
                 ))}
               </tr>
             </thead>
