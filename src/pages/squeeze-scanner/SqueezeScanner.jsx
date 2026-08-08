@@ -320,6 +320,16 @@ export default function SqueezeScanner() {
     setTimeframeFilter(new Set());
   };
 
+  // Refresh means "back to the baseline view" -- clear every filter and the
+  // sort order, not just re-fetch data, so it also doubles as a reset.
+  const handleRefresh = () => {
+    clearFilters();
+    setSortKey('ticker');
+    setSortDir('asc');
+    setFiltersOpen(false);
+    fetchTickers(false);
+  };
+
   const activeFilterCount =
     (tickerQ ? 1 : 0) +
     (idealFilter !== 'off' ? 1 : 0) +
@@ -368,7 +378,7 @@ export default function SqueezeScanner() {
           { text: 'Click Filters to narrow the list by Ideal Squeeze direction, Stacked EMA direction, RSI range, 52-week range, or which timeframe(s) are currently squeezing.', targetId: 'sqz-filters-btn' },
           { text: 'Ideal Squeeze flags price compression forming inside an already-established trend — Bull for uptrends, Bear for downtrends. Stacked EMA is a simpler trend-alignment check on its own.', targetId: 'sqz-table' },
           { text: 'The 5 / 15 / 30 / 60 / 1D / 1W / 1M columns show how many bars in a row each ticker has been compressing on that timeframe right now — blank means it isn’t squeezing there.', targetId: 'sqz-table' },
-          { text: 'Data refreshes automatically every 5 minutes; click Refresh any time for an immediate update.', targetId: 'sqz-refresh-btn' },
+          { text: 'Data refreshes automatically every 5 minutes. Click Refresh any time for an immediate update — it also resets the view back to baseline, clearing every filter and the sort order.', targetId: 'sqz-refresh-btn' },
           { text: 'Export the current filtered list to Excel any time.', targetId: 'sqz-export-btn' },
         ]}
       />
@@ -413,8 +423,9 @@ export default function SqueezeScanner() {
           </div>
           <button
             id="sqz-refresh-btn"
-            onClick={() => fetchTickers(false)}
+            onClick={handleRefresh}
             disabled={refreshing}
+            title="Refresh data and reset the view to baseline (clears filters and sort)"
             className="rounded-lg border border-[var(--c-border)] px-3 py-1.5 text-xs font-medium text-[var(--c-text-secondary)] transition hover:bg-[var(--c-hover)] disabled:opacity-60"
           >
             {refreshing ? 'Refreshing…' : 'Refresh'}
