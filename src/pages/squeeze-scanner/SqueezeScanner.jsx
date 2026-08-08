@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { apiFetch } from '../../lib/api';
+import PageGuide from '../../components/PageGuide';
 
 const DIRECTION_OPTS = [
   { label: 'Off', value: 'off' },
@@ -33,6 +34,16 @@ const EXPORT_COLUMNS = [
   { key: 'stacked_ema', header: 'Stacked EMA' },
   ...TIMEFRAME_COLS.map((c) => ({ key: c.key, header: c.label })),
 ];
+
+const DEFAULT_FILTERS = {
+  tickerQ: '',
+  idealFilter: 'off',
+  stackedFilter: 'off',
+  rsiMin: '',
+  rsiMax: '',
+  range52wMin: '',
+  timeframeFilter: new Set(),
+};
 
 function matchesDirection(value, filter) {
   if (filter === 'off') return true;
@@ -89,7 +100,7 @@ function SortTh({ label, sk, sortKey, sortDir, onSort, className = '' }) {
   return (
     <th
       onClick={() => onSort(sk)}
-      className={`cursor-pointer select-none py-3 text-[10px] uppercase tracking-widest whitespace-nowrap transition-colors ${
+      className={`cursor-pointer select-none py-2 text-[10px] uppercase tracking-widest leading-tight transition-colors ${
         active ? 'text-[var(--c-violet-strong)]' : 'text-[var(--c-text-dimmed)] hover:text-[var(--c-text-secondary)]'
       } ${className}`}
     >
@@ -99,91 +110,138 @@ function SortTh({ label, sk, sortKey, sortDir, onSort, className = '' }) {
   );
 }
 
-// ── Filter bar ────────────────────────────────────────────────────────────
+// ── Filters dropdown panel ──────────────────────────────────────────────────
 
 function DirectionToggle({ label, value, onChange, tooltip }) {
   return (
-    <div className="flex items-center gap-1.5" title={tooltip}>
-      <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)] mr-1">{label}</span>
-      {DIRECTION_OPTS.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => onChange(opt.value)}
-          className={`rounded-lg border px-2.5 py-0.5 text-xs font-semibold transition-all ${
-            value === opt.value
-              ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
-              : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
-          }`}
-        >
-          {opt.label}
-        </button>
-      ))}
+    <div title={tooltip}>
+      <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">{label}</span>
+      <div className="mt-1.5 flex flex-wrap gap-1.5">
+        {DIRECTION_OPTS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
+              value === opt.value
+                ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
+                : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
 
-function FilterBar({
+function FiltersPanel({
   tickerQ, setTickerQ,
   idealFilter, setIdealFilter,
   stackedFilter, setStackedFilter,
   rsiMin, setRsiMin, rsiMax, setRsiMax,
   range52wMin, setRange52wMin,
+  timeframeFilter, toggleTimeframe,
+  onClear, onClose,
   total, filtered,
 }) {
   return (
-    <div className="mb-4 rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-3 flex flex-wrap items-center gap-3">
-      <div className="relative min-w-[140px]">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--c-text-dimmed)] text-xs pointer-events-none">⌕</span>
-        <input
-          type="text"
-          value={tickerQ}
-          onChange={(e) => setTickerQ(e.target.value.toUpperCase())}
-          placeholder="Symbol or name…"
-          className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-hover)] py-1.5 pl-7 pr-3 text-sm text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] focus:border-violet-500/50 focus:outline-none"
-        />
+    <>
+      <div className="fixed inset-0 z-40" onClick={onClose} />
+      <div className="absolute right-0 z-50 mt-2 w-[360px] rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-dropdown)] p-4 shadow-2xl">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-semibold text-[var(--c-text-primary)]">Filters</p>
+          <span className="text-xs text-[var(--c-text-dimmed)]">
+            <span className="font-semibold text-[var(--c-text-primary)]">{filtered}</span> of {total}
+          </span>
+        </div>
+
+        <div className="space-y-4">
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--c-text-dimmed)] text-xs pointer-events-none">⌕</span>
+            <input
+              type="text"
+              value={tickerQ}
+              onChange={(e) => setTickerQ(e.target.value.toUpperCase())}
+              placeholder="Symbol or name…"
+              className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-hover)] py-1.5 pl-7 pr-7 text-sm text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] focus:border-violet-500/50 focus:outline-none"
+            />
+            {tickerQ && (
+              <button
+                onClick={() => setTickerQ('')}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <DirectionToggle
+            label="Ideal Squeeze"
+            value={idealFilter}
+            onChange={setIdealFilter}
+            tooltip="A squeeze (price compression) forming inside an already-established trend, in the direction shown. Bull = building inside an uptrend, Bear = building inside a downtrend."
+          />
+
+          <DirectionToggle
+            label="Stacked EMA"
+            value={stackedFilter}
+            onChange={setStackedFilter}
+            tooltip="Three short-term trend averages lined up in order (fastest on top for Bull, slowest on top for Bear) — a simple trend-alignment check."
+          />
+
+          <div title="Momentum reading, 0-100. Below 40 = oversold, above 65-80 = strong momentum.">
+            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">RSI</span>
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <input
+                type="number" value={rsiMin} onChange={(e) => setRsiMin(e.target.value)} placeholder="Min"
+                className="w-full rounded-lg border border-[var(--c-border)] bg-[var(--c-hover)] px-2 py-1 text-xs text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] focus:border-violet-500/50 focus:outline-none"
+              />
+              <span className="text-[var(--c-text-faint)] text-xs">–</span>
+              <input
+                type="number" value={rsiMax} onChange={(e) => setRsiMax(e.target.value)} placeholder="Max"
+                className="w-full rounded-lg border border-[var(--c-border)] bg-[var(--c-hover)] px-2 py-1 text-xs text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] focus:border-violet-500/50 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div title="Where price sits within its 52-week high/low range. 100% = at the 52-week high.">
+            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">52W Range % ≥</span>
+            <input
+              type="number" value={range52wMin} onChange={(e) => setRange52wMin(e.target.value)} placeholder="0"
+              className="mt-1.5 w-full rounded-lg border border-[var(--c-border)] bg-[var(--c-hover)] px-2 py-1 text-xs text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] focus:border-violet-500/50 focus:outline-none"
+            />
+          </div>
+
+          <div title="Only show tickers currently squeezing on at least one of the checked timeframes.">
+            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Squeezing On</span>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {TIMEFRAME_COLS.map((c) => (
+                <button
+                  key={c.key}
+                  onClick={() => toggleTimeframe(c.key)}
+                  className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
+                    timeframeFilter.has(c.key)
+                      ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
+                      : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={onClear}
+          className="mt-4 w-full rounded-lg border border-[var(--c-border)] py-1.5 text-xs font-medium text-[var(--c-text-secondary)] transition hover:bg-[var(--c-hover)]"
+        >
+          Clear all filters
+        </button>
       </div>
-
-      <DirectionToggle
-        label="Ideal Squeeze"
-        value={idealFilter}
-        onChange={setIdealFilter}
-        tooltip="A squeeze (price compression) forming inside an already-established trend, in the direction shown. Bull = building inside an uptrend, Bear = building inside a downtrend."
-      />
-
-      <DirectionToggle
-        label="Stacked EMA"
-        value={stackedFilter}
-        onChange={setStackedFilter}
-        tooltip="Three short-term trend averages lined up in order (fastest on top for Bull, slowest on top for Bear) — a simple trend-alignment check."
-      />
-
-      <div className="flex items-center gap-1.5" title="Momentum reading, 0-100. Below 40 = oversold, above 65-80 = strong momentum.">
-        <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)] mr-1">RSI</span>
-        <input
-          type="number" value={rsiMin} onChange={(e) => setRsiMin(e.target.value)} placeholder="Min"
-          className="w-16 rounded-lg border border-[var(--c-border)] bg-[var(--c-hover)] px-2 py-0.5 text-xs text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] focus:border-violet-500/50 focus:outline-none"
-        />
-        <span className="text-[var(--c-text-faint)] text-xs">–</span>
-        <input
-          type="number" value={rsiMax} onChange={(e) => setRsiMax(e.target.value)} placeholder="Max"
-          className="w-16 rounded-lg border border-[var(--c-border)] bg-[var(--c-hover)] px-2 py-0.5 text-xs text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] focus:border-violet-500/50 focus:outline-none"
-        />
-      </div>
-
-      <div className="flex items-center gap-1.5" title="Where price sits within its 52-week high/low range. 100% = at the 52-week high.">
-        <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)] mr-1">52W Range % ≥</span>
-        <input
-          type="number" value={range52wMin} onChange={(e) => setRange52wMin(e.target.value)} placeholder="0"
-          className="w-16 rounded-lg border border-[var(--c-border)] bg-[var(--c-hover)] px-2 py-0.5 text-xs text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] focus:border-violet-500/50 focus:outline-none"
-        />
-      </div>
-
-      {filtered < total && (
-        <span className="ml-auto text-xs text-[var(--c-text-dimmed)]">
-          <span className="font-semibold text-[var(--c-text-primary)]">{filtered}</span> of {total}
-        </span>
-      )}
-    </div>
+    </>
   );
 }
 
@@ -193,20 +251,24 @@ export default function SqueezeScanner() {
   const [rows, setRows] = useState([]);
   const [updatedAt, setUpdatedAt] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
-  const [tickerQ, setTickerQ] = useState('');
-  const [idealFilter, setIdealFilter] = useState('off');
-  const [stackedFilter, setStackedFilter] = useState('off');
-  const [rsiMin, setRsiMin] = useState('');
-  const [rsiMax, setRsiMax] = useState('');
-  const [range52wMin, setRange52wMin] = useState('');
+  const [tickerQ, setTickerQ] = useState(DEFAULT_FILTERS.tickerQ);
+  const [idealFilter, setIdealFilter] = useState(DEFAULT_FILTERS.idealFilter);
+  const [stackedFilter, setStackedFilter] = useState(DEFAULT_FILTERS.stackedFilter);
+  const [rsiMin, setRsiMin] = useState(DEFAULT_FILTERS.rsiMin);
+  const [rsiMax, setRsiMax] = useState(DEFAULT_FILTERS.rsiMax);
+  const [range52wMin, setRange52wMin] = useState(DEFAULT_FILTERS.range52wMin);
+  const [timeframeFilter, setTimeframeFilter] = useState(DEFAULT_FILTERS.timeframeFilter);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const [sortKey, setSortKey] = useState('ticker');
   const [sortDir, setSortDir] = useState('asc');
 
   const fetchTickers = (showSkeleton) => {
     if (showSkeleton) setLoading(true);
+    else setRefreshing(true);
     setError(null);
     return apiFetch('/squeeze-scanner/tickers')
       .then((data) => {
@@ -214,7 +276,7 @@ export default function SqueezeScanner() {
         setUpdatedAt(data?.updatedAt ?? null);
       })
       .catch((e) => setError(e.message))
-      .finally(() => { if (showSkeleton) setLoading(false); });
+      .finally(() => { if (showSkeleton) setLoading(false); else setRefreshing(false); });
   };
 
   // Backend refreshes every 15 min; poll a bit faster so a tab left open
@@ -231,6 +293,33 @@ export default function SqueezeScanner() {
     else { setSortKey(key); setSortDir(key === 'ticker' ? 'asc' : 'desc'); }
   };
 
+  const toggleTimeframe = (key) => {
+    setTimeframeFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+
+  const clearFilters = () => {
+    setTickerQ(DEFAULT_FILTERS.tickerQ);
+    setIdealFilter(DEFAULT_FILTERS.idealFilter);
+    setStackedFilter(DEFAULT_FILTERS.stackedFilter);
+    setRsiMin(DEFAULT_FILTERS.rsiMin);
+    setRsiMax(DEFAULT_FILTERS.rsiMax);
+    setRange52wMin(DEFAULT_FILTERS.range52wMin);
+    setTimeframeFilter(new Set());
+  };
+
+  const activeFilterCount =
+    (tickerQ ? 1 : 0) +
+    (idealFilter !== 'off' ? 1 : 0) +
+    (stackedFilter !== 'off' ? 1 : 0) +
+    (rsiMin !== '' ? 1 : 0) +
+    (rsiMax !== '' ? 1 : 0) +
+    (range52wMin !== '' ? 1 : 0) +
+    (timeframeFilter.size > 0 ? 1 : 0);
+
   const filtered = useMemo(() => {
     const q = tickerQ.trim().toUpperCase();
     return rows.filter((r) => {
@@ -240,9 +329,10 @@ export default function SqueezeScanner() {
       if (rsiMin !== '' && (r.rsi == null || r.rsi < Number(rsiMin))) return false;
       if (rsiMax !== '' && (r.rsi == null || r.rsi > Number(rsiMax))) return false;
       if (range52wMin !== '' && (r.range_52w_pct == null || r.range_52w_pct < Number(range52wMin))) return false;
+      if (timeframeFilter.size > 0 && ![...timeframeFilter].some((key) => r[key])) return false;
       return true;
     });
-  }, [rows, tickerQ, idealFilter, stackedFilter, rsiMin, rsiMax, range52wMin]);
+  }, [rows, tickerQ, idealFilter, stackedFilter, rsiMin, rsiMax, range52wMin, timeframeFilter]);
 
   const sorted = useMemo(
     () => [...filtered].sort((a, b) => compareRows(a, b, sortKey, sortDir)),
@@ -260,6 +350,20 @@ export default function SqueezeScanner() {
 
   return (
     <div className="p-4 sm:p-6">
+      <PageGuide
+        guideKey="squeeze-scanner"
+        title="Scanning for compression setups across the QE universe"
+        description="This page scans a fixed list of stocks, ETFs, and crypto proxies for tickers currently compressing (squeezing) and flags trend-aligned setups."
+        accent="violet"
+        steps={[
+          { text: 'Click Filters to narrow the list by Ideal Squeeze direction, Stacked EMA direction, RSI range, 52-week range, or which timeframe(s) are currently squeezing.', targetId: 'sqz-filters-btn' },
+          { text: 'Ideal Squeeze flags price compression forming inside an already-established trend — Bull for uptrends, Bear for downtrends. Stacked EMA is a simpler trend-alignment check on its own.', targetId: 'sqz-table' },
+          { text: 'The 5 / 15 / 30 / 60 / 1D / 1W / 1M columns show how many bars in a row each ticker has been compressing on that timeframe right now — blank means it isn’t squeezing there.', targetId: 'sqz-table' },
+          { text: 'Data refreshes automatically every 5 minutes; click Refresh any time for an immediate update.', targetId: 'sqz-refresh-btn' },
+          { text: 'Export the current filtered list to Excel any time.', targetId: 'sqz-export-btn' },
+        ]}
+      />
+
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-[var(--c-text-primary)]">QE Squeeze Scanner</h1>
@@ -268,13 +372,46 @@ export default function SqueezeScanner() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <div className="relative">
+            <button
+              id="sqz-filters-btn"
+              onClick={() => setFiltersOpen((o) => !o)}
+              className={`relative rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                filtersOpen
+                  ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
+                  : 'border-[var(--c-border)] text-[var(--c-text-secondary)] hover:bg-[var(--c-hover)]'
+              }`}
+            >
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-bold text-white">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+            {filtersOpen && (
+              <FiltersPanel
+                tickerQ={tickerQ} setTickerQ={setTickerQ}
+                idealFilter={idealFilter} setIdealFilter={setIdealFilter}
+                stackedFilter={stackedFilter} setStackedFilter={setStackedFilter}
+                rsiMin={rsiMin} setRsiMin={setRsiMin} rsiMax={rsiMax} setRsiMax={setRsiMax}
+                range52wMin={range52wMin} setRange52wMin={setRange52wMin}
+                timeframeFilter={timeframeFilter} toggleTimeframe={toggleTimeframe}
+                onClear={clearFilters} onClose={() => setFiltersOpen(false)}
+                total={rows.length} filtered={sorted.length}
+              />
+            )}
+          </div>
           <button
+            id="sqz-refresh-btn"
             onClick={() => fetchTickers(false)}
-            className="rounded-lg border border-[var(--c-border)] px-3 py-1.5 text-xs font-medium text-[var(--c-text-secondary)] transition hover:bg-[var(--c-hover)]"
+            disabled={refreshing}
+            className="rounded-lg border border-[var(--c-border)] px-3 py-1.5 text-xs font-medium text-[var(--c-text-secondary)] transition hover:bg-[var(--c-hover)] disabled:opacity-60"
           >
-            Refresh
+            {refreshing ? 'Refreshing…' : 'Refresh'}
           </button>
           <button
+            id="sqz-export-btn"
             onClick={handleExport}
             disabled={sorted.length === 0}
             className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-[var(--c-cyan-strong)] transition hover:bg-cyan-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -283,15 +420,6 @@ export default function SqueezeScanner() {
           </button>
         </div>
       </div>
-
-      <FilterBar
-        tickerQ={tickerQ} setTickerQ={setTickerQ}
-        idealFilter={idealFilter} setIdealFilter={setIdealFilter}
-        stackedFilter={stackedFilter} setStackedFilter={setStackedFilter}
-        rsiMin={rsiMin} setRsiMin={setRsiMin} rsiMax={rsiMax} setRsiMax={setRsiMax}
-        range52wMin={range52wMin} setRange52wMin={setRange52wMin}
-        total={rows.length} filtered={sorted.length}
-      />
 
       {error && (
         <div className="mb-4 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-[var(--c-rose)]">
@@ -306,42 +434,42 @@ export default function SqueezeScanner() {
           ))}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-card)]">
-          <table className="w-full text-xs">
-            <thead>
+        <div id="sqz-table" className="max-h-[70vh] overflow-y-auto rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-card)]">
+          <table className="w-full table-fixed text-xs">
+            <thead className="sticky top-0 z-10 bg-[var(--c-bg-card)]">
               <tr className="border-b border-[var(--c-border-subtle)]">
-                <SortTh label="Symbol" sk="ticker" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="pl-4 pr-3 text-left" />
-                <SortTh label="Name" sk="name" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="px-3 text-left" />
-                <SortTh label="Sector" sk="sector" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="px-3 text-left" />
-                <SortTh label="Close" sk="close" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="px-3 text-right" />
-                <SortTh label="Last" sk="last" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="px-3 text-right" />
-                <SortTh label="Net Chg $" sk="net_chg" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="px-3 text-right" />
-                <SortTh label="Net Chg %" sk="net_chg_pct" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="px-3 text-right" />
-                <SortTh label="RSI" sk="rsi" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="px-3 text-right" />
-                <SortTh label="52W Range %" sk="range_52w_pct" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="px-3 text-right" />
-                <SortTh label="Ideal Squeeze" sk="ideal_squeeze" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="px-3 text-center" />
-                <SortTh label="Stacked EMA" sk="stacked_ema" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="px-3 text-center" />
+                <SortTh label="Symbol" sk="ticker" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[64px] pl-3 pr-2 text-left" />
+                <SortTh label="Name" sk="name" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[150px] px-2 text-left" />
+                <SortTh label="Sector" sk="sector" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[100px] px-2 text-left" />
+                <SortTh label="Close" sk="close" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[64px] px-2 text-center" />
+                <SortTh label="Last" sk="last" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[64px] px-2 text-center" />
+                <SortTh label="Net Chg $" sk="net_chg" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" />
+                <SortTh label="Net Chg %" sk="net_chg_pct" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" />
+                <SortTh label="RSI" sk="rsi" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[48px] px-2 text-center" />
+                <SortTh label="52W Range %" sk="range_52w_pct" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" />
+                <SortTh label="Ideal Squeeze" sk="ideal_squeeze" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[80px] px-2 text-center" />
+                <SortTh label="Stacked EMA" sk="stacked_ema" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[80px] px-2 text-center" />
                 {TIMEFRAME_COLS.map((c) => (
-                  <SortTh key={c.key} label={c.label} sk={c.key} sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="px-3 text-center" />
+                  <SortTh key={c.key} label={c.label} sk={c.key} sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[38px] px-1 text-center" />
                 ))}
               </tr>
             </thead>
             <tbody>
               {sorted.map((r) => (
                 <tr key={r.ticker} className="border-b border-[var(--c-border-subtle)] transition-colors hover:bg-[var(--c-hover)]">
-                  <td className="py-2.5 pl-4 pr-3 font-bold text-[var(--c-text-primary)] whitespace-nowrap">{r.ticker}</td>
-                  <td className="px-3 py-2.5 text-[var(--c-text-secondary)] whitespace-nowrap max-w-[220px] truncate">{r.name ?? '—'}</td>
-                  <td className="px-3 py-2.5 text-[var(--c-text-muted)] whitespace-nowrap">{r.sector ?? '—'}</td>
-                  <td className="px-3 py-2.5 text-right font-mono text-[var(--c-text-secondary)]">{r.close != null ? `$${r.close.toFixed(2)}` : '—'}</td>
-                  <td className="px-3 py-2.5 text-right font-mono text-[var(--c-text-primary)]">{r.last != null ? `$${r.last.toFixed(2)}` : '—'}</td>
-                  <td className="px-3 py-2.5 text-right"><SignedNum value={r.net_chg} fmt={(v) => `$${Math.abs(v).toFixed(2)}`} /></td>
-                  <td className="px-3 py-2.5 text-right"><SignedNum value={r.net_chg_pct} fmt={(v) => `${Math.abs(v).toFixed(2)}%`} /></td>
-                  <td className="px-3 py-2.5 text-right font-mono text-[var(--c-text-secondary)]">{r.rsi != null ? r.rsi.toFixed(1) : '—'}</td>
-                  <td className="px-3 py-2.5 text-right font-mono text-[var(--c-text-secondary)]">{r.range_52w_pct != null ? `${r.range_52w_pct.toFixed(1)}%` : '—'}</td>
-                  <td className="px-3 py-2.5 text-center"><DirectionBadge value={r.ideal_squeeze} /></td>
-                  <td className="px-3 py-2.5 text-center"><DirectionBadge value={r.stacked_ema} /></td>
+                  <td className="py-2.5 pl-3 pr-2 font-bold text-[var(--c-text-primary)] whitespace-nowrap">{r.ticker}</td>
+                  <td className="px-2 py-2.5 text-[var(--c-text-secondary)] whitespace-nowrap truncate" title={r.name ?? ''}>{r.name ?? '—'}</td>
+                  <td className="px-2 py-2.5 text-[var(--c-text-muted)] whitespace-nowrap truncate" title={r.sector ?? ''}>{r.sector ?? '—'}</td>
+                  <td className="px-2 py-2.5 text-center font-mono text-[var(--c-text-secondary)]">{r.close != null ? `$${r.close.toFixed(2)}` : '—'}</td>
+                  <td className="px-2 py-2.5 text-center font-mono text-[var(--c-text-primary)]">{r.last != null ? `$${r.last.toFixed(2)}` : '—'}</td>
+                  <td className="px-2 py-2.5 text-center"><SignedNum value={r.net_chg} fmt={(v) => `$${Math.abs(v).toFixed(2)}`} /></td>
+                  <td className="px-2 py-2.5 text-center"><SignedNum value={r.net_chg_pct} fmt={(v) => `${Math.abs(v).toFixed(2)}%`} /></td>
+                  <td className="px-2 py-2.5 text-center font-mono text-[var(--c-text-secondary)]">{r.rsi != null ? r.rsi.toFixed(1) : '—'}</td>
+                  <td className="px-2 py-2.5 text-center font-mono text-[var(--c-text-secondary)]">{r.range_52w_pct != null ? `${r.range_52w_pct.toFixed(1)}%` : '—'}</td>
+                  <td className="px-2 py-2.5 text-center"><DirectionBadge value={r.ideal_squeeze} /></td>
+                  <td className="px-2 py-2.5 text-center"><DirectionBadge value={r.stacked_ema} /></td>
                   {TIMEFRAME_COLS.map((c) => (
-                    <td key={c.key} className="px-3 py-2.5 text-center"><SqzCount value={r[c.key]} /></td>
+                    <td key={c.key} className="px-1 py-2.5 text-center"><SqzCount value={r[c.key]} /></td>
                   ))}
                 </tr>
               ))}
