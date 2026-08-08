@@ -18,7 +18,7 @@ const TIMEFRAME_COLS = [
   { key: 'sqz_1d', label: '1D', tf: 'Daily' },
   { key: 'sqz_1w', label: '1W', tf: 'Weekly' },
   { key: 'sqz_1m', label: '1M', tf: 'Monthly' },
-].map((c) => ({ ...c, tooltip: `How many ${c.tf} bars in a row this ticker has been squeezing (price compression) right now. Blank means it isn't squeezing on this timeframe.` }));
+].map((c) => ({ ...c, tooltip: `How many ${c.tf} bars in a row this ticker has been in an Ideal Squeeze (either direction) on this timeframe. Blank means it isn't right now — this is a narrower, more deliberate signal than plain compression: it requires the EMA stack to confirm too, not just tight price action.` }));
 
 const IDEAL_SQUEEZE_TOOLTIP = 'A squeeze (price compression) forming inside an already-established trend, in the direction shown. Bull = building inside an uptrend, Bear = building inside a downtrend.';
 const STACKED_EMA_TOOLTIP = 'Three short-term trend averages (9/13/21-day EMAs) lined up in order — fastest-on-top for Bull, slowest-on-top for Bear. A simple trend-alignment check on its own, separate from Ideal Squeeze.';
@@ -223,8 +223,8 @@ function FiltersPanel({
             />
           </div>
 
-          <div title="Only show tickers currently squeezing on at least one of the checked timeframes.">
-            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Squeezing On</span>
+          <div title="Only show tickers currently in an Ideal Squeeze on at least one of the checked timeframes.">
+            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Ideal Squeeze On</span>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {TIMEFRAME_COLS.map((c) => (
                 <button
@@ -375,9 +375,9 @@ export default function SqueezeScanner() {
         description="This page scans a fixed list of stocks, ETFs, and crypto proxies for tickers currently compressing (squeezing) and flags trend-aligned setups."
         accent="violet"
         steps={[
-          { text: 'Click Filters to narrow the list by Ideal Squeeze direction, Stacked EMA direction, RSI range, 52-week range, or which timeframe(s) are currently squeezing.', targetId: 'sqz-filters-btn' },
+          { text: 'Click Filters to narrow the list by Ideal Squeeze direction, Stacked EMA direction, RSI range, 52-week range, or which timeframe(s) are currently in an Ideal Squeeze.', targetId: 'sqz-filters-btn' },
           { text: 'Ideal Squeeze flags price compression forming inside an already-established trend — Bull for uptrends, Bear for downtrends. Stacked EMA is a simpler trend-alignment check on its own.', targetId: 'sqz-table' },
-          { text: 'The 5 / 15 / 30 / 60 / 1D / 1W / 1M columns show how many bars in a row each ticker has been compressing on that timeframe right now — blank means it isn’t squeezing there.', targetId: 'sqz-table' },
+          { text: 'The 5 / 15 / 30 / 60 / 1D / 1W / 1M columns show how many bars in a row each ticker has been in an Ideal Squeeze on that timeframe right now — blank means it isn’t. This is the same Ideal Squeeze condition as the column above, just checked on every timeframe instead of only Daily.', targetId: 'sqz-table' },
           { text: 'Data refreshes automatically every 5 minutes. Click Refresh any time for an immediate update — it also resets the view back to baseline, clearing every filter and the sort order.', targetId: 'sqz-refresh-btn' },
           { text: 'Export the current filtered list to Excel any time.', targetId: 'sqz-export-btn' },
         ]}
