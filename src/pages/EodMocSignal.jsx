@@ -478,18 +478,17 @@ export default function EodMocSignal() {
         </p>
       </div>
 
-      <div className="mb-2 flex justify-start">
-        <button
-          onClick={() => setShowStrategyInfo(true)}
-          className="flex items-center gap-1.5 rounded-full border border-amber-500/20 px-3 py-1 text-xs text-amber-500/70 transition-colors hover:border-amber-500/40 hover:text-[var(--c-amber)]"
-        >
-          <span className="font-bold">$</span> How to Trade this Strategy
-        </button>
-      </div>
-
       <PageGuide
         guideKey="eod-moc"
         accent="amber"
+        extra={
+          <button
+            onClick={() => setShowStrategyInfo(true)}
+            className="flex items-center gap-1.5 rounded-full border border-amber-500/20 px-3 py-1 text-xs text-amber-500/70 transition-colors hover:border-amber-500/40 hover:text-[var(--c-amber)]"
+          >
+            <span className="font-bold">$</span> How to Trade this Strategy
+          </button>
+        }
         title="How EOD-Accounting works"
         description="This page delivers directional trade signals across two windows in the final minutes of each trading day."
         steps={[

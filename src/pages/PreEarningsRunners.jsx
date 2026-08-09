@@ -683,15 +683,6 @@ export default function PreEarningsRunners() {
         </div>
       </div>
 
-      <div className="mb-2 flex justify-start">
-        <button
-          onClick={() => setShowStrategyInfo(true)}
-          className="flex items-center gap-1.5 rounded-full border border-violet-500/20 px-3 py-1 text-xs text-violet-500/70 transition-colors hover:border-violet-500/40 hover:text-[var(--c-violet)]"
-        >
-          <span className="font-bold">$</span> How to Trade this Strategy
-        </button>
-      </div>
-
       {isSummary && (
         <PageGuide
           guideKey="pre-earnings-summary"
@@ -703,6 +694,14 @@ export default function PreEarningsRunners() {
             { text: 'Hot Picks are the system\'s top-ranked stocks right now — scored fresh each day by blending historical patterns with current market conditions. ⚡ means all key conditions are aligned at once.', targetId: 'pg-hotpicks' },
             'Click any stock to open its full research page. Always review the details before placing a trade.',
           ]}
+          extra={
+            <button
+              onClick={() => setShowStrategyInfo(true)}
+              className="flex items-center gap-1.5 rounded-full border border-violet-500/20 px-3 py-1 text-xs text-violet-500/70 transition-colors hover:border-violet-500/40 hover:text-[var(--c-violet)]"
+            >
+              <span className="font-bold">$</span> How to Trade this Strategy
+            </button>
+          }
         />
       )}
 
@@ -857,6 +856,14 @@ export default function PreEarningsRunners() {
               { text: 'The sector filter lets you target a specific industry or avoid one. Focus on sectors with momentum behind them for the strongest setups.', targetId: 'pg-sector-filter' },
               { text: 'Toggle between ⊞ Card view for a snapshot of each signal, or ☰ List view for a sortable table. Click any column header to sort.', targetId: 'pg-signals-list' },
             ]}
+            extra={
+              <button
+                onClick={() => setShowStrategyInfo(true)}
+                className="flex items-center gap-1.5 rounded-full border border-violet-500/20 px-3 py-1 text-xs text-violet-500/70 transition-colors hover:border-violet-500/40 hover:text-[var(--c-violet)]"
+              >
+                <span className="font-bold">$</span> How to Trade this Strategy
+              </button>
+            }
           />
 
           {/* Toolbar */}

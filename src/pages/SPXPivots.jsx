@@ -393,18 +393,17 @@ export default function SPXPivots() {
 
       {isAdmin && <TrendDayBanner />}
 
-      <div className="mb-2 flex justify-start">
-        <button
-          onClick={() => setShowStrategyInfo(true)}
-          className="flex items-center gap-1.5 rounded-full border border-cyan-500/20 px-3 py-1 text-xs text-cyan-500/70 transition-colors hover:border-cyan-500/40 hover:text-[var(--c-cyan)]"
-        >
-          <span className="font-bold">$</span> How to Trade this Strategy
-        </button>
-      </div>
-
       <PageGuide
         guideKey="spx-pivots"
         accent="cyan"
+        extra={
+          <button
+            onClick={() => setShowStrategyInfo(true)}
+            className="flex items-center gap-1.5 rounded-full border border-cyan-500/20 px-3 py-1 text-xs text-cyan-500/70 transition-colors hover:border-cyan-500/40 hover:text-[var(--c-cyan)]"
+          >
+            <span className="font-bold">$</span> How to Trade this Strategy
+          </button>
+        }
         title="Today's SPX pivot levels and recommended Bull Put Spread trades."
         description="Pivot levels are key price zones where the S&P 500 tends to find support or bounce. This page turns those levels into a ready-to-use options trade for your chosen timeframe and risk tolerance."
         steps={[

@@ -371,20 +371,19 @@ export default function SqueezeScanner() {
 
   return (
     <div className="p-4 sm:p-6">
-      <div className="mb-2 flex justify-start">
-        <button
-          onClick={() => setShowStrategyInfo(true)}
-          className="flex items-center gap-1.5 rounded-full border border-violet-500/20 px-3 py-1 text-xs text-violet-500/70 transition-colors hover:border-violet-500/40 hover:text-[var(--c-violet)]"
-        >
-          <span className="font-bold">$</span> How to Trade this Strategy
-        </button>
-      </div>
-
       <PageGuide
         guideKey="squeeze-scanner"
         title="Scanning for compression setups across the QE universe"
         description="This page scans a fixed list of stocks, ETFs, and crypto proxies for tickers currently compressing (squeezing) and flags trend-aligned setups."
         accent="violet"
+        extra={
+          <button
+            onClick={() => setShowStrategyInfo(true)}
+            className="flex items-center gap-1.5 rounded-full border border-violet-500/20 px-3 py-1 text-xs text-violet-500/70 transition-colors hover:border-violet-500/40 hover:text-[var(--c-violet)]"
+          >
+            <span className="font-bold">$</span> How to Trade this Strategy
+          </button>
+        }
         steps={[
           { text: 'Click Filters to narrow the list by Ideal Squeeze direction, Stacked EMA direction, RSI range, 52-week range, or which timeframe(s) are currently in an Ideal Squeeze.', targetId: 'sqz-filters-btn' },
           { text: 'Ideal Squeeze flags price compression forming inside an already-established trend — Bull for uptrends, Bear for downtrends. Stacked EMA is a simpler trend-alignment check on its own.', targetId: 'sqz-table' },
