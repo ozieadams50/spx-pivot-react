@@ -26,10 +26,11 @@ export default function Home() {
         guideKey="home"
         accent="violet"
         title="New here? Here's how this platform is organized."
-        description="You have three trading tools — one for finding stocks that run up before earnings, one for SPX credit spread strategies, and one for end-of-day directional trades. Here's where each one lives."
+        description="You have four trading tools — one for SPX credit spread strategies, one for catching volatility breakouts, one for finding stocks that run up before earnings, and one for end-of-day directional trades. Here's where each one lives."
         steps={[
-          { text: 'Pre-Earnings Runners identifies stocks with the highest probability of rising before their earnings announcement and ranks them daily. If you\'re new, start with Hot Picks — that\'s today\'s top-ranked list.', targetId: 'pg-pre-earnings-card' },
           { text: 'SPX Pivots gives you today\'s key S&P 500 price levels and a ready-to-use Bull Put Spread trade recommendation — updated daily with current market sentiment factored in. Start here for SPX options trades.', targetId: 'pg-spx-pivots-card' },
+          { text: 'QE Squeeze Scanner watches hundreds of tickers for volatility squeezes — stocks trading unusually quiet right before a bigger move — and flags the moment momentum starts breaking in a direction.', targetId: 'pg-squeeze-scanner-card' },
+          { text: 'Pre-Earnings Runners identifies stocks with the highest probability of rising before their earnings announcement and ranks them daily. If you\'re new, start with Hot Picks — that\'s today\'s top-ranked list.', targetId: 'pg-pre-earnings-card' },
           { text: 'EOD-Accounting activates at 3:50 PM ET. The system evaluates market conditions to determine if there\'s a directional edge into the close, then delivers a specific SPX options spread recommendation with exact strikes. Check it in the final minutes of the trading day.', targetId: 'pg-eod-moc-card' },
         ]}
       />
