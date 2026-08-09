@@ -65,7 +65,24 @@ function PillTag({ label, value, threshold, fmt, tooltip }) {
   return <Tooltip text={tooltip}>{pill}</Tooltip>;
 }
 
-function FullPickCard({ pick, rank, navigate, tickers }) {
+function SqueezeBadge({ squeeze }) {
+  if (!squeeze?.ideal_squeeze) return null;
+  const bull = squeeze.ideal_squeeze === 'bull';
+  const days = squeeze.sqz_1d ?? 0;
+  return (
+    <Tooltip text={`Active ${bull ? 'bullish' : 'bearish'} Ideal Squeeze on the Daily chart — ${days} consecutive day${days === 1 ? '' : 's'} of price compression inside an established ${bull ? 'uptrend' : 'downtrend'}.`}>
+      <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-default ${
+        bull
+          ? 'border-emerald-500/40 bg-emerald-500/15 text-[var(--c-emerald-strong)]'
+          : 'border-rose-500/40 bg-rose-500/15 text-[var(--c-rose-strong)]'
+      }`}>
+        🔒 Squeeze
+      </span>
+    </Tooltip>
+  );
+}
+
+function FullPickCard({ pick, rank, navigate, tickers, squeeze }) {
   const urgent  = (pick.days_to_earnings ?? 99) <= 5;
   const metCount = Object.values(pick.override_details ?? {}).filter(Boolean).length;
 
@@ -91,6 +108,7 @@ function FullPickCard({ pick, rank, navigate, tickers }) {
                   ⚡ Override
                 </span>
               )}
+              <SqueezeBadge squeeze={squeeze} />
             </div>
             {pick.company_name && (
               <p className="text-[11px] text-[var(--c-text-dimmed)] mt-0.5 truncate max-w-[200px]">{pick.company_name}</p>
@@ -150,7 +168,7 @@ function FullPickCard({ pick, rank, navigate, tickers }) {
   );
 }
 
-function OnDeckRow({ pick, rank, navigate, tickers }) {
+function OnDeckRow({ pick, rank, navigate, tickers, squeeze }) {
   const urgent  = (pick.days_to_earnings ?? 99) <= 5;
   const metCount = Object.values(pick.override_details ?? {}).filter(Boolean).length;
 
@@ -168,6 +186,7 @@ function OnDeckRow({ pick, rank, navigate, tickers }) {
           <span className="text-sm font-bold text-[var(--c-text-primary)] group-hover:text-[var(--c-text-secondary)]">{pick.ticker}</span>
           <GradeBadge grade={pick.grade} />
           {pick.momentum_override && <span className="text-[9px] text-[var(--c-cyan-strong)] font-bold">⚡</span>}
+          <SqueezeBadge squeeze={squeeze} />
         </div>
 
         <div className="hidden sm:block min-w-0">
@@ -192,9 +211,10 @@ function OnDeckRow({ pick, rank, navigate, tickers }) {
 }
 
 function TierRotationLog() {
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [history, setHistory]         = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [search, setSearch]           = useState('');
+  const [refreshKey, setRefreshKey]   = useState(0);
 
   useEffect(() => {
     const ticker = search.trim().toUpperCase();
@@ -209,7 +229,7 @@ function TierRotationLog() {
         .finally(() => setLoading(false));
     }, ticker ? 300 : 0);
     return () => clearTimeout(handle);
-  }, [search]);
+  }, [search, refreshKey]);
 
   const tierColor = (tier) => {
     if (tier === 'hot')    return 'text-[var(--c-amber-strong)]';
@@ -223,13 +243,24 @@ function TierRotationLog() {
         <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
           Tier Rotation Log
         </h2>
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search ticker…"
-          className="w-40 rounded-lg border border-[var(--c-border)] bg-[var(--c-hover-faint)] px-2.5 py-1 text-xs text-[var(--c-text-primary)] placeholder:text-[var(--c-text-faint)] focus:outline-none focus:border-[var(--c-border-strong,var(--c-border))]"
-        />
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search ticker…"
+            className="w-40 rounded-lg border border-[var(--c-border)] bg-[var(--c-hover-faint)] px-2.5 py-1 text-xs text-[var(--c-text-primary)] placeholder:text-[var(--c-text-faint)] focus:outline-none focus:border-[var(--c-border-strong,var(--c-border))]"
+          />
+          <button
+            type="button"
+            onClick={() => setRefreshKey((k) => k + 1)}
+            disabled={loading}
+            title="Refresh"
+            className="rounded-lg border border-[var(--c-border)] bg-[var(--c-hover-faint)] px-2 py-1 text-xs text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)] hover:bg-[var(--c-hover)] disabled:opacity-50 transition-colors"
+          >
+            <span className={loading ? 'inline-block animate-spin' : 'inline-block'}>↻</span>
+          </button>
+        </div>
       </div>
       {loading ? (
         <div className="animate-pulse space-y-2">
@@ -282,6 +313,7 @@ export default function HotPicksPage() {
   const { role }              = useAuth();
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
+  const [squeezeMap, setSqueezeMap] = useState({});
   const canSeeLog = role === 'admin' || role === 'superuser';
 
   useEffect(() => {
@@ -290,6 +322,14 @@ export default function HotPicksPage() {
       .then(setData)
       .catch(() => setData(null))
       .finally(() => setLoading(false));
+
+    apiFetch('/squeeze-scanner/tickers')
+      .then((res) => {
+        const map = {};
+        for (const row of res?.tickers ?? []) map[row.ticker] = row;
+        setSqueezeMap(map);
+      })
+      .catch(() => setSqueezeMap({}));
   }, []);
 
   const hotPicks = data?.hot_picks ?? [];
@@ -349,7 +389,7 @@ export default function HotPicksPage() {
             {(() => {
               const allTickers = [...hotPicks, ...onDeck].map(p => p.ticker);
               return hotPicks.map((pick, i) => (
-                <FullPickCard key={pick.ticker} pick={pick} rank={i + 1} navigate={navigate} tickers={allTickers} />
+                <FullPickCard key={pick.ticker} pick={pick} rank={i + 1} navigate={navigate} tickers={allTickers} squeeze={squeezeMap[pick.ticker]} />
               ));
             })()}
           </div>
@@ -378,7 +418,7 @@ export default function HotPicksPage() {
               {(() => {
                 const allTickers = [...hotPicks, ...onDeck].map(p => p.ticker);
                 return onDeck.map((pick, i) => (
-                  <OnDeckRow key={pick.ticker} pick={pick} rank={i + 1} navigate={navigate} tickers={allTickers} />
+                  <OnDeckRow key={pick.ticker} pick={pick} rank={i + 1} navigate={navigate} tickers={allTickers} squeeze={squeezeMap[pick.ticker]} />
                 ));
               })()}
             </div>
