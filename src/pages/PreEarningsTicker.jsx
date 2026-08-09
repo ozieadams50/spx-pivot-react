@@ -26,6 +26,23 @@ function ModelBadge({ model }) {
   );
 }
 
+function SqueezeBadge({ squeeze }) {
+  if (!squeeze?.ideal_squeeze) return null;
+  const bull = squeeze.ideal_squeeze === 'bull';
+  return (
+    <span
+      title={`Active ${bull ? 'bullish' : 'bearish'} Ideal Squeeze on the Daily chart — ${squeeze.sqz_1d ?? 0}d`}
+      className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider cursor-default ${
+        bull
+          ? 'border-emerald-500/40 bg-emerald-500/15 text-[var(--c-emerald-strong)]'
+          : 'border-rose-500/40 bg-rose-500/15 text-[var(--c-rose-strong)]'
+      }`}
+    >
+      🔒 Squeeze
+    </span>
+  );
+}
+
 function MetricBar({ label, score, max, rawValue, tip }) {
   const pct   = max > 0 ? Math.min(100, ((score ?? 0) / max) * 100) : 0;
   const color = pct >= 75 ? 'bg-emerald-500' : pct >= 40 ? 'bg-sky-500' : 'bg-slate-600';
@@ -547,6 +564,7 @@ export default function PreEarningsTicker() {
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState(null);
   const [dynamicScore, setDynamicScore] = useState(null);
+  const [squeeze,      setSqueeze]      = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -559,6 +577,12 @@ export default function PreEarningsTicker() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [ticker, earningsDate]);
+
+  useEffect(() => {
+    apiFetch('/squeeze-scanner/tickers')
+      .then((res) => setSqueeze((res?.tickers ?? []).find((r) => r.ticker === ticker) ?? null))
+      .catch(() => setSqueeze(null));
+  }, [ticker]);
 
   const signal = details[activeIdx];
   const cfg    = signal ? (GRADE_CONFIG[signal.grade] ?? GRADE_CONFIG['D']) : null;
@@ -659,6 +683,7 @@ export default function PreEarningsTicker() {
                 <div className="flex flex-wrap items-center gap-3 mb-1">
                   <h1 className="text-4xl font-black text-[var(--c-text-primary)]">{signal.ticker}</h1>
                   <GradeBadge grade={signal.grade} />
+                  <SqueezeBadge squeeze={squeeze} />
                 </div>
                 {signal.company_name && (
                   <p className="text-base font-semibold text-[var(--c-text-secondary)] mb-0.5">{signal.company_name}</p>
