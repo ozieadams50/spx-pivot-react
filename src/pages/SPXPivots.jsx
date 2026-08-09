@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import TradeModal from '../components/TradeModal';
+import StrategyThesisModal from '../components/StrategyThesisModal';
 import { apiFetch } from '../lib/api';
 import PageGuide from '../components/PageGuide';
 import { useAuth } from '../context/AuthContext';
@@ -279,6 +280,7 @@ export default function SPXPivots() {
   const [tradeMode,        setTradeMode]        = useState('Weekly Trade');
   const [selectedStrategy, setSelectedStrategy] = useState('Moderate');
   const [showModal,        setShowModal]        = useState(false);
+  const [showStrategyInfo, setShowStrategyInfo] = useState(false);
   const [pivotData,        setPivotData]        = useState(null);
   const [premiums,         setPremiums]         = useState(null);
   const [histStats,        setHistStats]        = useState(null);
@@ -390,6 +392,15 @@ export default function SPXPivots() {
       </div>
 
       {isAdmin && <TrendDayBanner />}
+
+      <div className="mb-2 flex justify-start">
+        <button
+          onClick={() => setShowStrategyInfo(true)}
+          className="flex items-center gap-1.5 rounded-full border border-cyan-500/20 px-3 py-1 text-xs text-cyan-500/70 transition-colors hover:border-cyan-500/40 hover:text-[var(--c-cyan)]"
+        >
+          <span className="font-bold">$</span> How to Trade this Strategy
+        </button>
+      </div>
 
       <PageGuide
         guideKey="spx-pivots"
@@ -609,6 +620,22 @@ export default function SPXPivots() {
           premiums={premiums}
           deltaMap={deltaMap}
           onClose={() => setShowModal(false)}
+        />
+      )}
+
+      {showStrategyInfo && (
+        <StrategyThesisModal
+          accent="cyan"
+          title="How to Trade: SPX Bull Put Spread"
+          thesis="This strategy sells a Bull Put Spread on the S&P 500 (SPX), positioned below a key support level for your chosen timeframe. The premise: SPX tends to hold above these pivot support zones more often than not, so selling premium below them collects income with your maximum risk capped from the moment you enter."
+          ideas={[
+            "Use the strikes already recommended in the Bull Put Spread table above — they're placed below the nearest support level for your selected risk tier.",
+            'Favor entries when Market Sentiment reads neutral or bullish; be more selective on bearish sentiment days.',
+            'Keep position size consistent and modest — this is a high-probability income strategy, not a concentrated directional bet.',
+            'Consider taking profits early once a spread has captured most of its potential value, rather than holding for the last few dollars into expiration.',
+            'Have a plan to close or roll if SPX breaks decisively below the support level you sold under.',
+          ]}
+          onClose={() => setShowStrategyInfo(false)}
         />
       )}
     </div>

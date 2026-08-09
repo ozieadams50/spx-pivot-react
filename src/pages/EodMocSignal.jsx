@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import PageGuide from '../components/PageGuide';
+import StrategyThesisModal from '../components/StrategyThesisModal';
 
 function getETTime() {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -427,6 +428,7 @@ export default function EodMocSignal() {
   // transition is noticeable even if you're not staring at the countdown.
   const prevPhaseRef = useRef(phase);
   const [flash, setFlash] = useState(false);
+  const [showStrategyInfo, setShowStrategyInfo] = useState(false);
   useEffect(() => {
     const cameFromScalp = prevPhaseRef.current === 'scalp' && phase === 'final';
     prevPhaseRef.current = phase;
@@ -474,6 +476,15 @@ export default function EodMocSignal() {
             ? 'End-of-day directional signal based on dealer positioning and market daily order flow.'
             : "End-of-day directional signal based on dealer's option position exposure and market balance flow."}
         </p>
+      </div>
+
+      <div className="mb-2 flex justify-start">
+        <button
+          onClick={() => setShowStrategyInfo(true)}
+          className="flex items-center gap-1.5 rounded-full border border-amber-500/20 px-3 py-1 text-xs text-amber-500/70 transition-colors hover:border-amber-500/40 hover:text-[var(--c-amber)]"
+        >
+          <span className="font-bold">$</span> How to Trade this Strategy
+        </button>
       </div>
 
       <PageGuide
@@ -529,6 +540,22 @@ export default function EodMocSignal() {
           </>
         )
       }
+
+      {showStrategyInfo && (
+        <StrategyThesisModal
+          accent="amber"
+          title="How to Trade: End-of-Day Directional Signal"
+          thesis="In the final minutes before the close, order flow and dealer positioning can combine to create a short, sharp directional push into the closing bell. This page watches for the specific conditions that have historically lined up with that move and tells you when the setup — and its direction — is in place."
+          ideas={[
+            'Only act when the page confirms a Play Day. On any other day, the safest move is to stay out.',
+            'When a Play Day triggers, consider a same-day-expiration (0DTE) SPX debit spread in the direction shown, entered during the signaled window.',
+            'Keep risk defined — use a spread rather than a single option, sized as a short, quick trade.',
+            "Close at or near the market close. This strategy isn't meant to be held overnight.",
+            'Stay out on days with major late-breaking news — unusual events can override the normal end-of-day pattern.',
+          ]}
+          onClose={() => setShowStrategyInfo(false)}
+        />
+      )}
     </div>
   );
 }

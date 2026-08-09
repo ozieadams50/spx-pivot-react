@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { apiFetch } from '../../lib/api';
 import PageGuide from '../../components/PageGuide';
+import StrategyThesisModal from '../../components/StrategyThesisModal';
 
 const DIRECTION_OPTS = [
   { label: 'Off', value: 'off' },
@@ -271,6 +272,7 @@ export default function SqueezeScanner() {
   const [range52wMin, setRange52wMin] = useState(DEFAULT_FILTERS.range52wMin);
   const [timeframeFilter, setTimeframeFilter] = useState(DEFAULT_FILTERS.timeframeFilter);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [showStrategyInfo, setShowStrategyInfo] = useState(false);
 
   const [sortKey, setSortKey] = useState('ticker');
   const [sortDir, setSortDir] = useState('asc');
@@ -369,6 +371,15 @@ export default function SqueezeScanner() {
 
   return (
     <div className="p-4 sm:p-6">
+      <div className="mb-2 flex justify-start">
+        <button
+          onClick={() => setShowStrategyInfo(true)}
+          className="flex items-center gap-1.5 rounded-full border border-violet-500/20 px-3 py-1 text-xs text-violet-500/70 transition-colors hover:border-violet-500/40 hover:text-[var(--c-violet)]"
+        >
+          <span className="font-bold">$</span> How to Trade this Strategy
+        </button>
+      </div>
+
       <PageGuide
         guideKey="squeeze-scanner"
         title="Scanning for compression setups across the QE universe"
@@ -503,6 +514,22 @@ export default function SqueezeScanner() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {showStrategyInfo && (
+        <StrategyThesisModal
+          accent="violet"
+          title="How to Trade: Volatility Squeeze Breakouts"
+          thesis="A “squeeze” is a period when a stock's price action goes unusually quiet — trading in a tight range with volatility compressed to multi-period lows. Quiet stretches like this often precede a bigger move. This scanner watches for that compression and flags the moment momentum starts breaking in a direction."
+          ideas={[
+            'Prioritize tickers flagged as an Ideal Squeeze — these combine the tightest compression with a fresh momentum trigger.',
+            "Wait for the momentum trigger to fire before entering. A stock can stay compressed for a while — don't front-run the move.",
+            'Trade in the direction the momentum signal points: bullish trigger for long exposure, bearish trigger for short/put exposure.',
+            'Consider a defined-risk options structure (like a debit spread) instead of shares if you want to cap downside if the breakout fails.',
+            'Set a stop near the edge of the range the stock was compressing in — a move back inside that range usually means the breakout failed.',
+          ]}
+          onClose={() => setShowStrategyInfo(false)}
+        />
       )}
     </div>
   );

@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 import { GRADE_CONFIG, MODEL_CONFIG, gradeToStars, STAR_LABELS, STAR_GRADES } from '../data/earningsConfig';
 import PageGuide from '../components/PageGuide';
+import StrategyThesisModal from '../components/StrategyThesisModal';
 
 const GRADES      = STAR_GRADES;
 const GRADE_ORDER = { 'A+': 0, A: 1, B: 2, C: 3, D: 4 };
@@ -507,6 +508,7 @@ export default function PreEarningsRunners() {
   const [sectorFilter,     setSectorFilter]     = useState([]);
   const [hotPicks,         setHotPicks]         = useState({ hot_picks: [], on_deck: [], compute_date: null });
   const [hotLoading,       setHotLoading]       = useState(true);
+  const [showStrategyInfo, setShowStrategyInfo] = useState(false);
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -673,12 +675,21 @@ export default function PreEarningsRunners() {
             <h1 className="text-3xl font-bold text-[var(--c-text-primary)] sm:text-4xl">Pre-Earnings Runners</h1>
             {!loading && (
               <p className="mt-2 text-sm text-[var(--c-text-muted)]">
-                <span className="font-semibold text-[var(--c-text-primary)]">{uniqueTickers}</span> tickers reporting in the next 22 days
+                <span className="font-semibold text-[var(--c-text-primary)]">{uniqueTickers}</span> tickers reporting in the next 32 days
               </p>
             )}
           </div>
           <div className="flex self-start rounded-2xl border border-[var(--c-border)] bg-black/30 p-1 lg:self-auto" />
         </div>
+      </div>
+
+      <div className="mb-2 flex justify-start">
+        <button
+          onClick={() => setShowStrategyInfo(true)}
+          className="flex items-center gap-1.5 rounded-full border border-violet-500/20 px-3 py-1 text-xs text-violet-500/70 transition-colors hover:border-violet-500/40 hover:text-[var(--c-violet)]"
+        >
+          <span className="font-bold">$</span> How to Trade this Strategy
+        </button>
       </div>
 
       {isSummary && (
@@ -1003,6 +1014,22 @@ export default function PreEarningsRunners() {
           )}
           </div>
         </>
+      )}
+
+      {showStrategyInfo && (
+        <StrategyThesisModal
+          accent="violet"
+          title="How to Trade: Pre-Earnings Run-Up"
+          thesis="Some stocks have a track record of drifting higher in the days and weeks leading into their earnings report, as positioning builds ahead of the announcement. This tool ranks stocks daily by how strong that historical pattern is, combined with how much momentum they're showing right now."
+          ideas={[
+            'Start with the top-ranked names in Hot Picks — they carry the strongest combined historical and current-momentum score.',
+            "Enter in the days-to-weeks window before the earnings date — that's where the historical edge has shown up.",
+            'Close the position before the earnings report itself. This is a pre-earnings drift strategy, not a bet on the earnings reaction — the edge does not extend through the report.',
+            "Consider call options or a debit call spread instead of shares if you'd rather cap risk than own stock outright.",
+            'Be cautious with names whose momentum has turned negative recently, even with a strong long-term score — recent trend matters.',
+          ]}
+          onClose={() => setShowStrategyInfo(false)}
+        />
       )}
     </div>
   );
