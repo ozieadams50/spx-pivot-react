@@ -82,13 +82,17 @@ function SectorBar({ d, rank, maxAbs, period, onSelect }) {
 
 // ── Heat map tile ─────────────────────────────────────────────────────────────
 
-function HeatTile({ h, period, onClick }) {
+function HeatTile({ h, period, onClick, squeeze }) {
   const pct = period === '30d' ? h.perf_1m : period === '5d' ? h.perf_5d : h.perf_1d;
   const Tag = onClick ? 'button' : 'div';
+  const hasSqueeze = h.in_signals && squeeze?.ideal_squeeze;
+  const squeezeNote = hasSqueeze
+    ? `\n🔒 ${squeeze.ideal_squeeze === 'bull' ? 'Bullish' : 'Bearish'} Ideal Squeeze — ${squeeze.sqz_1d ?? 0}d`
+    : '';
   return (
     <Tag
       onClick={onClick}
-      title={`${h.ticker}${h.name ? ` — ${h.name}` : ''}\n30d: ${signedFmt(h.perf_1m)}  5d: ${signedFmt(h.perf_5d)}  1d: ${signedFmt(h.perf_1d)}${h.weight != null ? `\nWeight: ${h.weight.toFixed(2)}%` : ''}${onClick ? '\nClick to view Pre-Earnings detail' : ''}`}
+      title={`${h.ticker}${h.name ? ` — ${h.name}` : ''}\n30d: ${signedFmt(h.perf_1m)}  5d: ${signedFmt(h.perf_5d)}  1d: ${signedFmt(h.perf_1d)}${h.weight != null ? `\nWeight: ${h.weight.toFixed(2)}%` : ''}${squeezeNote}${onClick ? '\nClick to view Pre-Earnings detail' : ''}`}
       className={`relative w-full text-left rounded-xl p-2.5 transition-all hover:scale-110 hover:z-10 ${
         onClick ? 'cursor-pointer hover:brightness-125 hover:ring-2 hover:ring-white/30' : 'cursor-default'
       } ${
@@ -98,6 +102,13 @@ function HeatTile({ h, period, onClick }) {
     >
       {h.in_signals && (
         <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-violet-400 shadow-lg shadow-violet-500/50" />
+      )}
+      {hasSqueeze && (
+        <span className={`absolute left-1.5 top-1.5 text-[10px] leading-none ${
+          squeeze.ideal_squeeze === 'bull' ? 'text-[var(--c-emerald-strong)]' : 'text-[var(--c-rose-strong)]'
+        }`}>
+          🔒
+        </span>
       )}
       <p className="text-xs font-bold leading-tight text-[var(--c-text-primary)]">{h.ticker}</p>
       <p className="mt-0.5 font-mono text-[11px] font-semibold text-[var(--c-text-primary)]/85">
@@ -314,7 +325,7 @@ function AllSectorsCrossoverPanel({ onSelect }) {
 
 // ── Heat map view ─────────────────────────────────────────────────────────────
 
-function HeatMap({ etf, onBack }) {
+function HeatMap({ etf, onBack, squeezeMap }) {
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
@@ -437,6 +448,7 @@ function HeatMap({ etf, onBack }) {
                 key={h.ticker}
                 h={h}
                 period={period}
+                squeeze={squeezeMap[h.ticker]}
                 onClick={h.in_signals ? () => navigate(`/earnings/${h.ticker}`) : undefined}
               />
             ))}
@@ -463,12 +475,23 @@ export default function SectorTracker() {
   const [error,       setError]       = useState(null);
   const [sortKey,     setSortKey]     = useState('return');
   const [period,      setPeriod]      = useState('30d');
+  const [squeezeMap,  setSqueezeMap]  = useState({});
 
   useEffect(() => {
     apiFetch('/sectors/performance')
       .then(setPerf)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    apiFetch('/squeeze-scanner/tickers')
+      .then((res) => {
+        const map = {};
+        for (const row of res?.tickers ?? []) map[row.ticker] = row;
+        setSqueezeMap(map);
+      })
+      .catch(() => setSqueezeMap({}));
   }, []);
 
   const sorted = useMemo(() => {
@@ -512,7 +535,7 @@ export default function SectorTracker() {
       )}
 
       {selectedEtf ? (
-        <HeatMap etf={selectedEtf} onBack={() => navigate('/earnings/sectors')} />
+        <HeatMap etf={selectedEtf} onBack={() => navigate('/earnings/sectors')} squeezeMap={squeezeMap} />
       ) : (
         <>
           <PageGuide

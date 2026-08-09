@@ -40,6 +40,19 @@ const OUTCOME_CARD = {
   LOSS: 'border-rose-500/40 bg-rose-500/10',
 };
 
+function SqueezeIcon({ squeeze, className = '' }) {
+  if (!squeeze?.ideal_squeeze) return null;
+  const bull = squeeze.ideal_squeeze === 'bull';
+  return (
+    <span
+      title={`Active ${bull ? 'bullish' : 'bearish'} Ideal Squeeze on the Daily chart — ${squeeze.sqz_1d ?? 0}d`}
+      className={`inline-flex items-center justify-center leading-none cursor-default ${bull ? 'text-[var(--c-emerald-strong)]' : 'text-[var(--c-rose-strong)]'} ${className}`}
+    >
+      🔒
+    </span>
+  );
+}
+
 function TickerCard({ signal, onClick }) {
   const [imgErr, setImgErr] = useState(false);
   const [tip,    setTip]    = useState(false);
@@ -77,6 +90,7 @@ function TickerCard({ signal, onClick }) {
             {signal.outcome === 'WIN' ? '✓' : '✗'}
           </span>
         )}
+        <SqueezeIcon squeeze={signal.squeeze} className="absolute -left-1 -top-1 text-[10px]" />
         {imgErr ? (
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--c-hover)] border border-[var(--c-border)]">
             <span className="text-[10px] font-black text-[var(--c-text-secondary)]">{signal.ticker.slice(0, 4)}</span>
@@ -202,7 +216,10 @@ function CalendarListRow({ signal, navigate }) {
     >
       <td className="py-3 pl-4 pr-3">
         <div>
-          <span className="font-bold text-[var(--c-text-primary)] text-sm">{signal.ticker}</span>
+          <span className="inline-flex items-center gap-1">
+            <span className="font-bold text-[var(--c-text-primary)] text-sm">{signal.ticker}</span>
+            <SqueezeIcon squeeze={signal.squeeze} className="text-xs" />
+          </span>
           {signal.company_name && (
             <p className="text-[10px] text-[var(--c-text-dimmed)] leading-tight">{signal.company_name}</p>
           )}
@@ -262,6 +279,7 @@ export default function EarningsCalendar() {
   const [activeGrades, setActiveGrades] = useState(new Set(GRADES));
   const [sortKey,      setSortKey]      = useState('earnings_date');
   const [sortDir,      setSortDir]      = useState('asc');
+  const [squeezeMap,   setSqueezeMap]   = useState({});
 
   useEffect(() => {
     setLoading(true);
@@ -279,6 +297,16 @@ export default function EarningsCalendar() {
       .finally(() => setLoading(false));
   }, [model]);
 
+  useEffect(() => {
+    apiFetch('/squeeze-scanner/tickers')
+      .then((res) => {
+        const map = {};
+        for (const row of res?.tickers ?? []) map[row.ticker] = row;
+        setSqueezeMap(map);
+      })
+      .catch(() => setSqueezeMap({}));
+  }, []);
+
   const toggleGrade = useCallback((g) => {
     setActiveGrades((prev) => {
       const next = new Set(prev);
@@ -288,9 +316,14 @@ export default function EarningsCalendar() {
     });
   }, []);
 
+  const enrichedSignals = useMemo(
+    () => signals.map((s) => ({ ...s, squeeze: squeezeMap[s.ticker] ?? null })),
+    [signals, squeezeMap],
+  );
+
   const filtered = useMemo(
-    () => signals.filter((s) => activeGrades.has(s.grade)),
-    [signals, activeGrades],
+    () => enrichedSignals.filter((s) => activeGrades.has(s.grade)),
+    [enrichedSignals, activeGrades],
   );
 
   const weekDays = useMemo(
