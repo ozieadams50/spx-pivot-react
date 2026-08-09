@@ -194,13 +194,22 @@ function OnDeckRow({ pick, rank, navigate, tickers }) {
 function TierRotationLog() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    apiFetch('/earnings/tier-history?limit=60')
-      .then(setHistory)
-      .catch(() => setHistory([]))
-      .finally(() => setLoading(false));
-  }, []);
+    const ticker = search.trim().toUpperCase();
+    setLoading(true);
+    const qs = ticker
+      ? `ticker=${encodeURIComponent(ticker)}&limit=200`
+      : 'limit=60';
+    const handle = setTimeout(() => {
+      apiFetch(`/earnings/tier-history?${qs}`)
+        .then(setHistory)
+        .catch(() => setHistory([]))
+        .finally(() => setLoading(false));
+    }, ticker ? 300 : 0);
+    return () => clearTimeout(handle);
+  }, [search]);
 
   const tierColor = (tier) => {
     if (tier === 'hot')    return 'text-[var(--c-amber-strong)]';
@@ -210,9 +219,18 @@ function TierRotationLog() {
 
   return (
     <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6">
-      <h2 className="mb-4 text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
-        Tier Rotation Log
-      </h2>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
+          Tier Rotation Log
+        </h2>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search ticker…"
+          className="w-40 rounded-lg border border-[var(--c-border)] bg-[var(--c-hover-faint)] px-2.5 py-1 text-xs text-[var(--c-text-primary)] placeholder:text-[var(--c-text-faint)] focus:outline-none focus:border-[var(--c-border-strong,var(--c-border))]"
+        />
+      </div>
       {loading ? (
         <div className="animate-pulse space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -220,7 +238,9 @@ function TierRotationLog() {
           ))}
         </div>
       ) : history.length === 0 ? (
-        <p className="text-sm text-[var(--c-text-faint)] text-center py-6">No tier changes recorded yet.</p>
+        <p className="text-sm text-[var(--c-text-faint)] text-center py-6">
+          {search.trim() ? `No tier changes found for "${search.trim().toUpperCase()}".` : 'No tier changes recorded yet.'}
+        </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
