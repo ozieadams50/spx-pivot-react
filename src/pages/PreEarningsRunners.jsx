@@ -63,6 +63,23 @@ function ShortBadge({ pct }) {
   );
 }
 
+function SqueezeBadge({ squeeze }) {
+  if (!squeeze?.ideal_squeeze) return null;
+  const bull = squeeze.ideal_squeeze === 'bull';
+  return (
+    <span
+      title={`Active ${bull ? 'bullish' : 'bearish'} Ideal Squeeze on the Daily chart — ${squeeze.sqz_1d ?? 0}d`}
+      className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider cursor-default ${
+        bull
+          ? 'border-emerald-500/40 bg-emerald-500/15 text-[var(--c-emerald-strong)]'
+          : 'border-rose-500/40 bg-rose-500/15 text-[var(--c-rose-strong)]'
+      }`}
+    >
+      🔒 Squeeze
+    </span>
+  );
+}
+
 function SignedPct({ value, label }) {
   const color =
     value == null ? 'text-[var(--c-text-dimmed)]'
@@ -103,6 +120,7 @@ function SignalCard({ signal, optionsLoading, onClick }) {
         <div className="flex flex-col items-end gap-1.5 shrink-0">
           <GradeBadge grade={signal.grade} />
           <ShortBadge pct={signal.short_float_pct} />
+          <SqueezeBadge squeeze={signal.squeeze} />
         </div>
       </div>
       <div className="mb-3 flex items-baseline gap-1.5">
@@ -207,6 +225,7 @@ function SignalRow({ signal, optionsLoading, onClick }) {
         <div className="flex items-center gap-1.5">
           <span className="font-bold text-[var(--c-text-primary)]">{signal.ticker}</span>
           {signal.is_new && <NewBadge />}
+          <SqueezeBadge squeeze={signal.squeeze} />
         </div>
         {signal.company_name && <span className="text-xs text-[var(--c-text-muted)] hidden sm:block">{signal.company_name}</span>}
         {signal.sector && <span className="text-[10px] text-[var(--c-text-faint)] hidden sm:block">{signal.sector}</span>}
@@ -255,7 +274,7 @@ function SignalRow({ signal, optionsLoading, onClick }) {
 
 // ── Filter bar ────────────────────────────────────────────────────────────────
 
-function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, setMaxDays, minExpMove, setMinExpMove, highShortOnly, setHighShortOnly, total, filtered }) {
+function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, setMaxDays, minExpMove, setMinExpMove, highShortOnly, setHighShortOnly, squeezeOnly, setSqueezeOnly, total, filtered }) {
   return (
     <div className="mb-4 rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-3 flex flex-wrap items-center gap-3">
       <div className="relative min-w-[140px]">
@@ -331,6 +350,18 @@ function FilterBar({ tickerQ, setTickerQ, activeGrades, toggleGrade, maxDays, se
         }`}
       >
         Short &gt;20%
+      </button>
+
+      <button
+        onClick={() => setSqueezeOnly(!squeezeOnly)}
+        title="Show only tickers with an active Ideal Squeeze (bullish or bearish)"
+        className={`rounded-lg border px-2.5 py-0.5 text-xs font-semibold transition-all ${
+          squeezeOnly
+            ? 'border-emerald-500/50 bg-emerald-500/20 text-[var(--c-emerald-strong)]'
+            : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
+        }`}
+      >
+        🔒 In Squeeze
       </button>
 
       {filtered < total && (
@@ -468,6 +499,8 @@ export default function PreEarningsRunners() {
   const [activeGrades,     setActiveGrades]     = useState(new Set(GRADES));
   const [maxDays,          setMaxDays]          = useState(null);
   const [highShortOnly,    setHighShortOnly]    = useState(false);
+  const [squeezeOnly,      setSqueezeOnly]      = useState(false);
+  const [squeezeMap,       setSqueezeMap]       = useState({});
   const [sortKey,          setSortKey]          = useState('score');
   const [sortDir,          setSortDir]          = useState('desc');
   const [minExpMove,       setMinExpMove]       = useState(null);
@@ -528,6 +561,17 @@ export default function PreEarningsRunners() {
       .finally(() => setHotLoading(false));
   }, []);
 
+  // Fetch QE Squeeze Scanner snapshot (independent of model/signals)
+  useEffect(() => {
+    apiFetch('/squeeze-scanner/tickers')
+      .then((res) => {
+        const map = {};
+        for (const row of res?.tickers ?? []) map[row.ticker] = row;
+        setSqueezeMap(map);
+      })
+      .catch(() => setSqueezeMap({}));
+  }, []);
+
   const handleSort = (key) => {
     if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
     else { setSortKey(key); setSortDir('desc'); }
@@ -542,7 +586,7 @@ export default function PreEarningsRunners() {
     });
   };
 
-  // Merge options + short float data
+  // Merge options + short float + squeeze data
   const enriched = useMemo(() =>
     signals.map((s) => {
       const opts = optionsMap[s.ticker] ?? {};
@@ -550,9 +594,10 @@ export default function PreEarningsRunners() {
         ? Math.max(0, Math.round((new Date(opts.expiry_date) - new Date()) / 86400000))
         : null;
       const short_float_pct = shortFloatMap[s.ticker] ?? null;
-      return { ...s, ...opts, dte, short_float_pct };
+      const squeeze = squeezeMap[s.ticker] ?? null;
+      return { ...s, ...opts, dte, short_float_pct, squeeze };
     }),
-    [signals, optionsMap, shortFloatMap],
+    [signals, optionsMap, shortFloatMap, squeezeMap],
   );
 
   // One entry per ticker — prefer Momentum; if same model keep highest score
@@ -597,13 +642,14 @@ export default function PreEarningsRunners() {
       (maxDays == null || (s.days_to_earnings != null && s.days_to_earnings <= maxDays)) &&
       (minExpMove == null || (s.expected_move_pct != null && s.expected_move_pct >= minExpMove)) &&
       (!highShortOnly || (s.short_float_pct != null && s.short_float_pct > 20)) &&
+      (!squeezeOnly || !!s.squeeze?.ideal_squeeze) &&
       (!sectorFilter.length || sectorFilter.includes(s.sector))
     );
     if (view === 'list') {
       return [...filtered].sort((a, b) => compareSignals(a, b, sortKey, sortDir));
     }
     return filtered;
-  }, [enriched, deduped, activeGrades, tickerQ, maxDays, minExpMove, highShortOnly, sectorFilter, view, sortKey, sortDir]);
+  }, [enriched, deduped, activeGrades, tickerQ, maxDays, minExpMove, highShortOnly, squeezeOnly, sectorFilter, view, sortKey, sortDir]);
 
   const recentNew = useMemo(() => {
     const cutoff = Date.now() - 3 * 24 * 60 * 60 * 1000;
@@ -842,6 +888,8 @@ export default function PreEarningsRunners() {
               setMinExpMove={setMinExpMove}
               highShortOnly={highShortOnly}
               setHighShortOnly={setHighShortOnly}
+              squeezeOnly={squeezeOnly}
+              setSqueezeOnly={setSqueezeOnly}
               total={deduped.length}
               filtered={displayed.length}
             />
