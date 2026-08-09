@@ -104,7 +104,7 @@ function HeatTile({ h, period, onClick, squeeze }) {
         <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-violet-400 shadow-lg shadow-violet-500/50" />
       )}
       {hasSqueeze && (
-        <span className={`absolute left-1.5 top-1.5 text-[10px] leading-none ${
+        <span className={`absolute right-1.5 bottom-1.5 text-[10px] leading-none ${
           squeeze.ideal_squeeze === 'bull' ? 'text-[var(--c-emerald-strong)]' : 'text-[var(--c-rose-strong)]'
         }`}>
           🔒
