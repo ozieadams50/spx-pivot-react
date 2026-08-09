@@ -90,7 +90,7 @@ function TickerCard({ signal, onClick }) {
             {signal.outcome === 'WIN' ? '✓' : '✗'}
           </span>
         )}
-        <SqueezeIcon squeeze={signal.squeeze} className="absolute -left-1 -top-1 text-[10px]" />
+        <SqueezeIcon squeeze={signal.squeeze} className="absolute -right-1 -bottom-1 text-[10px]" />
         {imgErr ? (
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--c-hover)] border border-[var(--c-border)]">
             <span className="text-[10px] font-black text-[var(--c-text-secondary)]">{signal.ticker.slice(0, 4)}</span>
