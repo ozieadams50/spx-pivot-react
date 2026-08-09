@@ -395,7 +395,6 @@ export default function SPXPivots() {
 
       <PageGuide
         guideKey="spx-pivots"
-        accent="cyan"
         extra={
           <button
             onClick={() => setShowStrategyInfo(true)}
@@ -624,7 +623,6 @@ export default function SPXPivots() {
 
       {showStrategyInfo && (
         <StrategyThesisModal
-          accent="cyan"
           title="How to Trade: SPX Bull Put Spread"
           thesis="This strategy sells a Bull Put Spread on the S&P 500 (SPX), positioned below a key support level for your chosen timeframe. The premise: SPX tends to hold above these pivot support zones more often than not, so selling premium below them collects income with your maximum risk capped from the moment you enter."
           ideas={[

@@ -1,24 +1,11 @@
-const ACCENTS = {
-  violet: {
-    pill: 'bg-violet-500/10 border-violet-500/20 text-[var(--c-violet)]',
-    num:  'bg-violet-500/15 border-violet-500/30 text-[var(--c-violet)]',
-  },
-  cyan: {
-    pill: 'bg-cyan-500/10 border-cyan-500/20 text-[var(--c-cyan)]',
-    num:  'bg-cyan-500/15 border-cyan-500/30 text-[var(--c-cyan)]',
-  },
-  amber: {
-    pill: 'bg-amber-500/10 border-amber-500/20 text-[var(--c-amber)]',
-    num:  'bg-amber-500/15 border-amber-500/30 text-[var(--c-amber)]',
-  },
-  rose: {
-    pill: 'bg-rose-500/10 border-rose-500/20 text-[var(--c-rose)]',
-    num:  'bg-rose-500/15 border-rose-500/30 text-[var(--c-rose)]',
-  },
+// "How to Trade this Strategy" always renders in this fixed cyan scheme
+// (matching SPX Pivots), same rationale as PageGuide.jsx.
+const C = {
+  pill: 'bg-cyan-500/10 border-cyan-500/20 text-[var(--c-cyan)]',
+  num:  'bg-cyan-500/15 border-cyan-500/30 text-[var(--c-cyan)]',
 };
 
-export default function StrategyThesisModal({ onClose, accent = 'violet', title, thesis, ideas }) {
-  const C = ACCENTS[accent] ?? ACCENTS.violet;
+export default function StrategyThesisModal({ onClose, title, thesis, ideas }) {
 
   return (
     <div

@@ -401,7 +401,6 @@ export default function SPXBacktest() {
 
       <PageGuide
         guideKey="spx-backtest"
-        accent="cyan"
         title="Test any Bull Put Spread strategy against years of SPX historical data."
         description="A backtest lets you see how a trading strategy would have performed in the past — before you risk real money. Adjust your parameters, run the simulation, and evaluate the results."
         steps={[

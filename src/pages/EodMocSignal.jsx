@@ -480,11 +480,10 @@ export default function EodMocSignal() {
 
       <PageGuide
         guideKey="eod-moc"
-        accent="amber"
         extra={
           <button
             onClick={() => setShowStrategyInfo(true)}
-            className="flex items-center gap-1.5 rounded-full border border-amber-500/20 px-3 py-1 text-xs text-amber-500/70 transition-colors hover:border-amber-500/40 hover:text-[var(--c-amber)]"
+            className="flex items-center gap-1.5 rounded-full border border-cyan-500/20 px-3 py-1 text-xs text-cyan-500/70 transition-colors hover:border-cyan-500/40 hover:text-[var(--c-cyan)]"
           >
             <span className="font-bold">$</span> How to Trade this Strategy
           </button>
@@ -542,7 +541,6 @@ export default function EodMocSignal() {
 
       {showStrategyInfo && (
         <StrategyThesisModal
-          accent="amber"
           title="How to Trade: End-of-Day Directional Signal"
           thesis="In the final minutes before the close, order flow and dealer positioning can combine to create a short, sharp directional push into the closing bell. This page watches for the specific conditions that have historically lined up with that move and tells you when the setup — and its direction — is in place."
           ideas={[

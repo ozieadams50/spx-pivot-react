@@ -375,11 +375,10 @@ export default function SqueezeScanner() {
         guideKey="squeeze-scanner"
         title="Scanning for compression setups across the QE universe"
         description="This page scans a fixed list of stocks, ETFs, and crypto proxies for tickers currently compressing (squeezing) and flags trend-aligned setups."
-        accent="violet"
         extra={
           <button
             onClick={() => setShowStrategyInfo(true)}
-            className="flex items-center gap-1.5 rounded-full border border-violet-500/20 px-3 py-1 text-xs text-violet-500/70 transition-colors hover:border-violet-500/40 hover:text-[var(--c-violet)]"
+            className="flex items-center gap-1.5 rounded-full border border-cyan-500/20 px-3 py-1 text-xs text-cyan-500/70 transition-colors hover:border-cyan-500/40 hover:text-[var(--c-cyan)]"
           >
             <span className="font-bold">$</span> How to Trade this Strategy
           </button>
@@ -517,7 +516,6 @@ export default function SqueezeScanner() {
 
       {showStrategyInfo && (
         <StrategyThesisModal
-          accent="violet"
           title="How to Trade: Volatility Squeeze Breakouts"
           thesis="A “squeeze” is a period when a stock's price action goes unusually quiet — trading in a tight range with volatility compressed to multi-period lows. Quiet stretches like this often precede a bigger move. This scanner watches for that compression and flags the moment momentum starts breaking in a direction."
           ideas={[

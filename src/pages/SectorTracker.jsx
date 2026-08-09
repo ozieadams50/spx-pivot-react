@@ -540,7 +540,6 @@ export default function SectorTracker() {
         <>
           <PageGuide
             guideKey="sector-tracker"
-            accent="violet"
             title="See which sectors are leading the market."
             description="Sector momentum matters. A stock in a strong sector has a better chance of following through on its setup."
             steps={[

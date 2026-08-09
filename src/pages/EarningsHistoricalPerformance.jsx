@@ -292,7 +292,6 @@ export default function EarningsHistoricalPerformance() {
 
         <PageGuide
           guideKey="historical-performance"
-          accent="violet"
           title="The scorecard — see exactly how past signals performed."
           description="Every signal the system has generated is tracked here with the real outcome. Use it to evaluate performance across different star ratings and conditions."
           steps={[

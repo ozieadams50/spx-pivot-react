@@ -1,27 +1,14 @@
 import { useState } from 'react';
 
-const ACCENTS = {
-  violet: {
-    pill: 'bg-violet-500/10 border-violet-500/20 text-[var(--c-violet)]',
-    num: 'bg-violet-500/15 border-violet-500/30 text-[var(--c-violet)]',
-    numHover: 'hover:bg-violet-500/30 hover:border-violet-500/60',
-    restore: 'border-violet-500/20 text-violet-500/70 hover:text-[var(--c-violet)] hover:border-violet-500/40',
-    glow: 'rgba(139, 92, 246, 0.55)',
-  },
-  cyan: {
-    pill: 'bg-cyan-500/10 border-cyan-500/20 text-[var(--c-cyan)]',
-    num: 'bg-cyan-500/15 border-cyan-500/30 text-[var(--c-cyan)]',
-    numHover: 'hover:bg-cyan-500/30 hover:border-cyan-500/60',
-    restore: 'border-cyan-500/20 text-cyan-500/70 hover:text-[var(--c-cyan)] hover:border-cyan-500/40',
-    glow: 'rgba(6, 182, 212, 0.55)',
-  },
-  amber: {
-    pill: 'bg-amber-500/10 border-amber-500/20 text-[var(--c-amber)]',
-    num: 'bg-amber-500/15 border-amber-500/30 text-[var(--c-amber)]',
-    numHover: 'hover:bg-amber-500/30 hover:border-amber-500/60',
-    restore: 'border-amber-500/20 text-amber-500/70 hover:text-[var(--c-amber)] hover:border-amber-500/40',
-    glow: 'rgba(245, 158, 11, 0.55)',
-  },
+// "How to Use this Page" always renders in this fixed cyan scheme
+// (matching SPX Pivots) regardless of the page's own accent, so it reads
+// identically everywhere — see feedback_pageguide_fixed_cyan for why.
+const C = {
+  pill: 'bg-cyan-500/10 border-cyan-500/20 text-[var(--c-cyan)]',
+  num: 'bg-cyan-500/15 border-cyan-500/30 text-[var(--c-cyan)]',
+  numHover: 'hover:bg-cyan-500/30 hover:border-cyan-500/60',
+  restore: 'border-cyan-500/20 text-cyan-500/70 hover:text-[var(--c-cyan)] hover:border-cyan-500/40',
+  glow: 'rgba(6, 182, 212, 0.55)',
 };
 
 function applyGlow(id, color) {
@@ -45,11 +32,9 @@ function scrollTo(id, color) {
   setTimeout(() => clearGlow(id), 1800);
 }
 
-export default function PageGuide({ guideKey, title, description, steps, accent = 'violet', extra }) {
+export default function PageGuide({ guideKey, title, description, steps, extra }) {
   const storageKey = `pg-v1-${guideKey}`;
   const [open, setOpen] = useState(() => localStorage.getItem(storageKey) !== '1');
-
-  const C = ACCENTS[accent] ?? ACCENTS.violet;
 
   const close = () => {
     localStorage.setItem(storageKey, '1');

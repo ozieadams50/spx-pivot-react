@@ -623,7 +623,6 @@ export default function PreEarningsTicker() {
       {!isSnapshot && (
         <PageGuide
           guideKey="ticker-detail"
-          accent="violet"
           title="Full research report — review before placing any trade."
           description="This is the complete breakdown of why this stock made the list and how strong the current conditions are."
           steps={[

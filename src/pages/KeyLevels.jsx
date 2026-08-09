@@ -71,7 +71,6 @@ export default function KeyLevels() {
 
       <PageGuide
         guideKey="key-levels"
-        accent="cyan"
         title="See SPX's key price levels for any past trading day."
         description="Pick a date and a timeframe to see the price zones that mattered that day — support and resistance levels, plus the expected trading range."
         steps={[

@@ -355,7 +355,6 @@ export default function HotPicksPage() {
 
       <PageGuide
         guideKey="hot-picks"
-        accent="amber"
         title="Today's top-ranked stocks — re-scored every night."
         description="Hot Picks are scored fresh each day based on current market conditions, not just history. A stock with strong momentum today can outrank a historically strong name that's gone quiet."
         steps={[

@@ -24,7 +24,6 @@ export default function Home() {
 
       <PageGuide
         guideKey="home"
-        accent="violet"
         title="New here? Here's how this platform is organized."
         description="You have four trading tools — one for SPX credit spread strategies, one for catching volatility breakouts, one for finding stocks that run up before earnings, and one for end-of-day directional trades. Here's where each one lives."
         steps={[

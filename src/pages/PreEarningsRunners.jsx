@@ -686,7 +686,6 @@ export default function PreEarningsRunners() {
       {isSummary && (
         <PageGuide
           guideKey="pre-earnings-summary"
-          accent="violet"
           title="Find stocks positioned to move before earnings — then pick the best ones."
           description="This page gives you two ways to find opportunities: star-rating buckets that reflect setup strength, and Hot Picks that are re-ranked daily based on current conditions."
           steps={[
@@ -697,7 +696,7 @@ export default function PreEarningsRunners() {
           extra={
             <button
               onClick={() => setShowStrategyInfo(true)}
-              className="flex items-center gap-1.5 rounded-full border border-violet-500/20 px-3 py-1 text-xs text-violet-500/70 transition-colors hover:border-violet-500/40 hover:text-[var(--c-violet)]"
+              className="flex items-center gap-1.5 rounded-full border border-cyan-500/20 px-3 py-1 text-xs text-cyan-500/70 transition-colors hover:border-cyan-500/40 hover:text-[var(--c-cyan)]"
             >
               <span className="font-bold">$</span> How to Trade this Strategy
             </button>
@@ -848,7 +847,6 @@ export default function PreEarningsRunners() {
         <>
           <PageGuide
             guideKey="all-signals"
-            accent="violet"
             title="Every active pre-earnings signal — filtered and sorted your way."
             description="The full list of all tickers approaching their earnings date. Use the filters to narrow down what matters most to you."
             steps={[
@@ -859,7 +857,7 @@ export default function PreEarningsRunners() {
             extra={
               <button
                 onClick={() => setShowStrategyInfo(true)}
-                className="flex items-center gap-1.5 rounded-full border border-violet-500/20 px-3 py-1 text-xs text-violet-500/70 transition-colors hover:border-violet-500/40 hover:text-[var(--c-violet)]"
+                className="flex items-center gap-1.5 rounded-full border border-cyan-500/20 px-3 py-1 text-xs text-cyan-500/70 transition-colors hover:border-cyan-500/40 hover:text-[var(--c-cyan)]"
               >
                 <span className="font-bold">$</span> How to Trade this Strategy
               </button>
@@ -1025,7 +1023,6 @@ export default function PreEarningsRunners() {
 
       {showStrategyInfo && (
         <StrategyThesisModal
-          accent="violet"
           title="How to Trade: Pre-Earnings Run-Up"
           thesis="Some stocks have a track record of drifting higher in the days and weeks leading into their earnings report, as positioning builds ahead of the announcement. This tool ranks stocks daily by how strong that historical pattern is, combined with how much momentum they're showing right now."
           ideas={[

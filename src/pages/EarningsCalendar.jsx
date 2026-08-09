@@ -472,7 +472,6 @@ export default function EarningsCalendar() {
 
       <PageGuide
         guideKey="earnings-calendar"
-        accent="violet"
         title="How to use the Earnings Calendar"
         description="See every scored stock with an upcoming earnings announcement. Plan your entries for the week ahead and review how past signals played out."
         steps={[
