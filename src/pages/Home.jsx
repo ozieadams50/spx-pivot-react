@@ -31,27 +31,11 @@ export default function Home() {
           { text: 'Pre-Earnings Runners identifies stocks with the highest probability of rising before their earnings announcement and ranks them daily. If you\'re new, start with Hot Picks — that\'s today\'s top-ranked list.', targetId: 'pg-pre-earnings-card' },
           { text: 'SPX Pivots gives you today\'s key S&P 500 price levels and a ready-to-use Bull Put Spread trade recommendation — updated daily with current market sentiment factored in. Start here for SPX options trades.', targetId: 'pg-spx-pivots-card' },
           { text: 'EOD-Accounting activates at 3:50 PM ET. The system evaluates market conditions to determine if there\'s a directional edge into the close, then delivers a specific SPX options spread recommendation with exact strikes. Check it in the final minutes of the trading day.', targetId: 'pg-eod-moc-card' },
-          { text: 'SPX Backtester lets you test any Bull Put Spread strategy against years of historical data before risking real money. Adjust the parameters, run the simulation, and check the win rate and profit factor before committing to a setup.', targetId: 'pg-spx-backtest-card' },
         ]}
       />
 
       {/* App cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
-        {/* Pre-Earnings Runners */}
-        <Link
-          id="pg-pre-earnings-card"
-          to="/earnings"
-          className="group rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6 hover:border-violet-500/30 transition-all"
-        >
-          <div className="mb-4 inline-flex rounded-2xl border border-violet-500/20 bg-violet-500/10 p-3">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[var(--c-violet-strong)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-[var(--c-text-primary)] group-hover:text-[var(--c-violet)] transition-colors">Pre-Earnings Runners</h3>
-          <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">Stocks that historically run up before earnings — scored and ranked daily. Start here.</p>
-        </Link>
 
         {/* SPX Pivots */}
         <Link
@@ -68,6 +52,36 @@ export default function Home() {
           <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">Daily, weekly, and monthly pivot levels with Bull Put Spread recommendations.</p>
         </Link>
 
+        {/* QE Squeeze Scanner */}
+        <Link
+          id="pg-squeeze-scanner-card"
+          to="/squeeze-scanner"
+          className="group rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6 hover:border-rose-500/30 transition-all"
+        >
+          <div className="mb-4 inline-flex rounded-2xl border border-rose-500/20 bg-rose-500/10 p-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[var(--c-rose-strong)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12h4l3 8 4-16 3 8h4" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-[var(--c-text-primary)] group-hover:text-[var(--c-rose)] transition-colors">QE Squeeze Scanner</h3>
+          <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">Scans hundreds of tickers daily for volatility squeeze setups building beneath the surface.</p>
+        </Link>
+
+        {/* Pre-Earnings Runners */}
+        <Link
+          id="pg-pre-earnings-card"
+          to="/earnings"
+          className="group rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6 hover:border-violet-500/30 transition-all"
+        >
+          <div className="mb-4 inline-flex rounded-2xl border border-violet-500/20 bg-violet-500/10 p-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[var(--c-violet-strong)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-[var(--c-text-primary)] group-hover:text-[var(--c-violet)] transition-colors">Pre-Earnings Runners</h3>
+          <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">Stocks that historically run up before earnings — scored and ranked daily. Start here.</p>
+        </Link>
+
         {/* EOD-Accounting */}
         <Link
           id="pg-eod-moc-card"
@@ -81,21 +95,6 @@ export default function Home() {
           </div>
           <h3 className="text-lg font-semibold text-[var(--c-text-primary)] group-hover:text-[var(--c-amber)] transition-colors">EOD-Accounting</h3>
           <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">End-of-day 0DTE spread signal based on dealer positioning and market-on-close imbalance flow.</p>
-        </Link>
-
-        {/* SPX Backtester */}
-        <Link
-          id="pg-spx-backtest-card"
-          to="/spx-backtest"
-          className="group rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-6 hover:border-sky-500/30 transition-all"
-        >
-          <div className="mb-4 inline-flex rounded-2xl border border-sky-500/20 bg-sky-500/10 p-3">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[var(--c-sky-strong)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-[var(--c-text-primary)] group-hover:text-[var(--c-sky)] transition-colors">SPX Backtester</h3>
-          <p className="mt-2 text-sm text-[var(--c-text-dimmed)]">Test any Bull Put Spread strategy against years of SPX historical data.</p>
         </Link>
 
         {/* System Monitor — admin/superuser only */}
