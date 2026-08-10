@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { apiFetch } from '../lib/api';
+import { loadRememberedEmail, saveRememberedEmail, clearRememberedEmail } from '../data/auth';
 
 function subscriptionsFromLevel(subscriptionLevel) {
   return subscriptionLevel && subscriptionLevel !== 'No Access' ? ['spx_pivots'] : [];
@@ -12,9 +13,10 @@ export default function Login() {
   const navigate          = useNavigate();
   const { login }         = useAuth();
   const { loadFromProfile } = useTheme();
-  const [email,        setEmail]        = useState('');
+  const [email,        setEmail]        = useState(() => loadRememberedEmail());
   const [password,     setPassword]     = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe,   setRememberMe]   = useState(() => Boolean(loadRememberedEmail()));
   const [error,        setError]        = useState('');
   const [loading,      setLoading]      = useState(false);
 
@@ -29,6 +31,12 @@ export default function Login() {
         method: 'POST',
         body: JSON.stringify({ email: email.trim(), password }),
       });
+
+      if (rememberMe) {
+        saveRememberedEmail(email.trim());
+      } else {
+        clearRememberedEmail();
+      }
 
       login({
         userId:        user.id,
@@ -106,7 +114,16 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 text-xs text-[var(--c-text-secondary)]">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-[var(--c-border)] text-cyan-500 focus:ring-cyan-500/30"
+                />
+                Remember me
+              </label>
               <Link to="/forgot-password" className="text-xs text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]">
                 Forgot password?
               </Link>

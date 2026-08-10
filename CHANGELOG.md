@@ -2,6 +2,36 @@
 
 ---
 
+## 2026-08-10 — "Remember me" on the login page
+
+### Summary
+Added a "Remember me" checkbox to `src/pages/Login.jsx`. When checked at
+successful sign-in, the entered email is saved to `localStorage` and
+pre-fills the Email field on the next visit; unchecking clears any
+previously remembered email. Only the email is persisted — the password is
+never stored, in any form.
+
+### Implementation
+- `src/data/auth.js` — added `loadRememberedEmail` / `saveRememberedEmail` /
+  `clearRememberedEmail`, following the file's existing load/save/clear
+  helper pattern. Stored under its own `remembered_email` localStorage key,
+  kept deliberately separate from the `auth_session` blob (JWT/token/role)
+  so it's unaffected by login/logout/session-expiry handling.
+- `src/pages/Login.jsx` — `email` and a new `rememberMe` state both
+  initialize from `loadRememberedEmail()` on mount; on successful
+  `POST /auth/login`, saves or clears the remembered email based on the
+  checkbox state.
+
+### Deploy
+Built and deployed via `bash deploy-react.sh` (prod `:3001` + staging
+`:3002`) from `ohlc_fetcher`. Verified working by the user.
+
+### Files Changed
+- `src/data/auth.js`
+- `src/pages/Login.jsx`
+
+---
+
 ## 2026-08-09 — Home page cards, per-strategy trading guides, and unified PageGuide modal
 
 ### Summary
