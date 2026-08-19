@@ -114,9 +114,19 @@ export default function SetMarketSentiment() {
             {draftLoading ? 'Loading Draft...' : 'Load AI Draft'}
           </button>
           {draft && (
-            <p className="mt-2 text-[10px] text-[var(--c-text-faint)] text-center">
-              Draft generated {draft.createdAt?.slice(0, 16).replace('T', ' ')} UTC
-            </p>
+            draft.stale ? (
+              <p className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-300">
+                Heads up: this draft was generated on {draft.draftDate}
+                {draft.ageDays ? ` (${draft.ageDays} day${draft.ageDays === 1 ? '' : 's'} ago)` : ''}
+                {draft.spxAsOf ? `, using the SPX close from ${draft.spxAsOf}` : ''}. The prices and
+                overseas market moves in it are out of date — re-run the draft job before publishing.
+              </p>
+            ) : (
+              <p className="mt-2 text-[10px] text-[var(--c-text-faint)] text-center">
+                Draft generated {draft.createdAt?.slice(0, 16).replace('T', ' ')} UTC
+                {draft.spxAsOf ? ` · SPX close as of ${draft.spxAsOf}` : ''}
+              </p>
+            )
           )}
         </div>
 
