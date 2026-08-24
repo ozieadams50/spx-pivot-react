@@ -40,6 +40,7 @@ const FULL_NAV = [
         title: 'EOD-Accounting', matrixKey: 'apps/eod-moc',
         children: [
           { title: 'Signal', path: '/eod-moc', matrixKey: 'apps/eod-moc/signal' },
+          { title: 'Closing Window', path: '/eod-moc/closing-window', matrixKey: 'apps/eod-moc/closing-window' },
         ],
       },
       {

@@ -40,6 +40,7 @@ import SectorTracker                 from './pages/SectorTracker';
 import HotPicksPage                  from './pages/HotPicksPage';
 import BreakoutScanner               from './pages/BreakoutScanner';
 import EodMocSignal                  from './pages/EodMocSignal';
+import ClosingWindow                 from './pages/ClosingWindow';
 import MocComparisonHistory          from './pages/MocComparisonHistory';
 import ModelCompareChart             from './pages/ModelCompareChart';
 import ClosingPrintAdmin             from './pages/ClosingPrintAdmin';
@@ -89,6 +90,7 @@ function AppRoutes() {
 
         {/* EOD-Accounting */}
         <Route path="eod-moc"            element={<Guard matrixKey="apps/eod-moc/signal"><EodMocSignal /></Guard>} />
+        <Route path="eod-moc/closing-window" element={<Guard matrixKey="apps/eod-moc/closing-window"><ClosingWindow /></Guard>} />
 
         {/* Closing Print */}
         <Route path="closing-print"      element={<Guard matrixKey="apps/closing-print/dashboard"><ClosingPrint /></Guard>} />

@@ -54,12 +54,14 @@ function countdownTo(targetH, targetM) {
 //           see cp_moc_peak) instead of re-evaluating live on every poll, so
 //           a value that crosses the threshold and recedes isn't missed
 //   post  — 4:00 PM ET onward: same result as final, special background gone
+// Same 3:50/3:55/4:00/4:30 PM ET window boundaries as ClosingWindow.jsx — keep in lockstep.
 function windowPhase(et) {
   const t = et.totalMinutes;
   if (t < 15 * 60 + 50) return 'pre';
   if (t < 15 * 60 + 55) return 'scalp';
   if (t < 16 * 60)      return 'final';
-  return 'post';
+  if (t < 16 * 60 + 30) return 'post';
+  return 'ended';
 }
 
 function WindowBadge({ phase }) {
@@ -90,8 +92,8 @@ function WindowBadge({ phase }) {
 }
 
 // Play Day requires MAG7 MOC same sign as SPX MOC, plus one of two paths:
-//   Path A: GEX Ratio <  0.35 AND |SPX MOC| >= $1.5B
-//   Path B: GEX Ratio >= 0.35 AND |SPX MOC| >  $3.5B
+//   Path A: GEX Ratio <= 0.35 AND |SPX MOC| >= $1.5B
+//   Path B: GEX Ratio >  0.35 AND |SPX MOC| >  $3.5B
 // Very: |SPX MOC| > $2B AND |MAG7 MOC| > $1B (unchanged, applies either path --
 // Path B's own $3.5B floor already exceeds $2B, so a Path B Play Day is "Very"
 // unless MAG7 MOC specifically stays under $1B while SPX MOC alone clears $3.5B).
@@ -106,7 +108,7 @@ function evalSignal(gexRatio, spxMoc, mag7Moc) {
   if (spxMoc == null || mag7Moc == null)                     return { play: false, reason: 'moc_missing' };
   if (Math.sign(spxMoc) !== Math.sign(mag7Moc))             return { play: false, reason: 'direction_mismatch' };
 
-  const meetsMoc = gexRatio < PLAY_GEX_RATIO_MAX
+  const meetsMoc = gexRatio <= PLAY_GEX_RATIO_MAX
     ? Math.abs(spxMoc) >= PLAY_SPX_MOC_MIN
     : Math.abs(spxMoc) >  PLAY_GEX_HIGH_MOC_MIN;
   if (!meetsMoc) return { play: false, reason: 'spx_too_small' };
@@ -156,6 +158,30 @@ function LiveSPXBar({ spxData }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function MarketClosedCard() {
+  return (
+    <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-8 text-center shadow-lg">
+      <div className="mb-4 text-5xl">&#128197;</div>
+      <h2 className="mb-3 text-xl font-bold text-[var(--c-text-primary)]">Market Closed</h2>
+      <p className="mx-auto max-w-lg text-sm leading-relaxed text-[var(--c-text-secondary)]">
+        Markets are closed today. The Signal window updates only on trading days — check back on the next market session.
+      </p>
+    </div>
+  );
+}
+
+function SessionEndedCard() {
+  return (
+    <div className="rounded-3xl border border-[var(--c-border)] bg-[var(--c-bg-card)] p-8 text-center shadow-lg">
+      <div className="mb-4 text-5xl">&#127937;</div>
+      <h2 className="mb-3 text-xl font-bold text-[var(--c-text-primary)]">Signal Window Session Ended</h2>
+      <p className="mx-auto max-w-lg text-sm leading-relaxed text-[var(--c-text-secondary)]">
+        Today's Signal window has ended. Check back tomorrow at 3:50 PM ET for the next session.
+      </p>
     </div>
   );
 }
@@ -405,6 +431,7 @@ export default function EodMocSignal() {
 
   const et    = getETTime();
   const phase = simMode ? 'final' : windowPhase(et);
+  const marketClosed = !simMode && cpData?.is_trading_day === false;
 
   const sim        = SIM_SCENARIOS[simIdx];
   const gexRatio   = simMode ? sim.gexRatio : (cpData?.gex?.gamma_notional ?? null);
@@ -522,8 +549,12 @@ export default function EodMocSignal() {
         </>
       )}
 
-      {phase === 'pre'
+      {marketClosed
+        ? <MarketClosedCard />
+        : phase === 'pre'
         ? <WaitingState isAdmin={isAdmin} spxMoc={spxMoc} />
+        : phase === 'ended'
+        ? <SessionEndedCard />
         : (
           <>
             <WindowBadge phase={phase} />

@@ -1,5 +1,5 @@
 const KEY     = 'access_matrix';
-const VERSION = 17;
+const VERSION = 18;
 
 // Flat list of every navigable item — used by both Sidebar and ManageAccess
 export const MENU_ITEMS = [
@@ -27,6 +27,7 @@ export const MENU_ITEMS = [
   { key: 'apps/breakout-scanner/dashboard',          label: 'Dashboard',               level: 2 },
   { key: 'apps/eod-moc',                             label: 'EOD-Accounting',          level: 1 },
   { key: 'apps/eod-moc/signal',                      label: 'Signal',                  level: 2 },
+  { key: 'apps/eod-moc/closing-window',               label: 'Closing Window',          level: 2 },
   { key: 'apps/closing-print',                        label: 'Closing Print',           level: 1 },
   { key: 'apps/closing-print/dashboard',              label: 'Live Dashboard',          level: 2 },
   { key: 'admin/closing-print',                              label: 'Closing Print Admin',     level: 1 },
@@ -79,6 +80,7 @@ export const DEFAULT_MATRIX = {
   'apps/breakout-scanner/dashboard':                { subscriber: false, admin: true,  superuser: true  },
   'apps/eod-moc':                                   { subscriber: true,  admin: true,  superuser: true  },
   'apps/eod-moc/signal':                            { subscriber: true,  admin: true,  superuser: true  },
+  'apps/eod-moc/closing-window':                     { subscriber: true,  admin: true,  superuser: true  },
   'apps/closing-print':                             { subscriber: true,  admin: true,  superuser: true  },
   'apps/closing-print/dashboard':                   { subscriber: true,  admin: true,  superuser: true  },
   'admin/closing-print':                            { subscriber: false, admin: true,  superuser: true  },
