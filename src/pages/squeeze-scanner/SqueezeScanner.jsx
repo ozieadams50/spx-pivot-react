@@ -12,16 +12,15 @@ const DIRECTION_OPTS = [
 ];
 
 const TIMEFRAME_COLS = [
-  { key: 'sqz_5', label: '5', tf: '5-minute' },
   { key: 'sqz_15', label: '15', tf: '15-minute' },
   { key: 'sqz_30', label: '30', tf: '30-minute' },
   { key: 'sqz_60', label: '60', tf: '60-minute (hourly)' },
   { key: 'sqz_1d', label: '1D', tf: 'Daily' },
   { key: 'sqz_1w', label: '1W', tf: 'Weekly' },
   { key: 'sqz_1m', label: '1M', tf: 'Monthly' },
-].map((c) => ({ ...c, tooltip: `How many ${c.tf} bars in a row this ticker has been in an Ideal Squeeze (either direction) on this timeframe. Blank means it isn't right now — this is a narrower, more deliberate signal than plain compression: it requires the EMA stack to confirm too, not just tight price action.` }));
+].map((c) => ({ ...c, tooltip: `Current ${c.tf} squeeze grade for this ticker: ▲/▼ Arrow = tightest squeeze tier + confirmed EMA stack. A = one tier looser, same confirmed stack. A+ = A, plus momentum just turned the right way on this bar's close. Blank means none of these apply right now.` }));
 
-const IDEAL_SQUEEZE_TOOLTIP = 'A squeeze (price compression) forming inside an already-established trend, in the direction shown. Bull = building inside an uptrend, Bear = building inside a downtrend.';
+const IDEAL_SQUEEZE_TOOLTIP = 'Maximum price compression (the tightest squeeze tier) forming inside an already-established trend, in the direction shown. Bull = building inside an uptrend, Bear = building inside a downtrend.';
 const STACKED_EMA_TOOLTIP = 'Three short-term trend averages (9/13/21-day EMAs) lined up in order — fastest-on-top for Bull, slowest-on-top for Bear. A simple trend-alignment check on its own, separate from Ideal Squeeze.';
 const RSI_TOOLTIP = 'Relative Strength Index (14-day) — a 0-100 momentum reading measured against the size of this ticker’s own up days versus down days over its last 14 daily closes, not against other tickers or the market. Below 40 = oversold, 65-80 = strong momentum.';
 const RANGE_52W_TOOLTIP = 'Where the Close sits within this ticker’s own trailing 52-week high/low range. 100% = at the 52-week high, 0% = at the 52-week low.';
@@ -97,9 +96,27 @@ function SignedNum({ value, fmt }) {
   return <span className={`font-mono ${color}`}>{value > 0 ? '+' : ''}{fmt(value)}</span>;
 }
 
-function SqzCount({ value }) {
+// value is one of: 'up'/'down' (Arrow -- corrected Ideal Squeeze, tier 3 +
+// stack), 'A_up'/'A_down' (tier 2 + stack, no Arrow), 'A+_up'/'A+_down'
+// (A plus matching-side momentum color on close), or null/undefined.
+function SqzGrade({ value }) {
   if (!value) return <span className="text-[var(--c-text-faint)]">—</span>;
-  return <span className="font-mono font-semibold text-[var(--c-text-primary)]">{value}</span>;
+  const isBull = value.endsWith('up');
+  const color = isBull ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]';
+  const arrow = isBull ? '▲' : '▼';
+  if (value === 'up' || value === 'down') {
+    return <span className={`text-base font-bold ${color}`} title="Arrow — corrected Ideal Squeeze (tightest tier + confirmed EMA stack)">{arrow}</span>;
+  }
+  const isPlus = value.startsWith('A+');
+  const border = isBull ? 'border-emerald-500/40 bg-emerald-500/15' : 'border-rose-500/40 bg-rose-500/15';
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 rounded-lg border px-1.5 py-0.5 text-[11px] font-bold ${border} ${color}`}
+      title={isPlus ? 'A+ — mid-tier squeeze + confirmed stack, plus momentum just turned the right way' : 'A — mid-tier squeeze + confirmed stack, momentum not yet confirming'}
+    >
+      {isPlus ? 'A+' : 'A'}<span className="text-[9px]">{arrow}</span>
+    </span>
+  );
 }
 
 // ── Sortable header cell (same pattern as PreEarningsRunners.jsx) ──────────
@@ -224,7 +241,7 @@ function FiltersPanel({
             />
           </div>
 
-          <div title="Only show tickers currently in an Ideal Squeeze on at least one of the checked timeframes.">
+          <div title="Only show tickers currently graded A, A+, or Arrow on at least one of the checked timeframes.">
             <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Ideal Squeeze On</span>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {TIMEFRAME_COLS.map((c) => (
@@ -385,8 +402,8 @@ export default function SqueezeScanner() {
         }
         steps={[
           { text: 'Click Filters to narrow the list by Ideal Squeeze direction, Stacked EMA direction, RSI range, 52-week range, or which timeframe(s) are currently in an Ideal Squeeze.', targetId: 'sqz-filters-btn' },
-          { text: 'Ideal Squeeze flags price compression forming inside an already-established trend — Bull for uptrends, Bear for downtrends. Stacked EMA is a simpler trend-alignment check on its own.', targetId: 'sqz-table' },
-          { text: 'The 5 / 15 / 30 / 60 / 1D / 1W / 1M columns show how many bars in a row each ticker has been in an Ideal Squeeze on that timeframe right now — blank means it isn’t. This is the same Ideal Squeeze condition as the column above, just checked on every timeframe instead of only Daily.', targetId: 'sqz-table' },
+          { text: 'Ideal Squeeze flags maximum price compression forming inside an already-established trend — Bull for uptrends, Bear for downtrends. Stacked EMA is a simpler trend-alignment check on its own.', targetId: 'sqz-table' },
+          { text: 'The 15 / 30 / 60 / 1D / 1W / 1M columns grade each ticker on that timeframe right now: ▲/▼ Arrow is the strongest (tightest squeeze + confirmed trend), A is one tier looser, A+ is A with momentum freshly confirming — blank means none apply.', targetId: 'sqz-table' },
           { text: 'Data refreshes automatically every 5 minutes. Click Refresh any time for an immediate update — it also resets the view back to baseline, clearing every filter and the sort order.', targetId: 'sqz-refresh-btn' },
           { text: 'Export the current filtered list to Excel any time.', targetId: 'sqz-export-btn' },
         ]}
@@ -498,7 +515,7 @@ export default function SqueezeScanner() {
                   <td className="px-2 py-2.5 text-center"><DirectionBadge value={r.ideal_squeeze} /></td>
                   <td className="px-2 py-2.5 text-center"><DirectionBadge value={r.stacked_ema} /></td>
                   {TIMEFRAME_COLS.map((c) => (
-                    <td key={c.key} className="px-1 py-2.5 text-center"><SqzCount value={r[c.key]} /></td>
+                    <td key={c.key} className="px-1 py-2.5 text-center"><SqzGrade value={r[c.key]} /></td>
                   ))}
                 </tr>
               ))}
