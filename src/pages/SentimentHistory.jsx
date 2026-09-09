@@ -9,6 +9,33 @@ const SENTIMENTS = {
   'Bearish':            { icon: '🔴', color: 'text-[var(--c-rose)]',    border: 'border-rose-500/30',    bg: 'bg-rose-500/10'    },
 };
 
+// The AI draft template (sentiment_draft.py build_draft()) always uses these
+// exact ALL-CAPS section labels, each on its own line — used to split one
+// long commentary blob into labeled, individually readable sections instead
+// of one run-on paragraph.
+const SECTION_HEADERS = [
+  'GEOPOLITICAL', 'INTERNATIONAL MARKETS', 'TECHNICAL', 'MARKET REGIME',
+  'GOVERNMENT REPORTS', 'ECONOMY, MARKETS & FINANCE', 'MARKET PULSE',
+  'CATALYSTS', 'MARKET NARRATIVE (reference)',
+];
+
+function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+function parseSections(text) {
+  if (!text) return [];
+  const re = new RegExp(`\\n(${SECTION_HEADERS.map(escapeRegex).join('|')})\\n`, 'g');
+  const parts = text.split(re);
+  const sections = [];
+  for (let i = 1; i < parts.length; i += 2) {
+    const title = parts[i];
+    let body = (parts[i + 1] || '').trim();
+    // Trailing "SUGGESTED SENTIMENT: ..." — already shown as the badge, drop it here.
+    body = body.replace(/\n*SUGGESTED SENTIMENT:.*$/s, '').trim();
+    if (body) sections.push({ title, body });
+  }
+  return sections;
+}
+
 function thirtyDaysAgo() {
   const d = new Date(); d.setDate(d.getDate() - 30); return d.toISOString().slice(0, 10);
 }
@@ -21,6 +48,49 @@ function SentimentBadge({ sentiment }) {
     <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${def.border} ${def.bg} ${def.color}`}>
       {def.icon} {sentiment}
     </span>
+  );
+}
+
+function HistoryEntry({ row }) {
+  const [open, setOpen] = useState(false);
+  const sections = parseSections(row.commentary);
+
+  return (
+    <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] overflow-hidden">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full flex-wrap items-center justify-between gap-3 px-5 py-4 text-left transition hover:bg-[var(--c-hover-faint)]"
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="font-mono text-sm font-semibold text-[var(--c-text-primary)]">{row.setDate}</span>
+          <span className="rounded-lg border border-[var(--c-border)] bg-[var(--c-hover)] px-2 py-0.5 text-xs capitalize text-[var(--c-text-secondary)]">{row.pivotType}</span>
+          <SentimentBadge sentiment={row.sentiment} />
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-xs text-[var(--c-text-dimmed)]">{row.setAt?.slice(0, 16).replace('T', ' ')}</span>
+          <span className={`text-[var(--c-text-dimmed)] transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
+        </div>
+      </button>
+
+      {open && (
+        <div className="border-t border-[var(--c-border)] px-5 py-4">
+          {sections.length === 0 ? (
+            row.commentary
+              ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--c-text-muted)]">{row.commentary}</p>
+              : <p className="text-sm text-[var(--c-text-faint)]">No commentary recorded.</p>
+          ) : (
+            <div className="space-y-5">
+              {sections.map((s, i) => (
+                <div key={i}>
+                  <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--c-cyan)]">{s.title}</h3>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--c-text-muted)]">{s.body}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -49,7 +119,7 @@ export default function SentimentHistory() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">Sentiment History</h1>
-          <p className="mt-1 text-sm text-[var(--c-text-muted)]">Historical record of market sentiment settings and subscriber alerts.</p>
+          <p className="mt-1 text-sm text-[var(--c-text-muted)]">Historical record of market sentiment settings and subscriber alerts. Click a row to read the full commentary.</p>
         </div>
         <span className="rounded-full border border-[var(--c-border)] bg-[var(--c-hover)] px-3 py-1 text-xs text-[var(--c-text-muted)]">
           {filtered.length} {filtered.length === 1 ? 'record' : 'records'}
@@ -76,37 +146,14 @@ export default function SentimentHistory() {
       </div>
 
       {loading ? (
-        <div className="space-y-2">{Array.from({length:5}).map((_,i) => <div key={i} className="h-12 animate-pulse rounded-xl bg-[var(--c-hover)]"/>)}</div>
+        <div className="space-y-2">{Array.from({length:5}).map((_,i) => <div key={i} className="h-16 animate-pulse rounded-2xl bg-[var(--c-hover)]"/>)}</div>
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] px-6 py-12 text-center">
           <p className="text-sm text-[var(--c-text-dimmed)]">No sentiment records for this range.</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)]">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[var(--c-border)] text-left text-xs font-semibold uppercase tracking-wider text-[var(--c-text-dimmed)]">
-                <th className="px-5 py-3">Date</th>
-                <th className="px-5 py-3">Pivot</th>
-                <th className="px-5 py-3">Sentiment</th>
-                <th className="px-5 py-3">Set At</th>
-                <th className="px-5 py-3">Commentary</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {filtered.map((row, i) => (
-                <tr key={i} className="transition hover:bg-[var(--c-hover-faint)]">
-                  <td className="px-5 py-3 font-mono text-[var(--c-text-secondary)]">{row.setDate}</td>
-                  <td className="px-5 py-3">
-                    <span className="rounded-lg border border-[var(--c-border)] bg-[var(--c-hover)] px-2 py-0.5 text-xs capitalize text-[var(--c-text-secondary)]">{row.pivotType}</span>
-                  </td>
-                  <td className="px-5 py-3"><SentimentBadge sentiment={row.sentiment} /></td>
-                  <td className="px-5 py-3 font-mono text-xs text-[var(--c-text-dimmed)]">{row.setAt?.slice(0, 16).replace('T', ' ')}</td>
-                  <td className="px-5 py-3 text-[var(--c-text-muted)]">{row.commentary || <span className="text-[var(--c-text-faint)]">—</span>}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-2">
+          {filtered.map((row, i) => <HistoryEntry key={i} row={row} />)}
         </div>
       )}
     </div>
