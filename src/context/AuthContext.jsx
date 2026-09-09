@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
-import { loadAuth, saveAuth, clearAuth } from '../data/auth';
+import { loadAuth, saveAuth, clearAuth, decodeJwtRole } from '../data/auth';
 import { DEFAULT_MATRIX, loadMatrix, saveMatrix } from '../data/accessMatrix';
 import { apiFetch } from '../lib/api';
 
@@ -93,8 +93,13 @@ export function AuthProvider({ children }) {
     setAccessMatrix(matrix);
   }
 
+  // The account's real role per its JWT — immune to setRole()'s local
+  // override, so the switcher's own visibility can always be judged against
+  // who's actually logged in, not whichever role is currently being simulated.
+  const realRole = decodeJwtRole(auth.token) ?? auth.role;
+
   return (
-    <AuthContext.Provider value={{ ...auth, login, logout, setRole, accessMatrix, updateMatrix }}>
+    <AuthContext.Provider value={{ ...auth, realRole, login, logout, setRole, accessMatrix, updateMatrix }}>
       {sessionWarning && (
         <div className="fixed bottom-4 left-1/2 z-[9999] -translate-x-1/2 flex items-center gap-3
                         rounded-2xl border border-amber-500/40 bg-amber-500/10 px-5 py-3 shadow-2xl
