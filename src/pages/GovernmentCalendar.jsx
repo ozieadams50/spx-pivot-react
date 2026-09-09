@@ -132,14 +132,26 @@ export default function GovernmentCalendar() {
               {week.days.length === 0 ? (
                 <p className="px-6 py-8 text-center text-sm text-[var(--c-text-faint)]">No Moderate or Critical events scheduled this week.</p>
               ) : (
-                week.days.map(([dateIso, events]) => (
-                  <div key={dateIso}>
-                    <div className="bg-[var(--c-bg-alt2)] px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--c-text-dimmed)]">
-                      {fmtDayHeader(dateIso)}
+                week.days.map(([dateIso, events]) => {
+                  const isToday = dateIso === data.today;
+                  return (
+                    <div key={dateIso} className={isToday ? 'bg-violet-500/[0.04]' : ''}>
+                      <div className={`flex items-center gap-2 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide ${
+                        isToday
+                          ? 'border-y border-violet-500/30 bg-violet-500/15 text-[var(--c-violet-strong)]'
+                          : 'bg-[var(--c-bg-alt2)] text-[var(--c-text-dimmed)]'
+                      }`}>
+                        {fmtDayHeader(dateIso)}
+                        {isToday && (
+                          <span className="rounded-full bg-violet-500 px-2 py-0.5 text-[9px] font-bold tracking-wider text-white">
+                            TODAY
+                          </span>
+                        )}
+                      </div>
+                      {events.map((ev, i) => <EventRow key={i} ev={ev} />)}
                     </div>
-                    {events.map((ev, i) => <EventRow key={i} ev={ev} />)}
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           ))}
