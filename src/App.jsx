@@ -16,6 +16,7 @@ import CommentaryHistory from './pages/CommentaryHistory';
 import SetMarketSentiment from './pages/SetMarketSentiment';
 import SetGexMoc from './pages/SetGexMoc';
 import SentimentHistory from './pages/SentimentHistory';
+import IntradayMarketPulse from './pages/IntradayMarketPulse';
 import ManageUsers from './pages/ManageUsers';
 import AddUser from './pages/AddUser';
 import ManageApps from './pages/ManageApps';
@@ -107,8 +108,10 @@ function AppRoutes() {
 
         <Route path="admin/closing-print"    element={<Guard matrixKey="admin/closing-print"><ClosingPrintAdmin /></Guard>} />
         <Route path="admin/vix-signals"      element={<Guard matrixKey="admin/closing-print/vix-signals"><VixSignals /></Guard>} />
-        <Route path="spx-pivots/sentiment-history"  element={<Guard matrixKey="apps/spx-pivots/sentiment-history"><SentimentHistory /></Guard>} />
-        <Route path="spx-pivots/commentary-history" element={<Guard matrixKey="apps/spx-pivots/commentary-history"><CommentaryHistory /></Guard>} />
+        {/* Market Sentiment (subscriber) */}
+        <Route path="market-sentiment/intraday-pulse"   element={<Guard matrixKey="apps/market-sentiment/intraday-pulse"><IntradayMarketPulse /></Guard>} />
+        <Route path="market-sentiment/sentiment-history"  element={<Guard matrixKey="apps/market-sentiment/sentiment-history"><SentimentHistory /></Guard>} />
+        <Route path="market-sentiment/commentary-history" element={<Guard matrixKey="apps/market-sentiment/commentary-history"><CommentaryHistory /></Guard>} />
 
         {/* Admin — User Mgmt */}
         <Route path="admin/users"     element={<Guard matrixKey="admin/user-mgmt/manage-users"><ManageUsers /></Guard>} />

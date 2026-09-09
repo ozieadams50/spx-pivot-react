@@ -15,8 +15,14 @@ const FULL_NAV = [
           { title: 'Key Levels',            path: '/spx-pivots/key-levels', matrixKey: 'apps/spx-pivots/key-levels'          },
           { title: 'Historical Performance', path: '/spx-pivots/history', matrixKey: 'apps/spx-pivots/historical-performance' },
           { title: 'Chart View',             path: '/spx-pivots/charts',  matrixKey: 'apps/spx-pivots/chart-view'             },
-          { title: 'Sentiment History',      path: '/spx-pivots/sentiment-history',  matrixKey: 'apps/spx-pivots/sentiment-history'  },
-          { title: 'Commentary History',     path: '/spx-pivots/commentary-history', matrixKey: 'apps/spx-pivots/commentary-history' },
+        ],
+      },
+      {
+        title: 'Market Sentiment', matrixKey: 'apps/market-sentiment',
+        children: [
+          { title: 'Intraday - Market Pulse', path: '/market-sentiment/intraday-pulse',  matrixKey: 'apps/market-sentiment/intraday-pulse'    },
+          { title: 'Sentiment History',       path: '/market-sentiment/sentiment-history', matrixKey: 'apps/market-sentiment/sentiment-history' },
+          { title: 'Commentary History',      path: '/market-sentiment/commentary-history', matrixKey: 'apps/market-sentiment/commentary-history' },
         ],
       },
       {

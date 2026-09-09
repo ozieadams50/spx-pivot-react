@@ -1,5 +1,5 @@
 const KEY     = 'access_matrix';
-const VERSION = 18;
+const VERSION = 19;
 
 // Flat list of every navigable item — used by both Sidebar and ManageAccess
 export const MENU_ITEMS = [
@@ -10,8 +10,10 @@ export const MENU_ITEMS = [
   { key: 'apps/spx-pivots/key-levels',                      label: 'Key Levels',              level: 2 },
   { key: 'apps/spx-pivots/historical-performance',          label: 'Historical Performance',  level: 2 },
   { key: 'apps/spx-pivots/chart-view',                      label: 'Chart View',              level: 2 },
-  { key: 'apps/spx-pivots/sentiment-history',                label: 'Sentiment History',       level: 2 },
-  { key: 'apps/spx-pivots/commentary-history',               label: 'Commentary History',       level: 2 },
+  { key: 'apps/market-sentiment',                           label: 'Market Sentiment',        level: 1 },
+  { key: 'apps/market-sentiment/intraday-pulse',            label: 'Intraday - Market Pulse', level: 2 },
+  { key: 'apps/market-sentiment/sentiment-history',         label: 'Sentiment History',       level: 2 },
+  { key: 'apps/market-sentiment/commentary-history',        label: 'Commentary History',      level: 2 },
   { key: 'apps/spx-backtest',                               label: 'SPX Backtester',          level: 1 },
   { key: 'apps/spx-backtest/run',                           label: 'Run Backtest',            level: 2 },
   { key: 'apps/squeeze-scanner',                            label: 'QE Squeeze Scanner',      level: 1 },
@@ -63,8 +65,10 @@ export const DEFAULT_MATRIX = {
   'apps/spx-pivots/key-levels':                     { subscriber: true,  admin: true,  superuser: true  },
   'apps/spx-pivots/historical-performance':         { subscriber: true,  admin: true,  superuser: true  },
   'apps/spx-pivots/chart-view':                     { subscriber: true,  admin: true,  superuser: true  },
-  'apps/spx-pivots/sentiment-history':             { subscriber: true,  admin: true,  superuser: true  },
-  'apps/spx-pivots/commentary-history':            { subscriber: true,  admin: true,  superuser: true  },
+  'apps/market-sentiment':                          { subscriber: true,  admin: true,  superuser: true  },
+  'apps/market-sentiment/intraday-pulse':           { subscriber: true,  admin: true,  superuser: true  },
+  'apps/market-sentiment/sentiment-history':        { subscriber: true,  admin: true,  superuser: true  },
+  'apps/market-sentiment/commentary-history':       { subscriber: true,  admin: true,  superuser: true  },
   'apps/spx-backtest':                              { subscriber: false, admin: true,  superuser: true  },
   'apps/spx-backtest/run':                          { subscriber: false, admin: true,  superuser: true  },
   'apps/squeeze-scanner':                           { subscriber: true,  admin: true,  superuser: true  },
