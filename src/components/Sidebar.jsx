@@ -18,14 +18,6 @@ const FULL_NAV = [
         ],
       },
       {
-        title: 'Market Sentiment', matrixKey: 'apps/market-sentiment',
-        children: [
-          { title: 'Intraday - Market Pulse', path: '/market-sentiment/intraday-pulse',  matrixKey: 'apps/market-sentiment/intraday-pulse'    },
-          { title: 'Sentiment History',       path: '/market-sentiment/sentiment-history', matrixKey: 'apps/market-sentiment/sentiment-history' },
-          { title: 'Commentary History',      path: '/market-sentiment/commentary-history', matrixKey: 'apps/market-sentiment/commentary-history' },
-        ],
-      },
-      {
         title: 'Pre-Earnings Runners', matrixKey: 'apps/pre-earnings',
         children: [
           { title: 'Summary',     path: '/earnings',            matrixKey: 'apps/pre-earnings/summary'     },
@@ -65,6 +57,14 @@ const FULL_NAV = [
         title: 'QE Squeeze Scanner', matrixKey: 'apps/squeeze-scanner',
         children: [
           { title: 'Dashboard', path: '/squeeze-scanner', matrixKey: 'apps/squeeze-scanner/dashboard' },
+        ],
+      },
+      {
+        title: 'Market Sentiment', matrixKey: 'apps/market-sentiment',
+        children: [
+          { title: 'Intraday - Market Pulse', path: '/market-sentiment/intraday-pulse',  matrixKey: 'apps/market-sentiment/intraday-pulse'    },
+          { title: 'Sentiment History',       path: '/market-sentiment/sentiment-history', matrixKey: 'apps/market-sentiment/sentiment-history' },
+          { title: 'Commentary History',      path: '/market-sentiment/commentary-history', matrixKey: 'apps/market-sentiment/commentary-history' },
         ],
       },
     ],
