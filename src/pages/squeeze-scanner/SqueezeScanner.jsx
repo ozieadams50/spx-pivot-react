@@ -59,11 +59,41 @@ function matchesDirection(value, filter) {
   return value === filter;
 }
 
+// ideal_squeeze / stacked_ema hold 'bull' | 'bear' | null — not numbers, so
+// the generic numeric branch below (`va - vb`) produced NaN for every row
+// and silently no-op'd the sort. Rank them instead: bull above none above bear.
+function directionRank(value) {
+  if (value === 'bull') return 1;
+  if (value === 'bear') return -1;
+  return 0;
+}
+
+// sqz_15/30/60/1d/1w/1m hold the tier strings from SqzGrade: 'up'/'down'
+// (Arrow, tightest tier + confirmed stack), 'A+_up'/'A+_down', 'A_up'/'A_down',
+// or null. Same NaN problem as above — rank by tier strength, with a small
+// same-tier tiebreak so bull/bear don't collapse to one bucket.
+const GRADE_TIER = { up: 3, down: 3, 'A+_up': 2, 'A+_down': 2, A_up: 1, A_down: 1 };
+const GRADE_KEYS = new Set(TIMEFRAME_COLS.map((c) => c.key));
+function gradeRank(value) {
+  if (!value) return 0;
+  return (GRADE_TIER[value] ?? 0) + (value.endsWith('up') ? 0.1 : 0);
+}
+
 function compareRows(a, b, key, dir) {
   if (['ticker', 'name', 'sector'].includes(key)) {
     const va = (a[key] ?? '').toLowerCase();
     const vb = (b[key] ?? '').toLowerCase();
     return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+  }
+  if (key === 'ideal_squeeze' || key === 'stacked_ema') {
+    const va = directionRank(a[key]);
+    const vb = directionRank(b[key]);
+    return dir === 'asc' ? va - vb : vb - va;
+  }
+  if (GRADE_KEYS.has(key)) {
+    const va = gradeRank(a[key]);
+    const vb = gradeRank(b[key]);
+    return dir === 'asc' ? va - vb : vb - va;
   }
   const va = a[key] ?? (dir === 'asc' ? Infinity : -Infinity);
   const vb = b[key] ?? (dir === 'asc' ? Infinity : -Infinity);
