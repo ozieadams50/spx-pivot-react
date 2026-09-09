@@ -230,22 +230,27 @@ export default function TopNavigation({ title, subtitle, onMobileMenuOpen }) {
                     <span className={`mt-1.5 inline-block rounded-lg px-2 py-0.5 text-xs font-semibold ${ROLE_BADGE[role]}`}>
                       {ROLE_LABELS[role]}
                     </span>
-                    {/* Role switcher — for demo/testing */}
-                    <div className="mt-2 flex gap-1">
-                      {Object.entries(ROLE_LABELS).map(([key, label]) => (
-                        <button
-                          key={key}
-                          onClick={() => setRole(key)}
-                          className={`flex-1 rounded-lg py-1 text-[10px] font-semibold transition ${
-                            role === key
-                              ? ROLE_BADGE[key]
-                              : 'bg-[var(--c-hover)] text-[var(--c-text-dimmed)] hover:bg-[var(--c-hover-strong)]'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
+                    {/* Role switcher — dev/testing tool, must never render for a real Subscriber:
+                        setRole() persists straight to localStorage and drives every canAccess()
+                        nav/route check, so showing this to a subscriber let them self-promote to
+                        Admin/Super User and unlock that entire nav surface client-side. */}
+                    {(role === 'admin' || role === 'superuser') && (
+                      <div className="mt-2 flex gap-1">
+                        {Object.entries(ROLE_LABELS).map(([key, label]) => (
+                          <button
+                            key={key}
+                            onClick={() => setRole(key)}
+                            className={`flex-1 rounded-lg py-1 text-[10px] font-semibold transition ${
+                              role === key
+                                ? ROLE_BADGE[key]
+                                : 'bg-[var(--c-hover)] text-[var(--c-text-dimmed)] hover:bg-[var(--c-hover-strong)]'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   {PROFILE_MENU.map((item) => (
                     <Link
