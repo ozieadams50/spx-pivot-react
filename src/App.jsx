@@ -17,6 +17,7 @@ import SetMarketSentiment from './pages/SetMarketSentiment';
 import SetGexMoc from './pages/SetGexMoc';
 import SentimentHistory from './pages/SentimentHistory';
 import IntradayMarketPulse from './pages/IntradayMarketPulse';
+import GovernmentCalendar from './pages/GovernmentCalendar';
 import ManageUsers from './pages/ManageUsers';
 import AddUser from './pages/AddUser';
 import ManageApps from './pages/ManageApps';
@@ -112,6 +113,9 @@ function AppRoutes() {
         <Route path="market-sentiment/intraday-pulse"   element={<Guard matrixKey="apps/market-sentiment/intraday-pulse"><IntradayMarketPulse /></Guard>} />
         <Route path="market-sentiment/sentiment-history"  element={<Guard matrixKey="apps/market-sentiment/sentiment-history"><SentimentHistory /></Guard>} />
         <Route path="market-sentiment/commentary-history" element={<Guard matrixKey="apps/market-sentiment/commentary-history"><CommentaryHistory /></Guard>} />
+
+        {/* Calendars (subscriber) */}
+        <Route path="calendars/government" element={<Guard matrixKey="apps/calendars/government-calendar"><GovernmentCalendar /></Guard>} />
 
         {/* Admin — User Mgmt */}
         <Route path="admin/users"     element={<Guard matrixKey="admin/user-mgmt/manage-users"><ManageUsers /></Guard>} />

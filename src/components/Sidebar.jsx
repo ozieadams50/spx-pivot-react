@@ -67,6 +67,13 @@ const FULL_NAV = [
           { title: 'Commentary History',      path: '/market-sentiment/commentary-history', matrixKey: 'apps/market-sentiment/commentary-history' },
         ],
       },
+      {
+        title: 'Calendars', matrixKey: 'apps/calendars',
+        children: [
+          { title: 'Government Calendar', path: '/calendars/government', matrixKey: 'apps/calendars/government-calendar' },
+          { title: 'Earnings Calendar',    path: '/earnings/calendar',    matrixKey: 'apps/pre-earnings/calendar' },
+        ],
+      },
     ],
   },
   {

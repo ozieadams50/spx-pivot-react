@@ -1,5 +1,5 @@
 const KEY     = 'access_matrix';
-const VERSION = 19;
+const VERSION = 20;
 
 // Flat list of every navigable item — used by both Sidebar and ManageAccess
 export const MENU_ITEMS = [
@@ -32,6 +32,8 @@ export const MENU_ITEMS = [
   { key: 'apps/market-sentiment/intraday-pulse',            label: 'Intraday - Market Pulse', level: 2 },
   { key: 'apps/market-sentiment/sentiment-history',         label: 'Sentiment History',       level: 2 },
   { key: 'apps/market-sentiment/commentary-history',        label: 'Commentary History',      level: 2 },
+  { key: 'apps/calendars',                                  label: 'Calendars',               level: 1 },
+  { key: 'apps/calendars/government-calendar',              label: 'Government Calendar',     level: 2 },
   { key: 'admin/closing-print',                              label: 'Closing Print Admin',     level: 1 },
   { key: 'admin/closing-print/vix-signals',                 label: 'VIX Signals',             level: 2 },
   { key: 'admin',                                           label: 'Admin',                   level: 0 },
@@ -69,6 +71,8 @@ export const DEFAULT_MATRIX = {
   'apps/market-sentiment/intraday-pulse':           { subscriber: true,  admin: true,  superuser: true  },
   'apps/market-sentiment/sentiment-history':        { subscriber: true,  admin: true,  superuser: true  },
   'apps/market-sentiment/commentary-history':       { subscriber: true,  admin: true,  superuser: true  },
+  'apps/calendars':                                 { subscriber: true,  admin: true,  superuser: true  },
+  'apps/calendars/government-calendar':             { subscriber: true,  admin: true,  superuser: true  },
   'apps/spx-backtest':                              { subscriber: false, admin: true,  superuser: true  },
   'apps/spx-backtest/run':                          { subscriber: false, admin: true,  superuser: true  },
   'apps/squeeze-scanner':                           { subscriber: true,  admin: true,  superuser: true  },
