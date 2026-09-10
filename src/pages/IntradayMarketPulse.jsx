@@ -42,7 +42,7 @@ export default function IntradayMarketPulse() {
         <div>
           <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">Intraday Market Pulse</h1>
           <p className="mt-1 text-sm text-[var(--c-text-muted)]">
-            A cross-asset read — yields, oil, credit, safe-haven flows, and sector rotation — refreshed every 30 minutes during the trading day (9:15 AM–4:00 PM ET).
+            A cross-asset read — yields, oil, credit, safe-haven flows, and sector rotation — refreshed every 30 minutes during the trading day (9:15 AM–4:00 PM ET) and hourly overnight (6 PM–9 AM ET), with a progressive view and an overall bullish/bearish/neutral read on every snapshot.
           </p>
         </div>
         {shown && (
@@ -65,14 +65,14 @@ export default function IntradayMarketPulse() {
       ) : !latest?.available ? (
         <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] px-6 py-12 text-center">
           <p className="text-sm text-[var(--c-text-dimmed)]">
-            No Market Pulse snapshots yet today — check back after 9:15 AM ET on a trading day.
+            No Market Pulse snapshots yet for this session — check back after 6 PM ET the evening before, or 9:15 AM ET on a trading day.
           </p>
         </div>
       ) : (
         <>
           {latest.stale && !viewing && (
             <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
-              Heads up: the most recent snapshot on file is from {latest.snapshotDate}, not today. The intraday cron may not have run yet — check back shortly.
+              Heads up: the most recent snapshot on file is from {latest.snapshotDate} {latest.etTime} ET, more than 90 minutes old. The cron may not have run yet — check back shortly.
             </div>
           )}
 
@@ -92,13 +92,14 @@ export default function IntradayMarketPulse() {
                 <button
                   key={h.etTime}
                   onClick={() => setViewing(h.etTime)}
+                  title={h.mode === 'overnight' ? 'Overnight snapshot' : 'Intraday snapshot'}
                   className={`rounded-xl border px-3 py-1.5 text-xs font-mono transition ${
                     viewing === h.etTime
                       ? 'border-cyan-500/50 bg-cyan-500/15 text-[var(--c-cyan)]'
                       : 'border-[var(--c-border)] bg-[var(--c-hover)] text-[var(--c-text-muted)] hover:border-cyan-500/30 hover:text-[var(--c-cyan)]'
                   }`}
                 >
-                  {h.etTime}
+                  {h.mode === 'overnight' ? '☾ ' : ''}{h.etTime}
                 </button>
               ))}
             </div>
