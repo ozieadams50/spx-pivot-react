@@ -356,34 +356,34 @@ export default function SPXPivots() {
         </div>
 
         <div className="flex flex-wrap items-stretch gap-3">
-          {/* GEX badge — daily context only */}
-          {tradeMode === 'Daily Trade' && (loading || data?.gexRatio != null) && (
+          {/* GEX badge */}
+          {(loading || data?.gexRatio != null) && (
             <div className={`rounded-3xl border bg-black/30 px-6 py-5 text-center ${
               !loading && data?.gexRatio != null
                 ? data.gexRatio >= 0.5
                   ? 'border-emerald-500/30'
                   : 'border-rose-500/30'
-                : 'border-[var(--c-border)]'
+                : 'border-white/10'
             }`}>
-              <p className="mb-1 text-xs uppercase tracking-[0.2em] text-[var(--c-text-dimmed)]">GEX</p>
+              <p className="mb-1 text-xs uppercase tracking-[0.2em] text-slate-500">GEX</p>
               {loading ? (
-                <div className="h-8 w-24 animate-pulse rounded-xl bg-[var(--c-hover-strong)]" />
+                <div className="h-8 w-24 animate-pulse rounded-xl bg-white/10" />
               ) : (
                 <>
-                  <p className={`text-2xl font-bold ${data.gexRatio >= 0.5 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]'}`}>
+                  <p className={`text-2xl font-bold ${data.gexRatio >= 0.5 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {data.gexRatio >= 0.5 ? 'Positive' : 'Negative'}
                   </p>
-                  <p className="mt-1 text-xs text-[var(--c-text-dimmed)]">{data.gexRatio.toFixed(2)}</p>
+                  <p className="mt-1 text-xs text-slate-500">{data.gexRatio.toFixed(2)}</p>
                 </>
               )}
             </div>
           )}
 
           {/* Market Sentiment */}
-          <div className="rounded-3xl border border-[var(--c-border)] bg-black/30 px-8 py-5 text-right">
-            <p className="mb-1 text-xs uppercase tracking-[0.2em] text-[var(--c-text-dimmed)]">Market Sentiment</p>
+          <div className="rounded-3xl border border-white/10 bg-black/30 px-8 py-5 text-right">
+            <p className="mb-1 text-xs uppercase tracking-[0.2em] text-slate-500">Market Sentiment</p>
             {loading ? (
-              <div className="h-10 w-40 animate-pulse rounded-xl bg-[var(--c-hover-strong)]" />
+              <div className="h-10 w-40 animate-pulse rounded-xl bg-white/10" />
             ) : (
               <p className={`text-3xl font-bold sm:text-4xl ${sentimentClass}`}>{data?.sentiment ?? '—'}</p>
             )}
@@ -468,12 +468,12 @@ export default function SPXPivots() {
               )}
             </div>
 
-            {/* MOC imbalance chip — daily context only */}
-            {tradeMode === 'Daily Trade' && !loading && data?.spxMoc != null && (
+            {/* MOC imbalance chip */}
+            {!loading && data?.spxMoc != null && (
               <div className={`inline-flex items-center gap-2 self-start rounded-2xl border px-4 py-2 text-sm font-semibold lg:self-auto ${
                 data.spxMoc > 0
-                  ? 'border-emerald-500/30 bg-emerald-500/10 text-[var(--c-emerald-strong)]'
-                  : 'border-rose-500/30 bg-rose-500/10 text-[var(--c-rose-strong)]'
+                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                  : 'border-rose-500/30 bg-rose-500/10 text-rose-300'
               }`}>
                 <span>{data.spxMoc > 0 ? '🟢' : '🔴'}</span>
                 <span>
