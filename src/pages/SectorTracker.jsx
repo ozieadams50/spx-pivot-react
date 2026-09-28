@@ -111,8 +111,20 @@ function SectorBar({ d, rank, maxAbs, period, onSelect }) {
 
 // ── Heat map tile ─────────────────────────────────────────────────────────────
 
-function HeatTile({ h, period, onClick, squeeze }) {
+const PERIOD_KEY = { '30d': '1m', '5d': '5d', '1d': '1d' };
+
+function tileRs(v) {
+  if (v == null) return '—';
+  return `${v > 0 ? '+' : ''}${v.toFixed(1)}`;
+}
+
+function HeatTile({ h, period, etf, onClick, squeeze }) {
   const pct = period === '30d' ? h.perf_1m : period === '5d' ? h.perf_5d : h.perf_1d;
+  const pk  = PERIOD_KEY[period];
+  const rsNote = `
+RS vs SPY — 30d: ${signedFmt(h.rs_spy_1m)}  5d: ${signedFmt(h.rs_spy_5d)}  1d: ${signedFmt(h.rs_spy_1d)}`
+    + `
+RS vs ${etf} — 30d: ${signedFmt(h.rs_etf_1m)}  5d: ${signedFmt(h.rs_etf_5d)}  1d: ${signedFmt(h.rs_etf_1d)}`;
   const Tag = onClick ? 'button' : 'div';
   const hasSqueeze = h.in_signals && squeeze?.ideal_squeeze;
   const squeezeNote = hasSqueeze
@@ -121,7 +133,7 @@ function HeatTile({ h, period, onClick, squeeze }) {
   return (
     <Tag
       onClick={onClick}
-      title={`${h.ticker}${h.name ? ` — ${h.name}` : ''}\n30d: ${signedFmt(h.perf_1m)}  5d: ${signedFmt(h.perf_5d)}  1d: ${signedFmt(h.perf_1d)}${h.weight != null ? `\nWeight: ${h.weight.toFixed(2)}%` : ''}${squeezeNote}${onClick ? '\nClick to view Pre-Earnings detail' : ''}`}
+      title={`${h.ticker}${h.name ? ` — ${h.name}` : ''}\n30d: ${signedFmt(h.perf_1m)}  5d: ${signedFmt(h.perf_5d)}  1d: ${signedFmt(h.perf_1d)}${rsNote}${h.weight != null ? `\nWeight: ${h.weight.toFixed(2)}%` : ''}${squeezeNote}${onClick ? '\nClick to view Pre-Earnings detail' : ''}`}
       className={`relative w-full text-left rounded-xl p-2.5 transition-all hover:scale-110 hover:z-10 ${
         onClick ? 'cursor-pointer hover:brightness-125 hover:ring-2 hover:ring-white/30' : 'cursor-default'
       } ${
@@ -142,6 +154,12 @@ function HeatTile({ h, period, onClick, squeeze }) {
       <p className="text-xs font-bold leading-tight text-[var(--c-text-primary)]">{h.ticker}</p>
       <p className="mt-0.5 font-mono text-[11px] font-semibold text-[var(--c-text-primary)]/85">
         {pct != null ? signedFmt(pct) : '—'}
+      </p>
+      <p className="mt-0.5 font-mono text-[9px] leading-tight text-white/70">
+        <span className="text-white/45">SPY</span> {tileRs(h[`rs_spy_${pk}`])}
+      </p>
+      <p className="font-mono text-[9px] leading-tight text-white/70">
+        <span className="text-white/45">ETF</span> {tileRs(h[`rs_etf_${pk}`])}
       </p>
       {h.weight != null && (
         <p className="mt-0.5 text-[9px] text-[var(--c-text-primary)]/45">{h.weight.toFixed(1)}%</p>
@@ -354,6 +372,32 @@ function AllSectorsCrossoverPanel({ onSelect }) {
 
 // ── Heat map view ─────────────────────────────────────────────────────────────
 
+function HoldingsBenchmarks({ data, period }) {
+  const rows = [['SPY', 'spy'], [data.etf_ticker, 'etf']];
+  return (
+    <div className="mb-3 space-y-1 text-xs text-[var(--c-text-faint)]">
+      {rows.map(([label, prefix]) => (
+        <p key={prefix}>
+          <span className="font-semibold text-[var(--c-text-secondary)]">{label}</span> benchmark:{' '}
+          {RS_PERIODS.map(([val, plabel], i) => {
+            const v = data[`${prefix}_${PERIOD_KEY[val]}`];
+            return (
+              <span key={val}>
+                {i > 0 && ' · '}
+                <span className={val === period ? 'font-semibold text-[var(--c-text-secondary)]' : ''}>{plabel}</span>{' '}
+                <span className={`font-mono ${rsColor(v)}`}>{signedFmt(v)}</span>
+              </span>
+            );
+          })}
+        </p>
+      ))}
+      <p className="text-[10px]">
+        Each tile's <span className="font-semibold">SPY</span> and <span className="font-semibold">ETF</span> lines show relative strength for the selected period — how many % the stock beat (+) or lagged (−) SPY and its own sector ETF. Hover a tile for all three periods.
+      </p>
+    </div>
+  );
+}
+
 function HeatMap({ etf, onBack, squeezeMap }) {
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
@@ -471,12 +515,14 @@ function HeatMap({ etf, onBack, squeezeMap }) {
       {!loading && data && data.holdings.length > 0 && (
         <>
           <Legend />
+          <HoldingsBenchmarks data={data} period={period} />
           <div className="grid grid-cols-5 sm:grid-cols-7 lg:grid-cols-10 xl:grid-cols-12 gap-2">
             {sorted.map((h) => (
               <HeatTile
                 key={h.ticker}
                 h={h}
                 period={period}
+                etf={etf}
                 squeeze={squeezeMap[h.ticker]}
                 onClick={h.in_signals ? () => navigate(`/earnings/${h.ticker}`) : undefined}
               />
@@ -620,7 +666,7 @@ export default function SectorTracker() {
             <p className="mb-2 text-xs text-[var(--c-text-faint)]">
               SPY benchmark:{' '}
               {RS_PERIODS.map(([val, label], i) => {
-                const v = perf[0][`spy_${val === '30d' ? '1m' : val}`];
+                const v = perf[0][`spy_${PERIOD_KEY[val]}`];
                 return (
                   <span key={val}>
                     {i > 0 && ' · '}
