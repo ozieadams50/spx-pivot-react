@@ -544,7 +544,7 @@ export default function SectorTracker() {
             description="Sector momentum matters. A stock in a strong sector has a better chance of following through on its setup."
             steps={[
               { text: 'Bars show each S&P 500 sector\'s recent performance — green = gaining, red = losing. The top sectors are highlighted, showing where momentum is strongest.', targetId: 'pg-sector-bars' },
-              { text: 'Use the Return / Weight toggle to switch between ranking by performance vs. index weight, and the 30 Day / 5 Day / 1 Day toggle to change the return period.', targetId: 'pg-sector-sort' },
+              { text: 'Use the Return / Weight toggle to switch between ranking by performance vs. index weight, and the 30 Day / 5 Day / 1 Day toggle to change the return period. These are calendar days, not trading days — if the start date lands on a weekend or holiday, the last close before it is used.', targetId: 'pg-sector-sort' },
               'Click any sector row to drill into the individual holdings. Stocks with a violet dot are in our active signals.',
             ]}
           />
