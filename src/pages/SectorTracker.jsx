@@ -30,6 +30,34 @@ function periodValue(d, period) {
   return period === '30d' ? d.perf_1m : period === '5d' ? d.perf_5d : d.perf_1d;
 }
 
+const RS_PERIODS = [['30d', '30D', 'rs_1m'], ['5d', '5D', 'rs_5d'], ['1d', '1D', 'rs_1d']];
+
+function rsColor(v) {
+  if (v == null) return 'text-[var(--c-text-faint)]';
+  return v >= 0 ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]';
+}
+
+// Relative strength vs SPY for all three periods; the selected period is emphasized.
+function RsVsSpy({ d, period }) {
+  return (
+    <div
+      className="flex shrink-0 items-center gap-2 rounded-lg border border-[var(--c-border)] bg-black/20 px-2 py-1"
+      title={`Relative strength vs SPY — how much ${d.etf_ticker} beat (+) or lagged (−) SPY over the same period`}
+    >
+      <span className="text-[9px] font-semibold uppercase tracking-wider text-[var(--c-text-faint)]">vs SPY</span>
+      {RS_PERIODS.map(([val, label, key]) => {
+        const active = val === period;
+        return (
+          <span key={val} className={`${active ? '' : 'hidden sm:flex'} flex w-14 flex-col items-end leading-tight`}>
+            <span className={`text-[9px] ${active ? 'text-[var(--c-violet)] font-bold' : 'text-[var(--c-text-faint)]'}`}>{label}</span>
+            <span className={`font-mono text-xs ${active ? 'font-bold' : 'opacity-70'} ${rsColor(d[key])}`}>{signedFmt(d[key])}</span>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 function SectorBar({ d, rank, maxAbs, period, onSelect }) {
   const pct    = periodValue(d, period) ?? 0;
   const barPct = maxAbs > 0 ? (Math.abs(pct) / maxAbs) * 100 : 0;
@@ -70,6 +98,7 @@ function SectorBar({ d, rank, maxAbs, period, onSelect }) {
       <span className={`w-16 shrink-0 text-right font-mono text-sm font-bold ${pos ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]'}`}>
         {signedFmt(periodValue(d, period))}
       </span>
+      <RsVsSpy d={d} period={period} />
       {d.weight != null && (
         <span className="w-12 shrink-0 text-right font-mono text-xs text-[var(--c-text-dimmed)]">
           {d.weight.toFixed(1)}%
@@ -524,7 +553,7 @@ export default function SectorTracker() {
         <p className="mt-2 text-sm text-[var(--c-text-muted)]">
           {selectedEtf
             ? 'SPDR ETF holdings heat map · 30-day, 5-day, and 1-day returns'
-            : '30-day, 5-day, or 1-day return by SPDR sector ETF · click a sector to explore holdings'}
+            : '30-day, 5-day, or 1-day return and relative strength vs SPY by SPDR sector ETF · click a sector to explore holdings'}
         </p>
       </div>
 
@@ -545,6 +574,7 @@ export default function SectorTracker() {
             steps={[
               { text: 'Bars show each S&P 500 sector\'s recent performance — green = gaining, red = losing. The top sectors are highlighted, showing where momentum is strongest.', targetId: 'pg-sector-bars' },
               { text: 'Use the Return / Weight toggle to switch between ranking by performance vs. index weight, and the 30 Day / 5 Day / 1 Day toggle to change the return period. These are calendar days, not trading days — if the start date lands on a weekend or holiday, the last close before it is used.', targetId: 'pg-sector-sort' },
+              { text: 'The "vs SPY" box shows each sector\'s relative strength against the S&P 500 (SPY) for 30, 5, and 1 day. A positive number means the sector beat SPY by that much over the same stretch; negative means it lagged. The period you have selected is highlighted.', targetId: 'pg-sector-bars' },
               'Click any sector row to drill into the individual holdings. Stocks with a violet dot are in our active signals.',
             ]}
           />
@@ -586,6 +616,21 @@ export default function SectorTracker() {
             </div>
           </div>
 
+          {!loading && perf[0] && (
+            <p className="mb-2 text-xs text-[var(--c-text-faint)]">
+              SPY benchmark:{' '}
+              {RS_PERIODS.map(([val, label], i) => {
+                const v = perf[0][`spy_${val === '30d' ? '1m' : val}`];
+                return (
+                  <span key={val}>
+                    {i > 0 && ' · '}
+                    <span className={val === period ? 'font-semibold text-[var(--c-text-secondary)]' : ''}>{label}</span>{' '}
+                    <span className={`font-mono ${rsColor(v)}`}>{signedFmt(v)}</span>
+                  </span>
+                );
+              })}
+            </p>
+          )}
           <div id="pg-sector-bars">
           {loading ? (
             <div className="space-y-2">
