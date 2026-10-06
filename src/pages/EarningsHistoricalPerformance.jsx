@@ -396,9 +396,11 @@ export default function EarningsHistoricalPerformance() {
             No historical signals found.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-[var(--c-border)]">
+          // Scrolls inside its own viewport-height box (header pinned) so the
+          // horizontal scrollbar is always on screen, not below the last row.
+          <div className="max-h-[calc(100vh-8rem)] overflow-auto rounded-2xl border border-[var(--c-border)]">
             <table className="min-w-full border-collapse text-sm">
-              <thead>
+              <thead className="sticky top-0 z-10 shadow-[0_1px_0_var(--c-border)]">
                 <tr className="border-b border-[var(--c-border)] bg-[var(--c-bg-card)]">
                   <Th col="ticker"             label="Ticker"        {...thProps} />
                   <th className="px-2 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-[var(--c-text-dimmed)]"></th>
