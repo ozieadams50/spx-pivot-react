@@ -646,9 +646,9 @@ export default function HistoricalPerformance() {
                   </button>
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className="overflow-auto rounded-b-2xl" style={{ maxHeight: '600px' }}>
                   <table className="w-full text-xs">
-                    <thead>
+                    <thead className="sticky top-0 z-10 bg-[var(--c-bg-panel)] shadow-[0_1px_0_var(--c-border-subtle)]">
                       <tr className="border-b border-[var(--c-border-subtle)] text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">
                         <th className="px-3 py-2 text-left">Date</th>
                         <th className="px-3 py-2 text-right text-[var(--c-violet-strong)]/80">P&amp;L</th>
