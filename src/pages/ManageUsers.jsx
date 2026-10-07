@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../lib/api';
+import BulkImportUsersModal from '../components/BulkImportUsersModal';
 
 // ── Role mapping (API keys ↔ display labels) ──────────────────────────────────
 
@@ -334,6 +335,7 @@ export default function ManageUsers() {
   const [saving,      setSaving]      = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [query,       setQuery]       = useState('');
+  const [showImport,  setShowImport]  = useState(false);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -402,9 +404,17 @@ export default function ManageUsers() {
 
   return (
     <div className="p-6 md:p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">Manage Users</h1>
-        <p className="mt-1 text-sm text-[var(--c-text-muted)]">Platform subscribers. Click a name to view or edit.</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">Manage Users</h1>
+          <p className="mt-1 text-sm text-[var(--c-text-muted)]">Platform subscribers. Click a name to view or edit.</p>
+        </div>
+        <button
+          onClick={() => setShowImport(true)}
+          className="shrink-0 rounded-xl border border-cyan-500/50 bg-cyan-500/15 px-4 py-2 text-sm font-medium text-[var(--c-cyan)] transition hover:bg-cyan-500/25"
+        >
+          Bulk Import
+        </button>
       </div>
 
       {error && (
@@ -493,6 +503,10 @@ export default function ManageUsers() {
           currentRole={currentRole}
           saving={saving}
         />
+      )}
+
+      {showImport && (
+        <BulkImportUsersModal onClose={() => setShowImport(false)} onImported={fetchUsers} />
       )}
     </div>
   );
