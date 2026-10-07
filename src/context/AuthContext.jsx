@@ -11,10 +11,19 @@ const CHECK_EVERY = 30 * 1000;             // check every 30 seconds
 
 const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
 
+// Privilege order for the "view as" switcher. A session may only ever view the
+// app at or BELOW its real (server-verified) role — never above it. Unknown /
+// custom role keys rank as subscriber.
+export const ROLE_RANK = { subscriber: 0, admin: 1, superuser: 2 };
+const rank = (r) => ROLE_RANK[r] ?? 0;
+
 export function AuthProvider({ children }) {
   const [auth,           setAuth]         = useState(loadAuth);
   const [accessMatrix,   setAccessMatrix] = useState(loadMatrix);
   const [sessionWarning, setWarning]      = useState(false);  // true → show 5-min banner
+  // Real role as reported by the server (GET /profile reads user_profile.user_role).
+  // Never taken from localStorage, which the user can edit freely.
+  const [serverRole,     setServerRole]   = useState(null);
   const lastActivity = useRef(Date.now());
   const intervalRef  = useRef(null);
 
@@ -58,6 +67,16 @@ export function AuthProvider({ children }) {
     };
   }, [auth.loggedIn, resetTimer]);
 
+  // ── Server-verified role ──────────────────────────────────────────────────
+  // Re-checked on every app load so a role edited in localStorage (or a stale
+  // "view as" left over from a different account) can't survive a refresh.
+  useEffect(() => {
+    if (!auth.loggedIn) { setServerRole(null); return; }
+    apiFetch('/profile')
+      .then((u) => setServerRole(u?.role ?? 'subscriber'))
+      .catch(() => setServerRole('subscriber'));
+  }, [auth.loggedIn, auth.token]);
+
   // ── Access matrix sync ────────────────────────────────────────────────────
   useEffect(() => {
     if (!auth.loggedIn) return;
@@ -76,6 +95,7 @@ export function AuthProvider({ children }) {
     const session = { loggedIn: true, userId, role, subscriptions, token: token ?? null, user: user ?? null };
     saveAuth(session);
     setAuth((a) => ({ ...a, ...session }));
+    setServerRole(role ?? 'subscriber');
   }
 
   function logout() {
@@ -83,7 +103,9 @@ export function AuthProvider({ children }) {
     window.location.href = '/login';
   }
 
+  // "View as" — only allowed at or below the real role. Anything higher is ignored.
   function setRole(role) {
+    if (rank(role) > rank(realRole)) return;
     saveAuth({ role });
     setAuth((a) => ({ ...a, role }));
   }
@@ -93,13 +115,25 @@ export function AuthProvider({ children }) {
     setAccessMatrix(matrix);
   }
 
-  // The account's real role per its JWT — immune to setRole()'s local
-  // override, so the switcher's own visibility can always be judged against
-  // who's actually logged in, not whichever role is currently being simulated.
-  const realRole = decodeJwtRole(auth.token) ?? auth.role;
+  // The account's real role. Server answer first; until it arrives, the JWT's
+  // role claim; failing both, subscriber. NEVER falls back to auth.role — that
+  // is the simulatable, user-editable value (before 2026-10-07 it did, so a
+  // missing/garbled token let a localStorage edit pass as the real role).
+  const realRole = serverRole ?? decodeJwtRole(auth.token) ?? 'subscriber';
+
+  // Effective role used by every canAccess() check: the simulated role, but
+  // clamped so it can never exceed the real one.
+  const role = rank(auth.role) > rank(realRole) ? realRole : (auth.role ?? realRole);
+
+  useEffect(() => {
+    if (auth.loggedIn && role !== auth.role) {
+      saveAuth({ role });
+      setAuth((a) => ({ ...a, role }));
+    }
+  }, [auth.loggedIn, auth.role, role]);
 
   return (
-    <AuthContext.Provider value={{ ...auth, realRole, login, logout, setRole, accessMatrix, updateMatrix }}>
+    <AuthContext.Provider value={{ ...auth, role, realRole, login, logout, setRole, accessMatrix, updateMatrix }}>
       {sessionWarning && (
         <div className="fixed bottom-4 left-1/2 z-[9999] -translate-x-1/2 flex items-center gap-3
                         rounded-2xl border border-amber-500/40 bg-amber-500/10 px-5 py-3 shadow-2xl

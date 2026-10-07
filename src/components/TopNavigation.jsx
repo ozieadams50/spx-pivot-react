@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   loadNotifications, markRead, clearOne, clearAll, unreadCount,
 } from '../data/notifications';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, ROLE_RANK } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -239,7 +239,9 @@ export default function TopNavigation({ title, subtitle, onMobileMenuOpen }) {
                         the switcher itself and have no way back to their real role. */}
                     {(realRole === 'admin' || realRole === 'superuser') && (
                       <div className="mt-2 flex gap-1">
-                        {Object.entries(ROLE_LABELS).map(([key, label]) => (
+                        {Object.entries(ROLE_LABELS)
+                          .filter(([key]) => (ROLE_RANK[key] ?? 0) <= (ROLE_RANK[realRole] ?? 0))
+                          .map(([key, label]) => (
                           <button
                             key={key}
                             onClick={() => setRole(key)}
