@@ -193,7 +193,6 @@ function DirectionToggle({ label, value, onChange, tooltip }) {
 }
 
 function FiltersPanel({
-  tickerQ, setTickerQ,
   idealFilter, setIdealFilter,
   stackedFilter, setStackedFilter,
   rsiMin, setRsiMin, rsiMax, setRsiMax,
@@ -214,26 +213,6 @@ function FiltersPanel({
         </div>
 
         <div className="space-y-4">
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--c-text-dimmed)] text-xs pointer-events-none">⌕</span>
-            <input
-              type="text"
-              value={tickerQ}
-              onChange={(e) => setTickerQ(e.target.value.toUpperCase())}
-              placeholder="Symbol or name…"
-              className="w-full rounded-xl border border-[var(--c-border)] bg-[var(--c-hover)] py-1.5 pl-7 pr-7 text-sm text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] focus:border-violet-500/50 focus:outline-none"
-            />
-            {tickerQ && (
-              <button
-                onClick={() => setTickerQ('')}
-                aria-label="Clear search"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
           <DirectionToggle
             label="Ideal Squeeze"
             value={idealFilter}
@@ -379,8 +358,8 @@ export default function SqueezeScanner() {
     fetchTickers(false);
   };
 
+  // Search box lives on the toolbar (always visible), so it isn't counted here
   const activeFilterCount =
-    (tickerQ ? 1 : 0) +
     (idealFilter !== 'off' ? 1 : 0) +
     (stackedFilter !== 'off' ? 1 : 0) +
     (rsiMin !== '' ? 1 : 0) +
@@ -431,6 +410,7 @@ export default function SqueezeScanner() {
           </button>
         }
         steps={[
+          { text: 'Type a symbol or company name in the search box to jump straight to a ticker. Click ✕ to clear it.', targetId: 'sqz-search' },
           { text: 'Click Filters to narrow the list by Ideal Squeeze direction, Stacked EMA direction, RSI range, 52-week range, or which timeframe(s) are currently in an Ideal Squeeze.', targetId: 'sqz-filters-btn' },
           { text: 'Ideal Squeeze flags maximum price compression forming inside an already-established trend — Bull for uptrends, Bear for downtrends. Stacked EMA is a simpler trend-alignment check on its own.', targetId: 'sqz-table' },
           { text: 'The 15 / 30 / 60 / 1D / 1W / 1M columns grade each ticker on that timeframe right now: ▲/▼ Arrow is the strongest (tightest squeeze + confirmed trend), A is one tier looser, A+ is A with momentum freshly confirming — blank means none apply.', targetId: 'sqz-table' },
@@ -446,7 +426,27 @@ export default function SqueezeScanner() {
             {updatedAt ? `Last updated ${updatedAt}` : 'Loading…'}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div id="sqz-search" className="relative">
+            <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[var(--c-text-dimmed)]">⌕</span>
+            <input
+              type="text"
+              value={tickerQ}
+              onChange={(e) => setTickerQ(e.target.value.toUpperCase())}
+              placeholder="Search symbol or name…"
+              aria-label="Search symbol or name"
+              className="w-44 rounded-lg border border-[var(--c-border)] bg-[var(--c-hover)] py-1.5 pl-7 pr-7 text-xs text-[var(--c-text-primary)] placeholder-[var(--c-text-faint)] focus:border-violet-500/50 focus:outline-none sm:w-56"
+            />
+            {tickerQ && (
+              <button
+                onClick={() => setTickerQ('')}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]"
+              >
+                ✕
+              </button>
+            )}
+          </div>
           <div className="relative">
             <button
               id="sqz-filters-btn"
@@ -466,7 +466,6 @@ export default function SqueezeScanner() {
             </button>
             {filtersOpen && (
               <FiltersPanel
-                tickerQ={tickerQ} setTickerQ={setTickerQ}
                 idealFilter={idealFilter} setIdealFilter={setIdealFilter}
                 stackedFilter={stackedFilter} setStackedFilter={setStackedFilter}
                 rsiMin={rsiMin} setRsiMin={setRsiMin} rsiMax={rsiMax} setRsiMax={setRsiMax}
