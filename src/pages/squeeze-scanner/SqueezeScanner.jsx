@@ -23,7 +23,7 @@ const TIMEFRAME_COLS = [
 const IDEAL_SQUEEZE_TOOLTIP = 'Maximum price compression (the tightest squeeze tier) forming inside an already-established trend, in the direction shown. Bull = building inside an uptrend, Bear = building inside a downtrend.';
 const STACKED_EMA_TOOLTIP = 'Three short-term trend averages (9/13/21-day EMAs) lined up in order — fastest-on-top for Bull, slowest-on-top for Bear. A simple trend-alignment check on its own, separate from Ideal Squeeze.';
 // Hover text for the purple upcoming-earnings dot (API sends earnings_date
-// only when the report falls within the next 30 days).
+// only when the report falls within the next 15 days).
 const EARNINGS_HOUR = { bmo: 'before the open', amc: 'after the close', dmh: 'during market hours' };
 function earningsTooltip(dateStr, hour) {
   const d = new Date(`${dateStr}T12:00:00`);
@@ -45,7 +45,7 @@ const EXPORT_COLUMNS = [
   { key: 'ticker', header: 'Symbol' },
   { key: 'name', header: 'Name' },
   { key: 'sector', header: 'Sector' },
-  { key: 'earnings_date', header: 'Earnings Date (next 30d)' },
+  { key: 'earnings_date', header: 'Earnings Date (next 15d)' },
   { key: 'close', header: 'Close' },
   { key: 'last', header: 'Last' },
   { key: 'net_chg', header: 'Net Chg $' },
@@ -428,7 +428,7 @@ export default function SqueezeScanner() {
           { text: 'Click Filters to narrow the list by Ideal Squeeze direction, Stacked EMA direction, RSI range, 52-week range, or which timeframe(s) are currently in an Ideal Squeeze.', targetId: 'sqz-filters-btn' },
           { text: 'Ideal Squeeze flags maximum price compression forming inside an already-established trend — Bull for uptrends, Bear for downtrends. Stacked EMA is a simpler trend-alignment check on its own.', targetId: 'sqz-table' },
           { text: 'The 15 / 30 / 60 / 1D / 1W / 1M columns grade each ticker on that timeframe right now: ▲/▼ Arrow is the strongest (tightest squeeze + confirmed trend), A is one tier looser, A+ is A with momentum freshly confirming — blank means none apply.', targetId: 'sqz-table' },
-          { text: 'A purple dot beside a ticker means it reports earnings within the next 30 days. Hover over the dot to see the date and whether it is before the open or after the close.', targetId: 'sqz-table' },
+          { text: 'A purple dot beside a ticker means it reports earnings within the next 15 days. Hover over the dot to see the date and whether it is before the open or after the close.', targetId: 'sqz-table' },
           { text: 'Data refreshes automatically every 5 minutes. Click Refresh any time for an immediate update — it also resets the view back to baseline, clearing every filter and the sort order.', targetId: 'sqz-refresh-btn' },
           { text: 'Export the current filtered list to Excel any time.', targetId: 'sqz-export-btn' },
         ]}
