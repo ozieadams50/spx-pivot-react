@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { apiFetch } from '../lib/api';
+import PageGuide from '../components/PageGuide';
 import { useAuth } from '../context/AuthContext';
 
 // ── Metric card with tooltip ──────────────────────────────────────────────────
@@ -284,17 +285,36 @@ export default function HistoricalPerformance() {
           <h1 className="text-2xl font-bold text-[var(--c-text-primary)]">Historical Performance</h1>
           <p className="text-sm text-[var(--c-text-muted)]">DKQPivot touch &amp; close statistics by period</p>
         </div>
-        <button onClick={runQuery} disabled={loading}
+        <button id="hp-run" onClick={runQuery} disabled={loading}
           className="rounded-lg bg-violet-600 px-4 py-1.5 text-xs font-bold text-[var(--c-text-primary)] transition hover:bg-violet-500 disabled:opacity-50">
           {loading ? 'Running…' : '▶  Run Query'}
         </button>
       </div>
 
+      <PageGuide
+        guideKey="historical-performance"
+        title="How often SPX has reached, and closed beyond, its pivot levels in the past."
+        description="Pick a symbol, date range and period, then run the query. The page looks back over every period in that range and shows how often price touched or closed past each pivot level, so you can judge how much room a level has given historically."
+        steps={[
+          { text: 'Enter the symbol and the date range you want to study. SPX is the default; SPY or any other ticker in the database works too.', targetId: 'hp-inputs' },
+          { text: 'Choose Daily, Weekly or Monthly. This picks which set of pivot levels is tested, so each row in the results is one day, one week or one month.', targetId: 'hp-period' },
+          { text: 'Optionally limit the study to periods when SPX was trading above, or below, its 20-day average. This shows how the levels behaved in rising versus falling markets.', targetId: 'hp-sma' },
+          { text: 'The Card View switch flips every card between "how often price DID reach a level" and the opposite, "how often it did NOT." Use whichever reads more naturally for the trade you are considering.', targetId: 'hp-view' },
+          { text: 'Click Run Query to calculate the results for your choices.', targetId: 'hp-run' },
+          { text: 'The summary cards show how many periods were studied, how often price finished inside the R1–S1 and R2–S2 ranges, and how often each level was touched or closed beyond. Hover any card for a plain-English explanation.', targetId: 'hp-summary' },
+          ...(canSeePremiums ? [
+            { text: 'Premium Estimates (Admin) show the typical credit for a $5-wide spread at each level, grouped by how high VIX was when the period opened. These are model estimates, not actual fills.', targetId: 'hp-premiums' },
+            { text: 'The Register (Admin) runs a simple test: sell one $5-wide bull put spread at S1, Mid-S or S2 every period and hold it to the period close. P&L shows each period's result and Running adds them up, so the top row is the total for your date range.', targetId: 'hp-register' },
+          ] : []),
+          { text: 'Period Detail lists every period, newest first, with its levels, its open/high/low/close and which levels it touched or closed past. The table scrolls on its own, and Export CSV downloads the full list.', targetId: 'hp-detail' },
+        ]}
+      />
+
       {/* ── Main grid ────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-12 gap-4">
 
         {/* ── Left: Inputs ─────────────────────────────────────────────── */}
-        <div className="col-span-3 rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-4">
+        <div id="hp-inputs" className="col-span-3 rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)] p-4">
           <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--c-text-dimmed)]">Query Inputs</p>
 
           <div className="space-y-4">
@@ -327,7 +347,7 @@ export default function HistoricalPerformance() {
               </div>
             </div>
 
-            <div>
+            <div id="hp-period">
               <Lbl>Quant Period</Lbl>
               <Seg
                 options={[{ v: 'daily', l: 'Daily' }, { v: 'weekly', l: 'Weekly' }, { v: 'monthly', l: 'Monthly' }]}
@@ -339,7 +359,7 @@ export default function HistoricalPerformance() {
               </p>
             </div>
 
-            <div>
+            <div id="hp-sma">
               <Lbl>Daily SMA Filter</Lbl>
               <select
                 value={form.sma_filter}
@@ -354,7 +374,7 @@ export default function HistoricalPerformance() {
             </div>
 
             {/* ── View toggle ───────────────────────────────────────── */}
-            <div className="rounded-xl border border-[var(--c-border)] bg-[var(--c-hover-faint)] p-3">
+            <div id="hp-view" className="rounded-xl border border-[var(--c-border)] bg-[var(--c-hover-faint)] p-3">
               <Lbl>Card View</Lbl>
               <button
                 type="button"
@@ -439,7 +459,7 @@ export default function HistoricalPerformance() {
               </div>
 
               {/* ── Row 1: Summary ───────────────────────────────────────── */}
-              <div className="grid grid-cols-3 gap-3">
+              <div id="hp-summary" className="grid grid-cols-3 gap-3">
                 <MetricCard
                   label="Periods Analyzed"
                   value={n.toLocaleString()}
@@ -566,7 +586,7 @@ export default function HistoricalPerformance() {
 
               {/* ── Premium estimates — Admin / Super User only ──────────── */}
               {canSeePremiums && premiums && premiums.by_vix_bucket.length > 0 && (
-                <div className="space-y-3">
+                <div id="hp-premiums" className="space-y-3">
                   <div className="flex items-center gap-2 rounded-xl border border-[var(--c-border)] bg-white/[0.02] px-4 py-2.5">
                     <span className="h-2 w-2 flex-shrink-0 rounded-full bg-violet-400" />
                     <p className="text-xs font-semibold text-[var(--c-text-primary)]">5-Wide Spread Premium Estimates</p>
@@ -603,12 +623,12 @@ export default function HistoricalPerformance() {
               )}
 
               {/* ── Period detail table ───────────────────────────────────── */}
-              <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)]">
+              <div id="hp-detail" className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-bg-panel)]">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--c-border)] px-4 py-3">
                   <p className="text-xs font-semibold uppercase tracking-widest text-[var(--c-text-dimmed)]">
                     Period Detail — {results.periods.length.toLocaleString()} {form.period} periods
                   </p>
-                  <div className="flex items-center gap-3">
+                  <div id="hp-register" className="flex items-center gap-3">
                     {/* Register strike selector */}
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] text-[var(--c-text-dimmed)] uppercase tracking-wider">Register:</span>
