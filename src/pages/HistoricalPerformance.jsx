@@ -214,11 +214,14 @@ export default function HistoricalPerformance() {
     if (!results?.periods) return [];
     let running = 0;
     return results.periods.map(p => {
-      // Credit = bull_put_mids mean for that day's VIX bucket; fall back to overall avg
+      // Credit = the SELECTED strike's spread mean for that period's VIX bucket;
+      // fall back to overall avg. (Before 2026-10-07 this always used the Mid-S
+      // credit, so S1 was under-credited and S2 over-credited.)
+      const creditKey = regStrike === 'S1' ? 'bull_put_s1' : regStrike === 'MidS' ? 'bull_put_mids' : 'bull_put_s2';
       const bucket  = vixBucket(p.vix);
       const bktData = premiums?.by_vix_bucket?.find(b => b.vix_range === bucket);
-      const credit  = bktData?.spreads?.bull_put_mids?.mean
-                   ?? premiums?.overall?.spreads?.bull_put_mids?.mean
+      const credit  = bktData?.spreads?.[creditKey]?.mean
+                   ?? premiums?.overall?.spreads?.[creditKey]?.mean
                    ?? null;
 
       // Short strike based on selected level
@@ -619,7 +622,7 @@ export default function HistoricalPerformance() {
                           {s === 'MidS' ? 'Mid-S' : s}
                         </button>
                       ))}
-                      <span className="text-[10px] text-[var(--c-text-faint)]">· $5 spread · Mid-S VIX credit</span>
+                      <span className="text-[10px] text-[var(--c-text-faint)]">· $5 spread · {regStrike === 'MidS' ? 'Mid-S' : regStrike} VIX credit</span>
                     </div>
                   </div>
                   <button
