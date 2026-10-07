@@ -304,7 +304,7 @@ export default function HistoricalPerformance() {
           { text: 'The summary cards show how many periods were studied, how often price finished inside the R1–S1 and R2–S2 ranges, and how often each level was touched or closed beyond. Hover any card for a plain-English explanation.', targetId: 'hp-summary' },
           ...(canSeePremiums ? [
             { text: 'Premium Estimates (Admin) show the typical credit for a $5-wide spread at each level, grouped by how high VIX was when the period opened. These are model estimates, not actual fills.', targetId: 'hp-premiums' },
-            { text: 'The Register (Admin) runs a simple test: sell one $5-wide bull put spread at S1, Mid-S or S2 every period and hold it to the period close. P&L shows each period's result and Running adds them up, so the top row is the total for your date range.', targetId: 'hp-register' },
+            { text: 'The Register (Admin) runs a simple test: sell one $5-wide bull put spread at S1, Mid-S or S2 every period and hold it to the period close. P&L shows the result for each period and Running adds them up, so the top row is the total for your date range.', targetId: 'hp-register' },
           ] : []),
           { text: 'Period Detail lists every period, newest first, with its levels, its open/high/low/close and which levels it touched or closed past. The table scrolls on its own, and Export CSV downloads the full list.', targetId: 'hp-detail' },
         ]}
