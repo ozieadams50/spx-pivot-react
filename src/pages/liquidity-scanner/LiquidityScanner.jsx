@@ -21,7 +21,7 @@ const TIMEFRAME_COLS = [
   { key: 'liq_30', label: '30', tf: '30-minute', intraday: true },
   { key: 'liq_60', label: '60', tf: '60-minute (hourly)', intraday: true },
   { key: 'liq_1d', label: '1D', tf: 'Daily', intraday: false },
-].map((c) => ({ ...c, tooltip: `Last time price touched a liquidity zone on the ${c.tf} chart — ${c.intraday ? 'today’s session only' : 'within the last 7 trading days'}. ▲ green = touched a zone below price (support, where sell stops rest). ▼ red = touched a zone above price (supply / distribution, where buy stops rest). A small × means price poked through the zone and closed back (a sweep); no × means it wicked into the zone and held. Bars that close straight through a zone are not counted. Hover a cell for the exact time and zone price. Blank = no touch ${c.intraday ? 'today' : 'in the last 7 trading days'}.` }));
+].map((c) => ({ ...c, tooltip: `Last time price touched a liquidity zone on the ${c.tf} chart — ${c.intraday ? 'today’s session only' : 'within the last 7 trading days'}. ▲ green = touched a zone below price (support, where sell stops rest). ▼ red = touched a zone above price (supply / distribution, where buy stops rest). Only touches where price reached into the zone and the zone held count — the zone is still drawn on the chart. Bars that push through a zone are not counted. Hover a cell for the exact time and zone price. Blank = no touch ${c.intraday ? 'today' : 'in the last 7 trading days'}.` }));
 
 // rel_vol = today's volume so far / the average volume over the same part of
 // the session across the prior 20 days. 1.25 = 25% above normal.
@@ -96,7 +96,6 @@ const EXPORT_COLUMNS = [
   { key: 'rel_vol', header: 'Volume vs Normal (x)' },
   ...TIMEFRAME_COLS.flatMap((c) => [
     { key: c.key, header: `${c.label} Touch`, fmt: (v) => (v === 'up' ? 'Support' : v === 'down' ? 'Supply' : '') },
-    { key: `${c.key}_kind`, header: `${c.label} Touch Type`, fmt: (v) => (v === 'sweep' ? 'Sweep' : v === 'hold' ? 'Hold' : '') },
     { key: `${c.key}_at`, header: `${c.label} Last Touch`, fmt: (v) => touchLabel(v) },
     { key: `${c.key}_level`, header: `${c.label} Zone Price` },
   ]),
@@ -171,18 +170,12 @@ function TouchCell({ row, col, now }) {
   const color = isUp ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]';
   const level = row[`${col.key}_level`];
   const touches = row[`${col.key}_touches`];
-  // sweep = poked through the zone and closed back (TradingView removes the
-  // band and marks it with ×); hold = wicked in, zone still on the chart.
-  const swept = row[`${col.key}_kind`] === 'sweep';
   const zone = level != null ? ` $${level.toFixed(2)}` : '';
-  const action = swept
-    ? `swept ${touchLabel(at)} — price poked ${isUp ? 'below' : 'above'} the zone${zone} and closed back ${isUp ? 'above' : 'below'} it. On the chart the band is gone and an × marks the spot`
-    : `touched ${touchLabel(at)} — price reached into the zone${zone} and held. The band is still on the chart`;
-  const title = `${isUp ? 'Support zone (below price)' : 'Supply zone (above price)'} ${action}`
+  const title = `${isUp ? 'Support zone (below price)' : 'Supply zone (above price)'} touched ${touchLabel(at)} — price reached into the zone${zone} and held`
     + (touches > 1 ? `. Built from ${touches} swing points` : '');
   return (
     <span className="inline-flex items-center gap-1 whitespace-nowrap" title={title}>
-      <span className={`text-sm font-bold ${color}`}>{isUp ? '▲' : '▼'}{swept && <span className="text-[10px] align-super">×</span>}</span>
+      <span className={`text-sm font-bold ${color}`}>{isUp ? '▲' : '▼'}</span>
       <span className="text-[10px] text-[var(--c-text-secondary)]">{timeAgo(at, now)}</span>
     </span>
   );
@@ -488,8 +481,8 @@ export default function LiquidityScanner() {
           { text: 'Type a symbol or company name in the search box to jump straight to a ticker. Click ✕ to clear it.', targetId: 'liq-search' },
           { text: 'Click Filters to show only tickers that touched a zone on the timeframes you pick, in the direction you pick, in the last hour, with High Volume, or within an RSI or 52-week range.', targetId: 'liq-filters-btn' },
           { text: 'High Volume compares today’s trading volume so far with a normal day at the same time of day. It lights up when volume is at least 25% above normal — a touch on heavy volume carries more weight. Tickers trading 3× normal volume or more get the whole row highlighted in amber so they stand out.', targetId: 'liq-table' },
-          { text: 'The 5 / 15 / 30 / 60 / 1D columns show the last time price touched a liquidity zone on that chart and the zone held. A green ▲ means a support zone below price; a red ▼ means a supply zone above price. A small × next to the triangle means price poked through the zone and snapped back (a sweep) — on the chart the zone is gone and an × marks it. No × means price reached into the zone and the zone is still on the chart. Bars that close straight through a zone are not counted. The time next to it says how long ago. The 5 / 15 / 30 / 60 columns only show touches from today; 1D looks back 7 trading days. Blank means no touch in that window.', targetId: 'liq-table' },
-          { text: 'Hover any triangle to see the exact time of the touch, whether it held or was swept, and the zone’s price.', targetId: 'liq-table' },
+          { text: 'The 5 / 15 / 30 / 60 / 1D columns show the last time price touched a liquidity zone on that chart and the zone held. A green ▲ means a support zone below price; a red ▼ means a supply zone above price. Only touches where the zone held are shown, so the zone is still on the chart. Bars that push through a zone are not counted. The time next to it says how long ago. The 5 / 15 / 30 / 60 columns only show touches from today; 1D looks back 7 trading days. Blank means no touch in that window.', targetId: 'liq-table' },
+          { text: 'Hover any triangle to see the exact time of the touch, and the zone’s price.', targetId: 'liq-table' },
           { text: 'Click a timeframe header to sort by the most recent touch on that chart. Click again to flip the order. Tickers with no touch always stay at the bottom.', targetId: 'liq-table' },
           { text: 'A purple dot beside a ticker means it reports earnings within the next 15 days. Hover over the dot for the date.', targetId: 'liq-table' },
           { text: 'Data refreshes automatically every 5 minutes. Click Refresh any time for an immediate update — it also clears every filter and the sort order.', targetId: 'liq-refresh-btn' },
@@ -666,7 +659,6 @@ export default function LiquidityScanner() {
             'A green ▲ means price dipped into a support zone below. Look for the bar to close back above the zone — that shows buyers defended it — before considering a long.',
             'A red ▼ means price pushed into a supply zone above. A close back below the zone suggests sellers are distributing there — a possible spot to trim longs or look for shorts.',
             'A close straight through a zone means the orders were absorbed and the move may continue — don’t fight it. Those bars are not flagged here.',
-            'A × (sweep) means price ran the stops beyond the zone and snapped back to the right side of it.',
             'Touches lining up across several timeframes (for example 15, 60, and 1D all showing ▲) carry more weight than a lone 5-minute touch.',
             'Use the zone itself to define risk: a stop just beyond the zone keeps the loss small if the level fails.',
           ]}
