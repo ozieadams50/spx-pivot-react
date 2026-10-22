@@ -46,7 +46,6 @@ const PROGRESS_OPTS = [
   { label: 'Confirmed only', value: SWING_BARS },
 ];
 const PROGRESS_TOOLTIP = 'How far along a zone must be to show. A swing high or low becomes a zone once the next 8 bars fail to go past it. "5/8 or later" keeps swings that have held at least 5 of those bars (about 4 in 5 of those historically became zones) plus confirmed zones. "Confirmed only" hides anything still forming.';
-const NEW_LAST_HOUR_TOOLTIP = 'Only show tickers with a zone that started forming within the last 60 minutes on the 5 / 15 / 30 / 60 charts (or just the ones checked under Zone On). Market data runs about 15-30 minutes behind. Daily zones are not included.';
 
 // rel_vol = today's volume so far / the average volume over the same part of
 // the session across the prior 20 days. 1.25 = 25% above normal.
@@ -54,7 +53,18 @@ const HIGH_VOLUME_RATIO = 1.25;
 // 3x+ normal volume: the whole row is highlighted so it stands out in the list.
 const EXTREME_VOLUME_RATIO = 3;
 const INTRADAY_KEYS = new Set(TIMEFRAME_COLS.filter((c) => c.intraday).map((c) => c.key));
-const LAST_HOUR_TOOLTIP = 'Only show tickers that touched a liquidity zone within the last 60 minutes on the 5 / 15 / 30 / 60 charts (or just the ones checked under Touched On). Uses the same time shown in each cell. Market data runs about 15-30 minutes behind, so this is roughly the last 30-45 minutes of real trading. Daily touches are not included.';
+const ACTIVITY_OPTS = [
+  { label: 'Touch', value: 'touch' },
+  { label: 'Created', value: 'created' },
+  { label: 'Both', value: 'both' },
+];
+const RECENT_OPTS = [
+  { label: 'Off', value: 0 },
+  { label: 'Last 30 min', value: 30 },
+  { label: 'Last 1 hour', value: 60 },
+];
+const ACTIVITY_TOOLTIP = 'Which kind of activity the timeframe, direction and recent filters look at. Touch = price reached into a zone and it held. Created = a zone forming or confirmed from a swing high or low. Both = either one. Picking Touch or Created also switches the table to that view.';
+const RECENT_TOOLTIP = 'Only show tickers with activity in this window on the 5 / 15 / 30 / 60 charts (or just the ones checked above). A touch counts by the time shown in its cell. A created zone counts when it was confirmed — or, if it is still forming, when the swing started. Market data runs about 15-30 minutes behind real time. Daily is not included.';
 const HIGH_VOLUME_TOOLTIP = 'Today’s total trading volume so far compared with how much had normally traded by this same time of day (average of the last 20 sessions). It is not a single bar’s volume — a stock can show 5× here while each candle looks ordinary, if the extra volume is spread across the morning. TradingView’s built-in “Relative Volume at Time” indicator (length 20) measures the same thing. High = at least 25% more than normal. The number shows how many times normal volume, e.g. 1.6× = 60% above normal. At 3× or more the whole row is highlighted in amber. Blank for indexes, which have no volume.';
 
 const DIRECTION_TOOLTIP = 'Only show tickers whose most recent touch was in this direction, on any of the timeframes checked below (or any timeframe if none are checked). ▲ Support = a zone below price. ▼ Supply = a zone above price.';
@@ -114,21 +124,27 @@ function touchLabel(at) {
 // ── Created view helpers ────────────────────────────────────────────────────
 // row.created[col.id] = { forming, confirmed } from the scan (either may be
 // null). The cell shows the forming swing when there is one that meets the
-// progress filter, otherwise the latest confirmed zone.
-function createdEntry(row, col, minProgress = 0) {
+// progress filter, otherwise the latest confirmed zone. With `since` (ms,
+// intraday columns only) only an entry that is recent enough qualifies, so a
+// cell can show a zone confirmed 10 min ago even while an older swing forms.
+const createdRecentAt = (e) => e.confirmed_at ?? e.appeared_at;
+
+function createdEntry(row, col, minProgress = 0, since = null) {
   const c = row.created?.[col.id];
   if (!c) return null;
-  if (c.forming && c.forming.progress >= minProgress) return c.forming;
-  return c.confirmed ?? null;
+  const cands = [c.forming && c.forming.progress >= minProgress ? c.forming : null, c.confirmed]
+    .filter(Boolean)
+    .filter((e) => since == null || !col.intraday || touchTime(createdRecentAt(e)) >= since);
+  return cands[0] ?? null;
 }
 
 // One accessor for both views so filters and sorting treat them the same:
-// dir = 'up' | 'down', at = time shown in the cell, recentAt = time the Last
-// Hour filter checks, level = zone price.
-function cellInfo(row, col, view, minProgress) {
+// dir = 'up' | 'down', at = time shown in the cell, recentAt = time the
+// Recent Activity filter checks, level = zone price.
+function cellInfo(row, col, view, minProgress, since = null) {
   if (view === 'created') {
-    const e = createdEntry(row, col, minProgress);
-    return e ? { dir: e.dir, at: e.at, recentAt: e.appeared_at, level: e.level, entry: e } : null;
+    const e = createdEntry(row, col, minProgress, since);
+    return e ? { dir: e.dir, at: e.at, recentAt: createdRecentAt(e), level: e.level, entry: e } : null;
   }
   const dir = row[col.key];
   const at = row[`${col.key}_at`];
@@ -211,7 +227,7 @@ const DEFAULT_FILTERS = {
   tickerQ: '',
   directionFilter: 'off',
   highVolumeOnly: false,
-  lastHourOnly: false,
+  recentMins: 0,
   rsiMin: '',
   rsiMax: '',
   range52wMin: '',
@@ -223,7 +239,7 @@ const DEFAULT_FILTERS = {
 // a blank cell always sinks to the bottom regardless of direction.
 const TOUCH_KEYS = new Set(TIMEFRAME_COLS.map((c) => c.key));
 
-function compareRows(a, b, key, dir, view, minProgress) {
+function compareRows(a, b, key, dir, view, minProgress, since) {
   if (['ticker', 'name', 'sector'].includes(key)) {
     const va = (a[key] ?? '').toLowerCase();
     const vb = (b[key] ?? '').toLowerCase();
@@ -231,8 +247,8 @@ function compareRows(a, b, key, dir, view, minProgress) {
   }
   if (TOUCH_KEYS.has(key)) {
     const col = TIMEFRAME_COLS.find((c) => c.key === key);
-    const va = touchTime(cellInfo(a, col, view, minProgress)?.at);
-    const vb = touchTime(cellInfo(b, col, view, minProgress)?.at);
+    const va = touchTime(cellInfo(a, col, view, minProgress, since)?.at);
+    const vb = touchTime(cellInfo(b, col, view, minProgress, since)?.at);
     if (va == null && vb == null) return 0;
     if (va == null) return 1;
     if (vb == null) return -1;
@@ -290,8 +306,8 @@ function TouchCell({ row, col, now }) {
   );
 }
 
-function CreatedCell({ row, col, now, minProgress }) {
-  const e = createdEntry(row, col, minProgress);
+function CreatedCell({ row, col, now, minProgress, since }) {
+  const e = createdEntry(row, col, minProgress, since);
   if (!e) return <span className="text-[var(--c-text-faint)]">—</span>;
   const isUp = e.dir === 'up';
   const color = isUp ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]';
@@ -354,7 +370,8 @@ function SortTh({ label, sk, sortKey, sortDir, onSort, className = '', tooltip }
 function FiltersPanel({
   directionFilter, setDirectionFilter,
   highVolumeOnly, setHighVolumeOnly,
-  lastHourOnly, setLastHourOnly,
+  recentMins, setRecentMins,
+  activity, onActivity,
   rsiMin, setRsiMin, rsiMax, setRsiMax,
   range52wMin, setRange52wMin,
   timeframeFilter, toggleTimeframe,
@@ -415,7 +432,7 @@ function FiltersPanel({
             </div>
           </div>
 
-          {created && (
+          {(created || activity === 'both') && (
             <div title={PROGRESS_TOOLTIP}>
               <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Zone Progress</span>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -436,15 +453,34 @@ function FiltersPanel({
             </div>
           )}
 
-          <div title={created ? NEW_LAST_HOUR_TOOLTIP : LAST_HOUR_TOOLTIP}>
-            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">{created ? 'New in Last Hour' : 'Touched in Last Hour'}</span>
+          <div title={ACTIVITY_TOOLTIP}>
+            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Activity</span>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {[{ label: 'Off', value: false }, { label: 'Last hour only', value: true }].map((opt) => (
+              {ACTIVITY_OPTS.map((opt) => (
                 <button
-                  key={opt.label}
-                  onClick={() => setLastHourOnly(opt.value)}
+                  key={opt.value}
+                  onClick={() => onActivity(opt.value)}
                   className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
-                    lastHourOnly === opt.value
+                    activity === opt.value
+                      ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
+                      : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div title={RECENT_TOOLTIP}>
+            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Recent Activity</span>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {RECENT_OPTS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setRecentMins(opt.value)}
+                  className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
+                    recentMins === opt.value
                       ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
                       : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
                   }`}
@@ -522,7 +558,7 @@ export default function LiquidityScanner() {
   const [tickerQ, setTickerQ] = useState(DEFAULT_FILTERS.tickerQ);
   const [directionFilter, setDirectionFilter] = useState(DEFAULT_FILTERS.directionFilter);
   const [highVolumeOnly, setHighVolumeOnly] = useState(DEFAULT_FILTERS.highVolumeOnly);
-  const [lastHourOnly, setLastHourOnly] = useState(DEFAULT_FILTERS.lastHourOnly);
+  const [recentMins, setRecentMins] = useState(DEFAULT_FILTERS.recentMins);
   const [rsiMin, setRsiMin] = useState(DEFAULT_FILTERS.rsiMin);
   const [rsiMax, setRsiMax] = useState(DEFAULT_FILTERS.rsiMax);
   const [range52wMin, setRange52wMin] = useState(DEFAULT_FILTERS.range52wMin);
@@ -530,6 +566,15 @@ export default function LiquidityScanner() {
   const [minProgress, setMinProgress] = useState(DEFAULT_FILTERS.minProgress);
   // Touches / Created is a mode, not a filter -- Refresh and Clear keep it.
   const [view, setView] = useState('touches');
+  // Which activity the timeframe / direction / recent filters test. Kept in
+  // step with the view switch; 'both' leaves the view as it is.
+  const [activity, setActivity] = useState('touch');
+  const changeView = (v) => { setView(v); setActivity(v === 'created' ? 'created' : 'touch'); };
+  const changeActivity = (a) => {
+    setActivity(a);
+    if (a !== 'both') setView(a === 'created' ? 'created' : 'touches');
+  };
+  const since = recentMins > 0 ? now - recentMins * 60 * 1000 : null;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [showStrategyInfo, setShowStrategyInfo] = useState(false);
 
@@ -575,7 +620,8 @@ export default function LiquidityScanner() {
     setTickerQ(DEFAULT_FILTERS.tickerQ);
     setDirectionFilter(DEFAULT_FILTERS.directionFilter);
     setHighVolumeOnly(DEFAULT_FILTERS.highVolumeOnly);
-    setLastHourOnly(DEFAULT_FILTERS.lastHourOnly);
+    setRecentMins(DEFAULT_FILTERS.recentMins);
+    setActivity(view === 'created' ? 'created' : 'touch');
     setRsiMin(DEFAULT_FILTERS.rsiMin);
     setRsiMax(DEFAULT_FILTERS.rsiMax);
     setRange52wMin(DEFAULT_FILTERS.range52wMin);
@@ -596,30 +642,36 @@ export default function LiquidityScanner() {
   const activeFilterCount =
     (directionFilter !== 'off' ? 1 : 0) +
     (highVolumeOnly ? 1 : 0) +
-    (lastHourOnly ? 1 : 0) +
+    (recentMins > 0 ? 1 : 0) +
+    (activity === 'both' ? 1 : 0) +
     (rsiMin !== '' ? 1 : 0) +
     (rsiMax !== '' ? 1 : 0) +
     (range52wMin !== '' ? 1 : 0) +
     (timeframeFilter.size > 0 ? 1 : 0) +
-    (view === 'created' && minProgress > 0 ? 1 : 0);
+    (activity !== 'touch' && minProgress > 0 ? 1 : 0);
 
   const filtered = useMemo(() => {
     const q = tickerQ.trim().toUpperCase();
     let tfKeys = timeframeFilter.size > 0 ? [...timeframeFilter] : TIMEFRAME_COLS.map((c) => c.key);
-    // Last hour = the touch time shown in the cell ("35m ago") is <= 60 min.
-    // Daily touches carry only a date, so Last Hour looks at 5/15/30/60 only.
-    if (lastHourOnly) tfKeys = tfKeys.filter((key) => INTRADAY_KEYS.has(key));
+    // Recent window = the time shown in the cell (touch) or the confirm /
+    // start-forming time (created). Daily carries only a date, so the recent
+    // filter looks at 5/15/30/60 only.
+    if (since != null) tfKeys = tfKeys.filter((key) => INTRADAY_KEYS.has(key));
     const want = directionFilter === 'off' ? null : directionFilter === 'both' ? ['up', 'down'] : [directionFilter];
-    const hourAgo = now - 60 * 60 * 1000;
-    // Timeframe / direction / last-hour must all hold on the SAME column, so
-    // e.g. "▲ in the last hour" doesn't match an old ▲ plus a fresh ▼.
+    const views = activity === 'both' ? ['touches', 'created'] : [activity === 'created' ? 'created' : 'touches'];
+    // Timeframe / direction / recency must all hold on the SAME column and
+    // the same activity, so e.g. "▲ in the last 30 min" doesn't match an old
+    // ▲ plus a fresh ▼.
     const keyMatches = (r, key) => {
-      const info = cellInfo(r, TIMEFRAME_COLS.find((c) => c.key === key), view, minProgress);
-      return info
-        && (!want || want.includes(info.dir))
-        && (!lastHourOnly || touchTime(info.recentAt) >= hourAgo);
+      const col = TIMEFRAME_COLS.find((c) => c.key === key);
+      return views.some((v) => {
+        const info = cellInfo(r, col, v, minProgress, since);
+        return info
+          && (!want || want.includes(info.dir))
+          && (since == null || touchTime(info.recentAt) >= since);
+      });
     };
-    const needsTouch = timeframeFilter.size > 0 || want || lastHourOnly;
+    const needsTouch = timeframeFilter.size > 0 || want || since != null;
     return rows.filter((r) => {
       if (q && !r.ticker.includes(q) && !(r.name ?? '').toUpperCase().includes(q)) return false;
       if (needsTouch && !tfKeys.some((key) => keyMatches(r, key))) return false;
@@ -629,11 +681,11 @@ export default function LiquidityScanner() {
       if (range52wMin !== '' && (r.range_52w_pct == null || r.range_52w_pct < Number(range52wMin))) return false;
       return true;
     });
-  }, [rows, tickerQ, directionFilter, highVolumeOnly, lastHourOnly, now, rsiMin, rsiMax, range52wMin, timeframeFilter, view, minProgress]);
+  }, [rows, tickerQ, directionFilter, highVolumeOnly, since, activity, rsiMin, rsiMax, range52wMin, timeframeFilter, minProgress]);
 
   const sorted = useMemo(
-    () => [...filtered].sort((a, b) => compareRows(a, b, sortKey, sortDir, view, minProgress)),
-    [filtered, sortKey, sortDir, view, minProgress],
+    () => [...filtered].sort((a, b) => compareRows(a, b, sortKey, sortDir, view, minProgress, since)),
+    [filtered, sortKey, sortDir, view, minProgress, since],
   );
 
   const handleExport = () => {
@@ -663,7 +715,7 @@ export default function LiquidityScanner() {
         steps={[
           { text: 'Use the Touches / Created switch to choose what the timeframe columns show. Touches = the last time price reached into a zone and the zone held. Created = zones being built right now by swing highs and lows, including ones still forming.', targetId: 'liq-view' },
           { text: 'Type a symbol or company name in the search box to jump straight to a ticker. Click ✕ to clear it.', targetId: 'liq-search' },
-          { text: 'Click Filters to show only tickers that touched a zone on the timeframes you pick, in the direction you pick, in the last hour, with High Volume, or within an RSI or 52-week range.', targetId: 'liq-filters-btn' },
+          { text: 'Click Filters to show only tickers that touched a zone on the timeframes you pick, in the direction you pick, touched or created in the last 30 minutes or hour, with High Volume, or within an RSI or 52-week range.', targetId: 'liq-filters-btn' },
           { text: 'ATR is how far the stock normally moves in a day (14-day average, in dollars). % ATR shows how much of that move has already happened today — 100% or more is highlighted, meaning a full normal day’s range is already done.', targetId: 'liq-table' },
           { text: 'High Volume compares today’s trading volume so far with a normal day at the same time of day. It lights up when volume is at least 25% above normal — a touch on heavy volume carries more weight. Tickers trading 3× normal volume or more get the whole row highlighted in amber so they stand out.', targetId: 'liq-table' },
           { text: 'The 5 / 15 / 30 / 60 / 1D columns show the last time price touched a liquidity zone on that chart and the zone held. A green ▲ means a support zone below price; a red ▼ means a supply zone above price. Only touches where the zone held are shown, so the zone is still on the chart. Bars that push through a zone are not counted. The time next to it says how long ago. The 5 / 15 / 30 / 60 columns only show touches from today; 1D looks back 7 trading days. Blank means no touch in that window.', targetId: 'liq-table' },
@@ -688,7 +740,7 @@ export default function LiquidityScanner() {
             {VIEW_OPTS.map((opt) => (
               <button
                 key={opt.value}
-                onClick={() => setView(opt.value)}
+                onClick={() => changeView(opt.value)}
                 title={opt.tooltip}
                 className={`rounded-md px-3 py-1 text-xs font-semibold transition ${
                   view === opt.value
@@ -741,7 +793,8 @@ export default function LiquidityScanner() {
               <FiltersPanel
                 directionFilter={directionFilter} setDirectionFilter={setDirectionFilter}
                 highVolumeOnly={highVolumeOnly} setHighVolumeOnly={setHighVolumeOnly}
-                lastHourOnly={lastHourOnly} setLastHourOnly={setLastHourOnly}
+                recentMins={recentMins} setRecentMins={setRecentMins}
+                activity={activity} onActivity={changeActivity}
                 rsiMin={rsiMin} setRsiMin={setRsiMin} rsiMax={rsiMax} setRsiMax={setRsiMax}
                 range52wMin={range52wMin} setRange52wMin={setRange52wMin}
                 timeframeFilter={timeframeFilter} toggleTimeframe={toggleTimeframe}
@@ -843,7 +896,7 @@ export default function LiquidityScanner() {
                   {TIMEFRAME_COLS.map((c) => (
                     <td key={c.key} className="px-1 py-2.5 text-center">
                       {view === 'created'
-                        ? <CreatedCell row={r} col={c} now={now} minProgress={minProgress} />
+                        ? <CreatedCell row={r} col={c} now={now} minProgress={minProgress} since={since} />
                         : <TouchCell row={r} col={c} now={now} />}
                     </td>
                   ))}
