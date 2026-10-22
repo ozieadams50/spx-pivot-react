@@ -60,6 +60,12 @@ const FULL_NAV = [
         ],
       },
       {
+        title: 'QE Liquidity Scanner', matrixKey: 'apps/liquidity-scanner',
+        children: [
+          { title: 'Dashboard', path: '/liquidity-scanner', matrixKey: 'apps/liquidity-scanner/dashboard' },
+        ],
+      },
+      {
         title: 'Market Sentiment', matrixKey: 'apps/market-sentiment',
         children: [
           { title: 'Intraday - Market Pulse', path: '/market-sentiment/intraday-pulse',  matrixKey: 'apps/market-sentiment/intraday-pulse'    },

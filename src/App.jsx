@@ -49,6 +49,7 @@ import ClosingPrintAdmin             from './pages/ClosingPrintAdmin';
 import ClosingPrint                  from './pages/ClosingPrint';
 import VixSignals                    from './pages/VixSignals';
 import SqueezeScanner                from './pages/squeeze-scanner/SqueezeScanner';
+import LiquidityScanner              from './pages/liquidity-scanner/LiquidityScanner';
 
 function AuthGuard({ children }) {
   const { loggedIn } = useAuth();
@@ -76,6 +77,7 @@ function AppRoutes() {
         <Route path="spx-pivots/key-levels" element={<Guard matrixKey="apps/spx-pivots/key-levels"><KeyLevels /></Guard>} />
         <Route path="spx-backtest"       element={<Guard matrixKey="apps/spx-backtest/run"><SPXBacktest /></Guard>} />
         <Route path="squeeze-scanner"    element={<Guard matrixKey="apps/squeeze-scanner/dashboard"><SqueezeScanner /></Guard>} />
+        <Route path="liquidity-scanner"  element={<Guard matrixKey="apps/liquidity-scanner/dashboard"><LiquidityScanner /></Guard>} />
         <Route path="spx-pivots/history" element={<Guard matrixKey="apps/spx-pivots/history"><HistoricalPerformance /></Guard>} />
 
         {/* Pre-Earnings Runners */}
