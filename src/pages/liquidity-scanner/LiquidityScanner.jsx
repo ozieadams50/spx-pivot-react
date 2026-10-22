@@ -55,9 +55,13 @@ const HIGH_VOLUME_RATIO = 1.25;
 const EXTREME_VOLUME_RATIO = 3;
 const INTRADAY_KEYS = new Set(TIMEFRAME_COLS.filter((c) => c.intraday).map((c) => c.key));
 const LAST_HOUR_TOOLTIP = 'Only show tickers that touched a liquidity zone within the last 60 minutes on the 5 / 15 / 30 / 60 charts (or just the ones checked under Touched On). Uses the same time shown in each cell. Market data runs about 15-30 minutes behind, so this is roughly the last 30-45 minutes of real trading. Daily touches are not included.';
-const HIGH_VOLUME_TOOLTIP = 'Today’s trading volume so far compared with a normal day at the same time of day (average of the last 20 sessions). High = at least 25% more than normal. The number shows how many times normal volume, e.g. 1.6× = 60% above normal. At 3× or more the whole row is highlighted in amber. Blank for indexes, which have no volume.';
+const HIGH_VOLUME_TOOLTIP = 'Today’s total trading volume so far compared with how much had normally traded by this same time of day (average of the last 20 sessions). It is not a single bar’s volume — a stock can show 5× here while each candle looks ordinary, if the extra volume is spread across the morning. TradingView’s built-in “Relative Volume at Time” indicator (length 20) measures the same thing. High = at least 25% more than normal. The number shows how many times normal volume, e.g. 1.6× = 60% above normal. At 3× or more the whole row is highlighted in amber. Blank for indexes, which have no volume.';
 
 const DIRECTION_TOOLTIP = 'Only show tickers whose most recent touch was in this direction, on any of the timeframes checked below (or any timeframe if none are checked). ▲ Support = a zone below price. ▼ Supply = a zone above price.';
+const ATR_TOOLTIP = 'Average True Range (14-day): how far this stock normally moves from high to low in a day, in dollars. Based on the 14 completed trading days before today, so it stays fixed all day. Matches TradingView’s ATR (14) on the daily chart as of yesterday’s bar.';
+const ATR_PCT_TOOLTIP = 'How much of a normal day’s move has already happened today: today’s high minus today’s low (regular hours) divided by the ATR. 50% = half a normal day’s range so far; 100% or more (highlighted) = it has already moved a full average day or more, so further room may be limited. Blank before today’s first bar.';
+// 100%+ of ATR used = a full average day's range already traded.
+const ATR_FULL_PCT = 100;
 const RSI_TOOLTIP = 'Relative Strength Index (14-day) — a 0-100 momentum reading measured against the size of this ticker’s own up days versus down days over its last 14 daily closes, not against other tickers or the market. Below 40 = oversold, 65-80 = strong momentum.';
 const RANGE_52W_TOOLTIP = 'Where the Close sits within this ticker’s own trailing 52-week high/low range. 100% = at the 52-week high, 0% = at the 52-week low.';
 const CLOSE_TOOLTIP = 'The previous trading day’s official closing price. Stays fixed all day until that day’s own close is finalized after the market close.';
@@ -175,7 +179,8 @@ const EXPORT_COLUMNS = [
   { key: 'last', header: 'Last' },
   { key: 'net_chg', header: 'Net Chg $' },
   { key: 'net_chg_pct', header: 'Net Chg %' },
-  { key: 'rsi', header: 'RSI' },
+  { key: 'atr', header: 'ATR (14d)' },
+  { key: 'atr_pct', header: '% ATR Used' },
   { key: 'range_52w_pct', header: '52W Range %' },
   { key: 'rel_vol', header: 'Volume vs Normal (x)' },
 ];
@@ -659,6 +664,7 @@ export default function LiquidityScanner() {
           { text: 'Use the Touches / Created switch to choose what the timeframe columns show. Touches = the last time price reached into a zone and the zone held. Created = zones being built right now by swing highs and lows, including ones still forming.', targetId: 'liq-view' },
           { text: 'Type a symbol or company name in the search box to jump straight to a ticker. Click ✕ to clear it.', targetId: 'liq-search' },
           { text: 'Click Filters to show only tickers that touched a zone on the timeframes you pick, in the direction you pick, in the last hour, with High Volume, or within an RSI or 52-week range.', targetId: 'liq-filters-btn' },
+          { text: 'ATR is how far the stock normally moves in a day (14-day average, in dollars). % ATR shows how much of that move has already happened today — 100% or more is highlighted, meaning a full normal day’s range is already done.', targetId: 'liq-table' },
           { text: 'High Volume compares today’s trading volume so far with a normal day at the same time of day. It lights up when volume is at least 25% above normal — a touch on heavy volume carries more weight. Tickers trading 3× normal volume or more get the whole row highlighted in amber so they stand out.', targetId: 'liq-table' },
           { text: 'The 5 / 15 / 30 / 60 / 1D columns show the last time price touched a liquidity zone on that chart and the zone held. A green ▲ means a support zone below price; a red ▼ means a supply zone above price. Only touches where the zone held are shown, so the zone is still on the chart. Bars that push through a zone are not counted. The time next to it says how long ago. The 5 / 15 / 30 / 60 columns only show touches from today; 1D looks back 7 trading days. Blank means no touch in that window.', targetId: 'liq-table' },
           { text: 'Hover any triangle to see the exact time and the zone’s price, plus the day’s key levels — prior day, premarket, opening range, prior week and nearby round numbers — and which one sits closest to the zone.', targetId: 'liq-table' },
@@ -789,7 +795,8 @@ export default function LiquidityScanner() {
                 <SortTh label="Last" sk="last" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[64px] px-2 text-center" tooltip={LAST_TOOLTIP} />
                 <SortTh label="Net Chg $" sk="net_chg" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" tooltip={NET_CHG_TOOLTIP} />
                 <SortTh label="Net Chg %" sk="net_chg_pct" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" tooltip={NET_CHG_TOOLTIP} />
-                <SortTh label="RSI" sk="rsi" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[48px] px-2 text-center" tooltip={RSI_TOOLTIP} />
+                <SortTh label="ATR" sk="atr" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[60px] px-2 text-center" tooltip={ATR_TOOLTIP} />
+                <SortTh label="% ATR" sk="atr_pct" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[64px] px-2 text-center" tooltip={ATR_PCT_TOOLTIP} />
                 <SortTh label="52W Range %" sk="range_52w_pct" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" tooltip={RANGE_52W_TOOLTIP} />
                 <SortTh label="High Volume" sk="rel_vol" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[84px] px-2 text-center" tooltip={HIGH_VOLUME_TOOLTIP} />
                 {TIMEFRAME_COLS.map((c) => (
@@ -827,7 +834,10 @@ export default function LiquidityScanner() {
                   <td className="px-2 py-2.5 text-center font-mono text-[var(--c-text-primary)]">{r.last != null ? `$${r.last.toFixed(2)}` : '—'}</td>
                   <td className="px-2 py-2.5 text-center"><SignedNum value={r.net_chg} fmt={(v) => `$${Math.abs(v).toFixed(2)}`} /></td>
                   <td className="px-2 py-2.5 text-center"><SignedNum value={r.net_chg_pct} fmt={(v) => `${Math.abs(v).toFixed(2)}%`} /></td>
-                  <td className="px-2 py-2.5 text-center font-mono text-[var(--c-text-secondary)]">{r.rsi != null ? r.rsi.toFixed(1) : '—'}</td>
+                  <td className="px-2 py-2.5 text-center font-mono text-[var(--c-text-secondary)]">{r.atr != null ? `$${r.atr.toFixed(2)}` : '—'}</td>
+                  <td className={`px-2 py-2.5 text-center font-mono ${
+                    r.atr_pct >= ATR_FULL_PCT ? 'font-bold text-[var(--c-amber)]' : 'text-[var(--c-text-secondary)]'
+                  }`}>{r.atr_pct != null ? `${Math.round(r.atr_pct)}%` : '—'}</td>
                   <td className="px-2 py-2.5 text-center font-mono text-[var(--c-text-secondary)]">{r.range_52w_pct != null ? `${r.range_52w_pct.toFixed(1)}%` : '—'}</td>
                   <td className="px-2 py-2.5 text-center"><HighVolume value={r.rel_vol} /></td>
                   {TIMEFRAME_COLS.map((c) => (
@@ -842,7 +852,7 @@ export default function LiquidityScanner() {
               })}
               {sorted.length === 0 && (
                 <tr>
-                  <td colSpan={10 + TIMEFRAME_COLS.length} className="py-8 text-center text-[var(--c-text-muted)]">
+                  <td colSpan={11 + TIMEFRAME_COLS.length} className="py-8 text-center text-[var(--c-text-muted)]">
                     {rows.length === 0 ? 'No scan data yet — the first scan of the day populates this page.' : 'No tickers match the current filters.'}
                   </td>
                 </tr>
