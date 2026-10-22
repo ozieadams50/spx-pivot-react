@@ -16,12 +16,37 @@ const DIRECTION_OPTS = [
 ];
 
 const TIMEFRAME_COLS = [
-  { key: 'liq_5', label: '5', tf: '5-minute', intraday: true },
-  { key: 'liq_15', label: '15', tf: '15-minute', intraday: true },
-  { key: 'liq_30', label: '30', tf: '30-minute', intraday: true },
-  { key: 'liq_60', label: '60', tf: '60-minute (hourly)', intraday: true },
-  { key: 'liq_1d', label: '1D', tf: 'Daily', intraday: false },
-].map((c) => ({ ...c, tooltip: `Last time price touched a liquidity zone on the ${c.tf} chart — ${c.intraday ? 'today’s session only' : 'within the last 7 trading days'}. ▲ green = touched a zone below price (support, where sell stops rest). ▼ red = touched a zone above price (supply / distribution, where buy stops rest). Only touches where price reached into the zone and the zone held count — the zone is still drawn on the chart. Bars that push through a zone are not counted. Hover a cell for the exact time and zone price. Blank = no touch ${c.intraday ? 'today' : 'in the last 7 trading days'}.` }));
+  { key: 'liq_5', id: '5', label: '5', tf: '5-minute', intraday: true, barMins: 5 },
+  { key: 'liq_15', id: '15', label: '15', tf: '15-minute', intraday: true, barMins: 15 },
+  { key: 'liq_30', id: '30', label: '30', tf: '30-minute', intraday: true, barMins: 30 },
+  { key: 'liq_60', id: '60', label: '60', tf: '60-minute (hourly)', intraday: true, barMins: 60 },
+  { key: 'liq_1d', id: '1d', label: '1D', tf: 'Daily', intraday: false, barMins: null },
+].map((c) => ({ ...c, createdTooltip: `Created view: the newest liquidity zone being built on the ${c.tf} chart by a swing high (▼ red, supply) or swing low (▲ green, support). A swing only counts once the next 8 bars fail to go past it — the badge shows how many of those 8 bars it has held so far (e.g. 4/8), and ✓ means it is confirmed and the zone is still on the chart. Hover a cell for the swing price, how often swings at that stage become a zone, and the day’s key levels. Blank = nothing forming and no zone confirmed ${c.intraday ? 'today' : 'in the last 7 trading days'}.`, tooltip: `Last time price touched a liquidity zone on the ${c.tf} chart — ${c.intraday ? 'today’s session only' : 'within the last 7 trading days'}. ▲ green = touched a zone below price (support, where sell stops rest). ▼ red = touched a zone above price (supply / distribution, where buy stops rest). Only touches where price reached into the zone and the zone held count — the zone is still drawn on the chart. Bars that push through a zone are not counted. Hover a cell for the exact time and zone price. Blank = no touch ${c.intraday ? 'today' : 'in the last 7 trading days'}.` }));
+
+// Share of forming swings that went on to confirm, by bars held (index 0 =
+// 1 of 8 ... index 6 = 7 of 8). Measured 2026-10-22 over 80 tickers / 45
+// days -- see SQUEEZE_SCANNER_ARCHITECTURE.md §11. Re-measure if the swing
+// length (8) ever changes.
+const CONFIRM_RATES = {
+  '5': [44, 57, 66, 75, 82, 88, 95],
+  '15': [46, 58, 67, 75, 81, 88, 94],
+  '30': [52, 64, 73, 80, 86, 91, 96],
+  '60': [44, 53, 60, 66, 72, 80, 95],
+  '1d': [42, 54, 64, 72, 80, 88, 94],
+};
+const SWING_BARS = 8;
+
+const VIEW_OPTS = [
+  { label: 'Touches', value: 'touches', tooltip: 'Show the last time price touched a liquidity zone and the zone held.' },
+  { label: 'Created', value: 'created', tooltip: 'Show liquidity zones being built right now by swing highs and lows — including ones still forming, with how close they are to being confirmed.' },
+];
+const PROGRESS_OPTS = [
+  { label: 'Any', value: 0 },
+  { label: '5/8 or later', value: 5 },
+  { label: 'Confirmed only', value: SWING_BARS },
+];
+const PROGRESS_TOOLTIP = 'How far along a zone must be to show. A swing high or low becomes a zone once the next 8 bars fail to go past it. "5/8 or later" keeps swings that have held at least 5 of those bars (about 4 in 5 of those historically became zones) plus confirmed zones. "Confirmed only" hides anything still forming.';
+const NEW_LAST_HOUR_TOOLTIP = 'Only show tickers with a zone that started forming within the last 60 minutes on the 5 / 15 / 30 / 60 charts (or just the ones checked under Zone On). Market data runs about 15-30 minutes behind. Daily zones are not included.';
 
 // rel_vol = today's volume so far / the average volume over the same part of
 // the session across the prior 20 days. 1.25 = 25% above normal.
@@ -82,6 +107,65 @@ function touchLabel(at) {
   }) + ' ET';
 }
 
+// ── Created view helpers ────────────────────────────────────────────────────
+// row.created[col.id] = { forming, confirmed } from the scan (either may be
+// null). The cell shows the forming swing when there is one that meets the
+// progress filter, otherwise the latest confirmed zone.
+function createdEntry(row, col, minProgress = 0) {
+  const c = row.created?.[col.id];
+  if (!c) return null;
+  if (c.forming && c.forming.progress >= minProgress) return c.forming;
+  return c.confirmed ?? null;
+}
+
+// One accessor for both views so filters and sorting treat them the same:
+// dir = 'up' | 'down', at = time shown in the cell, recentAt = time the Last
+// Hour filter checks, level = zone price.
+function cellInfo(row, col, view, minProgress) {
+  if (view === 'created') {
+    const e = createdEntry(row, col, minProgress);
+    return e ? { dir: e.dir, at: e.at, recentAt: e.appeared_at, level: e.level, entry: e } : null;
+  }
+  const dir = row[col.key];
+  const at = row[`${col.key}_at`];
+  return dir && at ? { dir, at, recentAt: at, level: row[`${col.key}_level`] } : null;
+}
+
+const money = (v) => (v == null ? '—' : `$${v.toFixed(2)}`);
+
+const KEY_LEVELS = [
+  { label: 'Prior day', hi: 'prior_day_high', lo: 'prior_day_low' },
+  { label: 'Premarket', hi: 'premarket_high', lo: 'premarket_low' },
+  { label: 'Opening range (first 30 min)', hi: 'orb_high', lo: 'orb_low' },
+  { label: 'Prior week', hi: 'prior_week_high', lo: 'prior_week_low' },
+];
+
+// Hover text block: the day's key levels + the one closest to this zone.
+function keyLevelsText(levels, zonePrice) {
+  if (!levels) return '';
+  const lines = ['', 'Key levels (high / low):'];
+  const all = [];
+  for (const k of KEY_LEVELS) {
+    lines.push(`   ${k.label}: ${money(levels[k.hi])} / ${money(levels[k.lo])}`);
+    if (levels[k.hi] != null) all.push([`${k.label} high`, levels[k.hi]]);
+    if (levels[k.lo] != null) all.push([`${k.label} low`, levels[k.lo]]);
+  }
+  lines.push(`   Round numbers: ${money(levels.round_above)} above / ${money(levels.round_below)} below`);
+  if (levels.round_above != null) all.push(['Round number', levels.round_above]);
+  if (levels.round_below != null) all.push(['Round number', levels.round_below]);
+  if (zonePrice != null && all.length) {
+    const [name, price] = all.reduce((best, cur) => (Math.abs(cur[1] - zonePrice) < Math.abs(best[1] - zonePrice) ? cur : best));
+    lines.push(`   Closest to this zone: ${name} ${money(price)} (${money(Math.abs(price - zonePrice))} away)`);
+  }
+  return lines.join('\n');
+}
+
+function barsLeftText(col, left) {
+  if (col.barMins == null) return `${left} more trading day${left === 1 ? '' : 's'}`;
+  const mins = left * col.barMins;
+  return mins < 60 ? `about ${mins} minutes` : `about ${+(mins / 60).toFixed(1)} hours`;
+}
+
 const EXPORT_COLUMNS = [
   { key: 'ticker', header: 'Symbol' },
   { key: 'name', header: 'Name' },
@@ -94,11 +178,28 @@ const EXPORT_COLUMNS = [
   { key: 'rsi', header: 'RSI' },
   { key: 'range_52w_pct', header: '52W Range %' },
   { key: 'rel_vol', header: 'Volume vs Normal (x)' },
-  ...TIMEFRAME_COLS.flatMap((c) => [
-    { key: c.key, header: `${c.label} Touch`, fmt: (v) => (v === 'up' ? 'Support' : v === 'down' ? 'Supply' : '') },
-    { key: `${c.key}_at`, header: `${c.label} Last Touch`, fmt: (v) => touchLabel(v) },
-    { key: `${c.key}_level`, header: `${c.label} Zone Price` },
+];
+const TOUCH_EXPORT = TIMEFRAME_COLS.flatMap((c) => [
+  { key: c.key, header: `${c.label} Touch`, fmt: (v) => (v === 'up' ? 'Support' : v === 'down' ? 'Supply' : '') },
+  { key: `${c.key}_at`, header: `${c.label} Last Touch`, fmt: (v) => touchLabel(v) },
+  { key: `${c.key}_level`, header: `${c.label} Zone Price` },
+]);
+const createdExport = (minProgress) => TIMEFRAME_COLS.flatMap((c) => {
+  const e = (r) => createdEntry(r, c, minProgress);
+  return [
+    { header: `${c.label} Zone`, get: (r) => (e(r)?.dir === 'up' ? 'Support' : e(r)?.dir === 'down' ? 'Supply' : '') },
+    { header: `${c.label} Status`, get: (r) => (!e(r) ? '' : e(r).progress >= SWING_BARS ? 'Confirmed' : `Forming ${e(r).progress}/${SWING_BARS}`) },
+    { header: `${c.label} Swing Time`, get: (r) => touchLabel(e(r)?.at) },
+    { header: `${c.label} Zone Price`, get: (r) => e(r)?.level ?? '' },
+  ];
+});
+const LEVELS_EXPORT = [
+  ...KEY_LEVELS.flatMap((k) => [
+    { header: `${k.label} High`, get: (r) => r.levels?.[k.hi] ?? '' },
+    { header: `${k.label} Low`, get: (r) => r.levels?.[k.lo] ?? '' },
   ]),
+  { header: 'Round Number Above', get: (r) => r.levels?.round_above ?? '' },
+  { header: 'Round Number Below', get: (r) => r.levels?.round_below ?? '' },
 ];
 
 const DEFAULT_FILTERS = {
@@ -110,21 +211,23 @@ const DEFAULT_FILTERS = {
   rsiMax: '',
   range52wMin: '',
   timeframeFilter: new Set(),
+  minProgress: 0,
 };
 
 // Timeframe columns sort by recency of the touch (desc = most recent first);
 // a blank cell always sinks to the bottom regardless of direction.
 const TOUCH_KEYS = new Set(TIMEFRAME_COLS.map((c) => c.key));
 
-function compareRows(a, b, key, dir) {
+function compareRows(a, b, key, dir, view, minProgress) {
   if (['ticker', 'name', 'sector'].includes(key)) {
     const va = (a[key] ?? '').toLowerCase();
     const vb = (b[key] ?? '').toLowerCase();
     return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
   }
   if (TOUCH_KEYS.has(key)) {
-    const va = touchTime(a[`${key}_at`]);
-    const vb = touchTime(b[`${key}_at`]);
+    const col = TIMEFRAME_COLS.find((c) => c.key === key);
+    const va = touchTime(cellInfo(a, col, view, minProgress)?.at);
+    const vb = touchTime(cellInfo(b, col, view, minProgress)?.at);
     if (va == null && vb == null) return 0;
     if (va == null) return 1;
     if (vb == null) return -1;
@@ -172,11 +275,53 @@ function TouchCell({ row, col, now }) {
   const touches = row[`${col.key}_touches`];
   const zone = level != null ? ` $${level.toFixed(2)}` : '';
   const title = `${isUp ? 'Support zone (below price)' : 'Supply zone (above price)'} touched ${touchLabel(at)} — price reached into the zone${zone} and held`
-    + (touches > 1 ? `. Built from ${touches} swing points` : '');
+    + (touches > 1 ? `. Built from ${touches} swing points` : '')
+    + keyLevelsText(row.levels, level);
   return (
     <span className="inline-flex items-center gap-1 whitespace-nowrap" title={title}>
       <span className={`text-sm font-bold ${color}`}>{isUp ? '▲' : '▼'}</span>
       <span className="text-[10px] text-[var(--c-text-secondary)]">{timeAgo(at, now)}</span>
+    </span>
+  );
+}
+
+function CreatedCell({ row, col, now, minProgress }) {
+  const e = createdEntry(row, col, minProgress);
+  if (!e) return <span className="text-[var(--c-text-faint)]">—</span>;
+  const isUp = e.dir === 'up';
+  const color = isUp ? 'text-[var(--c-emerald)]' : 'text-[var(--c-rose)]';
+  const confirmed = e.progress >= SWING_BARS;
+  const side = isUp ? 'Support' : 'Supply';
+  const swing = isUp ? 'Swing low' : 'Swing high';
+  const lines = [];
+  if (confirmed) {
+    lines.push(`${isUp ? '▲' : '▼'} ${side} zone created — confirmed ${touchLabel(e.confirmed_at)}`);
+    lines.push(`${swing} ${money(e.swing)} at ${touchLabel(e.at)}`);
+    lines.push(e.merge_into != null
+      ? `Joined the ${side.toLowerCase()} zone at ${money(e.merge_into)} — zone now at ${money(e.level)}`
+      : `New zone — now at ${money(e.level)}`);
+    lines.push('Still on the chart (price has not broken through it).');
+  } else {
+    const rate = CONFIRM_RATES[col.id]?.[e.progress - 1];
+    const left = SWING_BARS - e.progress;
+    lines.push(`${isUp ? '▲' : '▼'} ${side} zone forming — ${e.progress} of ${SWING_BARS} bars held`);
+    if (rate != null) lines.push(`About ${rate}% of swings at this stage become a zone on the ${col.tf} chart`);
+    lines.push(`${swing} ${money(e.swing)} at ${touchLabel(e.at)}`);
+    lines.push(`Confirms in ${barsLeftText(col, left)} if price doesn’t go ${isUp ? 'below' : 'above'} it`);
+    lines.push(e.merge_into != null
+      ? `Would join the ${side.toLowerCase()} zone at ${money(e.merge_into)} — zone would move to ${money(e.level)}`
+      : 'Would start a new zone');
+  }
+  const title = lines.join('\n') + keyLevelsText(row.levels, e.level);
+  return (
+    <span className="inline-flex items-center gap-1 whitespace-nowrap" title={title}>
+      <span className={`text-sm font-bold ${color}`}>{isUp ? '▲' : '▼'}</span>
+      {confirmed ? (
+        <span className="text-[10px] font-bold text-[var(--c-text-secondary)]">✓</span>
+      ) : (
+        <span className="rounded border border-[var(--c-border)] px-1 font-mono text-[9px] text-[var(--c-text-secondary)]">{e.progress}/{SWING_BARS}</span>
+      )}
+      <span className="text-[10px] text-[var(--c-text-secondary)]">{timeAgo(e.at, now)}</span>
     </span>
   );
 }
@@ -208,9 +353,11 @@ function FiltersPanel({
   rsiMin, setRsiMin, rsiMax, setRsiMax,
   range52wMin, setRange52wMin,
   timeframeFilter, toggleTimeframe,
+  view, minProgress, setMinProgress,
   onClear, onClose,
   total, filtered,
 }) {
+  const created = view === 'created';
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
@@ -223,8 +370,10 @@ function FiltersPanel({
         </div>
 
         <div className="space-y-4">
-          <div title="Only show tickers that touched a liquidity zone on at least one of the checked timeframes (today for 5/15/30/60, the last 7 trading days for 1D).">
-            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Touched On</span>
+          <div title={created
+            ? 'Only show tickers with a zone forming or created on at least one of the checked timeframes.'
+            : 'Only show tickers that touched a liquidity zone on at least one of the checked timeframes (today for 5/15/30/60, the last 7 trading days for 1D).'}>
+            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">{created ? 'Zone On' : 'Touched On'}</span>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {TIMEFRAME_COLS.map((c) => (
                 <button
@@ -261,8 +410,29 @@ function FiltersPanel({
             </div>
           </div>
 
-          <div title={LAST_HOUR_TOOLTIP}>
-            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Touched in Last Hour</span>
+          {created && (
+            <div title={PROGRESS_TOOLTIP}>
+              <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Zone Progress</span>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {PROGRESS_OPTS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setMinProgress(opt.value)}
+                    className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
+                      minProgress === opt.value
+                        ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
+                        : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div title={created ? NEW_LAST_HOUR_TOOLTIP : LAST_HOUR_TOOLTIP}>
+            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">{created ? 'New in Last Hour' : 'Touched in Last Hour'}</span>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {[{ label: 'Off', value: false }, { label: 'Last hour only', value: true }].map((opt) => (
                 <button
@@ -352,6 +522,9 @@ export default function LiquidityScanner() {
   const [rsiMax, setRsiMax] = useState(DEFAULT_FILTERS.rsiMax);
   const [range52wMin, setRange52wMin] = useState(DEFAULT_FILTERS.range52wMin);
   const [timeframeFilter, setTimeframeFilter] = useState(DEFAULT_FILTERS.timeframeFilter);
+  const [minProgress, setMinProgress] = useState(DEFAULT_FILTERS.minProgress);
+  // Touches / Created is a mode, not a filter -- Refresh and Clear keep it.
+  const [view, setView] = useState('touches');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [showStrategyInfo, setShowStrategyInfo] = useState(false);
 
@@ -402,6 +575,7 @@ export default function LiquidityScanner() {
     setRsiMax(DEFAULT_FILTERS.rsiMax);
     setRange52wMin(DEFAULT_FILTERS.range52wMin);
     setTimeframeFilter(new Set());
+    setMinProgress(DEFAULT_FILTERS.minProgress);
   };
 
   // Refresh means "back to the baseline view" -- same as the Squeeze Scanner.
@@ -421,7 +595,8 @@ export default function LiquidityScanner() {
     (rsiMin !== '' ? 1 : 0) +
     (rsiMax !== '' ? 1 : 0) +
     (range52wMin !== '' ? 1 : 0) +
-    (timeframeFilter.size > 0 ? 1 : 0);
+    (timeframeFilter.size > 0 ? 1 : 0) +
+    (view === 'created' && minProgress > 0 ? 1 : 0);
 
   const filtered = useMemo(() => {
     const q = tickerQ.trim().toUpperCase();
@@ -433,10 +608,12 @@ export default function LiquidityScanner() {
     const hourAgo = now - 60 * 60 * 1000;
     // Timeframe / direction / last-hour must all hold on the SAME column, so
     // e.g. "▲ in the last hour" doesn't match an old ▲ plus a fresh ▼.
-    const keyMatches = (r, key) =>
-      r[key]
-      && (!want || want.includes(r[key]))
-      && (!lastHourOnly || touchTime(r[`${key}_at`]) >= hourAgo);
+    const keyMatches = (r, key) => {
+      const info = cellInfo(r, TIMEFRAME_COLS.find((c) => c.key === key), view, minProgress);
+      return info
+        && (!want || want.includes(info.dir))
+        && (!lastHourOnly || touchTime(info.recentAt) >= hourAgo);
+    };
     const needsTouch = timeframeFilter.size > 0 || want || lastHourOnly;
     return rows.filter((r) => {
       if (q && !r.ticker.includes(q) && !(r.name ?? '').toUpperCase().includes(q)) return false;
@@ -447,20 +624,21 @@ export default function LiquidityScanner() {
       if (range52wMin !== '' && (r.range_52w_pct == null || r.range_52w_pct < Number(range52wMin))) return false;
       return true;
     });
-  }, [rows, tickerQ, directionFilter, highVolumeOnly, lastHourOnly, now, rsiMin, rsiMax, range52wMin, timeframeFilter]);
+  }, [rows, tickerQ, directionFilter, highVolumeOnly, lastHourOnly, now, rsiMin, rsiMax, range52wMin, timeframeFilter, view, minProgress]);
 
   const sorted = useMemo(
-    () => [...filtered].sort((a, b) => compareRows(a, b, sortKey, sortDir)),
-    [filtered, sortKey, sortDir],
+    () => [...filtered].sort((a, b) => compareRows(a, b, sortKey, sortDir, view, minProgress)),
+    [filtered, sortKey, sortDir, view, minProgress],
   );
 
   const handleExport = () => {
-    const headers = EXPORT_COLUMNS.map((c) => c.header);
-    const data = sorted.map((r) => EXPORT_COLUMNS.map((c) => (c.fmt ? c.fmt(r[c.key]) : r[c.key] ?? '')));
+    const cols = [...EXPORT_COLUMNS, ...(view === 'created' ? createdExport(minProgress) : TOUCH_EXPORT), ...LEVELS_EXPORT];
+    const headers = cols.map((c) => c.header);
+    const data = sorted.map((r) => cols.map((c) => (c.get ? c.get(r) : c.fmt ? c.fmt(r[c.key]) : r[c.key] ?? '')));
     const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Liquidity Scanner');
-    XLSX.writeFile(wb, `qe_liquidity_scanner_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    XLSX.writeFile(wb, `qe_liquidity_scanner_${view}_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   return (
@@ -478,11 +656,13 @@ export default function LiquidityScanner() {
           </button>
         }
         steps={[
+          { text: 'Use the Touches / Created switch to choose what the timeframe columns show. Touches = the last time price reached into a zone and the zone held. Created = zones being built right now by swing highs and lows, including ones still forming.', targetId: 'liq-view' },
           { text: 'Type a symbol or company name in the search box to jump straight to a ticker. Click ✕ to clear it.', targetId: 'liq-search' },
           { text: 'Click Filters to show only tickers that touched a zone on the timeframes you pick, in the direction you pick, in the last hour, with High Volume, or within an RSI or 52-week range.', targetId: 'liq-filters-btn' },
           { text: 'High Volume compares today’s trading volume so far with a normal day at the same time of day. It lights up when volume is at least 25% above normal — a touch on heavy volume carries more weight. Tickers trading 3× normal volume or more get the whole row highlighted in amber so they stand out.', targetId: 'liq-table' },
           { text: 'The 5 / 15 / 30 / 60 / 1D columns show the last time price touched a liquidity zone on that chart and the zone held. A green ▲ means a support zone below price; a red ▼ means a supply zone above price. Only touches where the zone held are shown, so the zone is still on the chart. Bars that push through a zone are not counted. The time next to it says how long ago. The 5 / 15 / 30 / 60 columns only show touches from today; 1D looks back 7 trading days. Blank means no touch in that window.', targetId: 'liq-table' },
-          { text: 'Hover any triangle to see the exact time of the touch, and the zone’s price.', targetId: 'liq-table' },
+          { text: 'Hover any triangle to see the exact time and the zone’s price, plus the day’s key levels — prior day, premarket, opening range, prior week and nearby round numbers — and which one sits closest to the zone.', targetId: 'liq-table' },
+          { text: 'In Created view, a swing high (▼) or swing low (▲) becomes a zone once the next 8 bars fail to go past it. A badge like 4/8 means it has held 4 of those 8 bars so far — hover to see how often swings at that stage become a zone. ✓ means confirmed and still on the chart. Use the Zone Progress filter to hide early ones.', targetId: 'liq-table' },
           { text: 'Click a timeframe header to sort by the most recent touch on that chart. Click again to flip the order. Tickers with no touch always stay at the bottom.', targetId: 'liq-table' },
           { text: 'A purple dot beside a ticker means it reports earnings within the next 15 days. Hover over the dot for the date.', targetId: 'liq-table' },
           { text: 'Data refreshes automatically every 5 minutes. Click Refresh any time for an immediate update — it also clears every filter and the sort order.', targetId: 'liq-refresh-btn' },
@@ -498,6 +678,22 @@ export default function LiquidityScanner() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <div id="liq-view" className="flex rounded-lg border border-[var(--c-border)] p-0.5">
+            {VIEW_OPTS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setView(opt.value)}
+                title={opt.tooltip}
+                className={`rounded-md px-3 py-1 text-xs font-semibold transition ${
+                  view === opt.value
+                    ? 'bg-violet-500/20 text-[var(--c-violet)]'
+                    : 'text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
           <div id="liq-search" className="relative">
             <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[var(--c-text-dimmed)]">⌕</span>
             <input
@@ -543,6 +739,7 @@ export default function LiquidityScanner() {
                 rsiMin={rsiMin} setRsiMin={setRsiMin} rsiMax={rsiMax} setRsiMax={setRsiMax}
                 range52wMin={range52wMin} setRange52wMin={setRange52wMin}
                 timeframeFilter={timeframeFilter} toggleTimeframe={toggleTimeframe}
+                view={view} minProgress={minProgress} setMinProgress={setMinProgress}
                 onClear={clearFilters} onClose={() => setFiltersOpen(false)}
                 total={rows.length} filtered={sorted.length}
               />
@@ -596,7 +793,7 @@ export default function LiquidityScanner() {
                 <SortTh label="52W Range %" sk="range_52w_pct" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" tooltip={RANGE_52W_TOOLTIP} />
                 <SortTh label="High Volume" sk="rel_vol" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[84px] px-2 text-center" tooltip={HIGH_VOLUME_TOOLTIP} />
                 {TIMEFRAME_COLS.map((c) => (
-                  <SortTh key={c.key} label={c.label} sk={c.key} sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[72px] px-1 text-center" tooltip={c.tooltip} />
+                  <SortTh key={c.key} label={c.label} sk={c.key} sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[84px] px-1 text-center" tooltip={view === 'created' ? c.createdTooltip : c.tooltip} />
                 ))}
               </tr>
             </thead>
@@ -634,7 +831,11 @@ export default function LiquidityScanner() {
                   <td className="px-2 py-2.5 text-center font-mono text-[var(--c-text-secondary)]">{r.range_52w_pct != null ? `${r.range_52w_pct.toFixed(1)}%` : '—'}</td>
                   <td className="px-2 py-2.5 text-center"><HighVolume value={r.rel_vol} /></td>
                   {TIMEFRAME_COLS.map((c) => (
-                    <td key={c.key} className="px-1 py-2.5 text-center"><TouchCell row={r} col={c} now={now} /></td>
+                    <td key={c.key} className="px-1 py-2.5 text-center">
+                      {view === 'created'
+                        ? <CreatedCell row={r} col={c} now={now} minProgress={minProgress} />
+                        : <TouchCell row={r} col={c} now={now} />}
+                    </td>
                   ))}
                 </tr>
                 );
@@ -661,6 +862,8 @@ export default function LiquidityScanner() {
             'A close straight through a zone means the orders were absorbed and the move may continue — don’t fight it. Those bars are not flagged here.',
             'Touches lining up across several timeframes (for example 15, 60, and 1D all showing ▲) carry more weight than a lone 5-minute touch.',
             'Use the zone itself to define risk: a stop just beyond the zone keeps the loss small if the level fails.',
+            'Created view shows zones as they form, before they are confirmed. A swing that has held more of its 8 bars is more likely to become a real zone — weigh an early 2/8 far less than a 6/8 or a ✓.',
+            'A zone sitting right on a key level (prior day high, premarket low, opening range, a round number) stacks two kinds of resting orders in one spot — those tend to matter more.',
           ]}
           onClose={() => setShowStrategyInfo(false)}
         />
