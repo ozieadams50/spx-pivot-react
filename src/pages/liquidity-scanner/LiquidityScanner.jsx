@@ -45,7 +45,7 @@ const PROGRESS_OPTS = [
   { label: '5/8 or later', value: 5 },
   { label: 'Confirmed only', value: SWING_BARS },
 ];
-const PROGRESS_TOOLTIP = 'How far along a zone must be to show. A swing high or low becomes a zone once the next 8 bars fail to go past it. "5/8 or later" keeps swings that have held at least 5 of those bars (about 4 in 5 of those historically became zones) plus confirmed zones. "Confirmed only" hides anything still forming.';
+const PROGRESS_TOOLTIP = 'How far along a zone must be to show. A swing high or low becomes a zone once the next 8 bars fail to go past it. "5/8 or later" keeps swings that have held at least 5 of those bars (about 4 in 5 of those historically became zones) plus confirmed zones. "Confirmed only" hides anything still forming. Applies to created zones only — picking 5/8 or Confirmed switches the table to Created.';
 
 // rel_vol = today's volume so far / the average volume over the same part of
 // the session across the prior 20 days. 1.25 = 25% above normal.
@@ -432,26 +432,29 @@ function FiltersPanel({
             </div>
           </div>
 
-          {(created || activity === 'both') && (
-            <div title={PROGRESS_TOOLTIP}>
-              <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Zone Progress</span>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {PROGRESS_OPTS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setMinProgress(opt.value)}
-                    className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
-                      minProgress === opt.value
-                        ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
-                        : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
+          {/* Always shown; picking a stage while on Touch switches to Created,
+              since progress only applies to created zones. */}
+          <div title={PROGRESS_TOOLTIP}>
+            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Created: Zone Progress</span>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {PROGRESS_OPTS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => {
+                    setMinProgress(opt.value);
+                    if (opt.value > 0 && activity === 'touch') onActivity('created');
+                  }}
+                  className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
+                    minProgress === opt.value
+                      ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
+                      : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
           <div title={ACTIVITY_TOOLTIP}>
             <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Activity</span>
