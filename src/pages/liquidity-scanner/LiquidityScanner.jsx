@@ -26,6 +26,8 @@ const TIMEFRAME_COLS = [
 // rel_vol = today's volume so far / the average volume over the same part of
 // the session across the prior 20 days. 1.25 = 25% above normal.
 const HIGH_VOLUME_RATIO = 1.25;
+const INTRADAY_KEYS = new Set(TIMEFRAME_COLS.filter((c) => c.intraday).map((c) => c.key));
+const LAST_HOUR_TOOLTIP = 'Only show tickers that touched a liquidity zone within the last 60 minutes on the 5 / 15 / 30 / 60 charts (or just the ones checked under Touched On). Uses the same time shown in each cell. Market data runs about 15-30 minutes behind, so this is roughly the last 30-45 minutes of real trading. Daily touches are not included.';
 const HIGH_VOLUME_TOOLTIP = 'Today’s trading volume so far compared with a normal day at the same time of day (average of the last 20 sessions). High = at least 25% more than normal. The number shows how many times normal volume, e.g. 1.6× = 60% above normal. Blank for indexes, which have no volume.';
 
 const DIRECTION_TOOLTIP = 'Only show tickers whose most recent touch was in this direction, on any of the timeframes checked below (or any timeframe if none are checked). ▲ Support = a zone below price. ▼ Supply = a zone above price.';
@@ -101,6 +103,7 @@ const DEFAULT_FILTERS = {
   tickerQ: '',
   directionFilter: 'off',
   highVolumeOnly: false,
+  lastHourOnly: false,
   rsiMin: '',
   rsiMax: '',
   range52wMin: '',
@@ -192,6 +195,7 @@ function SortTh({ label, sk, sortKey, sortDir, onSort, className = '', tooltip }
 function FiltersPanel({
   directionFilter, setDirectionFilter,
   highVolumeOnly, setHighVolumeOnly,
+  lastHourOnly, setLastHourOnly,
   rsiMin, setRsiMin, rsiMax, setRsiMax,
   range52wMin, setRange52wMin,
   timeframeFilter, toggleTimeframe,
@@ -238,6 +242,25 @@ function FiltersPanel({
                   onClick={() => setDirectionFilter(opt.value)}
                   className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
                     directionFilter === opt.value
+                      ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
+                      : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div title={LAST_HOUR_TOOLTIP}>
+            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Touched in Last Hour</span>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {[{ label: 'Off', value: false }, { label: 'Last hour only', value: true }].map((opt) => (
+                <button
+                  key={opt.label}
+                  onClick={() => setLastHourOnly(opt.value)}
+                  className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
+                    lastHourOnly === opt.value
                       ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
                       : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
                   }`}
@@ -315,6 +338,7 @@ export default function LiquidityScanner() {
   const [tickerQ, setTickerQ] = useState(DEFAULT_FILTERS.tickerQ);
   const [directionFilter, setDirectionFilter] = useState(DEFAULT_FILTERS.directionFilter);
   const [highVolumeOnly, setHighVolumeOnly] = useState(DEFAULT_FILTERS.highVolumeOnly);
+  const [lastHourOnly, setLastHourOnly] = useState(DEFAULT_FILTERS.lastHourOnly);
   const [rsiMin, setRsiMin] = useState(DEFAULT_FILTERS.rsiMin);
   const [rsiMax, setRsiMax] = useState(DEFAULT_FILTERS.rsiMax);
   const [range52wMin, setRange52wMin] = useState(DEFAULT_FILTERS.range52wMin);
@@ -364,6 +388,7 @@ export default function LiquidityScanner() {
     setTickerQ(DEFAULT_FILTERS.tickerQ);
     setDirectionFilter(DEFAULT_FILTERS.directionFilter);
     setHighVolumeOnly(DEFAULT_FILTERS.highVolumeOnly);
+    setLastHourOnly(DEFAULT_FILTERS.lastHourOnly);
     setRsiMin(DEFAULT_FILTERS.rsiMin);
     setRsiMax(DEFAULT_FILTERS.rsiMax);
     setRange52wMin(DEFAULT_FILTERS.range52wMin);
@@ -383,6 +408,7 @@ export default function LiquidityScanner() {
   const activeFilterCount =
     (directionFilter !== 'off' ? 1 : 0) +
     (highVolumeOnly ? 1 : 0) +
+    (lastHourOnly ? 1 : 0) +
     (rsiMin !== '' ? 1 : 0) +
     (rsiMax !== '' ? 1 : 0) +
     (range52wMin !== '' ? 1 : 0) +
@@ -390,21 +416,29 @@ export default function LiquidityScanner() {
 
   const filtered = useMemo(() => {
     const q = tickerQ.trim().toUpperCase();
-    const tfKeys = timeframeFilter.size > 0 ? [...timeframeFilter] : TIMEFRAME_COLS.map((c) => c.key);
+    let tfKeys = timeframeFilter.size > 0 ? [...timeframeFilter] : TIMEFRAME_COLS.map((c) => c.key);
+    // Last hour = the touch time shown in the cell ("35m ago") is <= 60 min.
+    // Daily touches carry only a date, so Last Hour looks at 5/15/30/60 only.
+    if (lastHourOnly) tfKeys = tfKeys.filter((key) => INTRADAY_KEYS.has(key));
+    const want = directionFilter === 'off' ? null : directionFilter === 'both' ? ['up', 'down'] : [directionFilter];
+    const hourAgo = now - 60 * 60 * 1000;
+    // Timeframe / direction / last-hour must all hold on the SAME column, so
+    // e.g. "▲ in the last hour" doesn't match an old ▲ plus a fresh ▼.
+    const keyMatches = (r, key) =>
+      r[key]
+      && (!want || want.includes(r[key]))
+      && (!lastHourOnly || touchTime(r[`${key}_at`]) >= hourAgo);
+    const needsTouch = timeframeFilter.size > 0 || want || lastHourOnly;
     return rows.filter((r) => {
       if (q && !r.ticker.includes(q) && !(r.name ?? '').toUpperCase().includes(q)) return false;
-      if (timeframeFilter.size > 0 && !tfKeys.some((key) => r[key])) return false;
-      if (directionFilter !== 'off') {
-        const want = directionFilter === 'both' ? ['up', 'down'] : [directionFilter];
-        if (!tfKeys.some((key) => want.includes(r[key]))) return false;
-      }
+      if (needsTouch && !tfKeys.some((key) => keyMatches(r, key))) return false;
       if (highVolumeOnly && !(r.rel_vol >= HIGH_VOLUME_RATIO)) return false;
       if (rsiMin !== '' && (r.rsi == null || r.rsi < Number(rsiMin))) return false;
       if (rsiMax !== '' && (r.rsi == null || r.rsi > Number(rsiMax))) return false;
       if (range52wMin !== '' && (r.range_52w_pct == null || r.range_52w_pct < Number(range52wMin))) return false;
       return true;
     });
-  }, [rows, tickerQ, directionFilter, highVolumeOnly, rsiMin, rsiMax, range52wMin, timeframeFilter]);
+  }, [rows, tickerQ, directionFilter, highVolumeOnly, lastHourOnly, now, rsiMin, rsiMax, range52wMin, timeframeFilter]);
 
   const sorted = useMemo(
     () => [...filtered].sort((a, b) => compareRows(a, b, sortKey, sortDir)),
@@ -436,7 +470,7 @@ export default function LiquidityScanner() {
         }
         steps={[
           { text: 'Type a symbol or company name in the search box to jump straight to a ticker. Click ✕ to clear it.', targetId: 'liq-search' },
-          { text: 'Click Filters to show only tickers that touched a zone on the timeframes you pick, in the direction you pick, with High Volume, or within an RSI or 52-week range.', targetId: 'liq-filters-btn' },
+          { text: 'Click Filters to show only tickers that touched a zone on the timeframes you pick, in the direction you pick, in the last hour, with High Volume, or within an RSI or 52-week range.', targetId: 'liq-filters-btn' },
           { text: 'High Volume compares today’s trading volume so far with a normal day at the same time of day. It lights up when volume is at least 25% above normal — a touch on heavy volume carries more weight.', targetId: 'liq-table' },
           { text: 'The 5 / 15 / 30 / 60 / 1D columns show the last time price touched a liquidity zone on that chart. A green ▲ means a support zone below price; a red ▼ means a supply zone above price. The time next to it says how long ago. The 5 / 15 / 30 / 60 columns only show touches from today; 1D looks back 7 trading days. Blank means no touch in that window.', targetId: 'liq-table' },
           { text: 'Hover any triangle to see the exact time of the touch and the zone’s price.', targetId: 'liq-table' },
@@ -496,6 +530,7 @@ export default function LiquidityScanner() {
               <FiltersPanel
                 directionFilter={directionFilter} setDirectionFilter={setDirectionFilter}
                 highVolumeOnly={highVolumeOnly} setHighVolumeOnly={setHighVolumeOnly}
+                lastHourOnly={lastHourOnly} setLastHourOnly={setLastHourOnly}
                 rsiMin={rsiMin} setRsiMin={setRsiMin} rsiMax={rsiMax} setRsiMax={setRsiMax}
                 range52wMin={range52wMin} setRange52wMin={setRange52wMin}
                 timeframeFilter={timeframeFilter} toggleTimeframe={toggleTimeframe}
