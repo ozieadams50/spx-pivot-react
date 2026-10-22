@@ -21,7 +21,12 @@ const TIMEFRAME_COLS = [
   { key: 'liq_30', label: '30', tf: '30-minute', intraday: true },
   { key: 'liq_60', label: '60', tf: '60-minute (hourly)', intraday: true },
   { key: 'liq_1d', label: '1D', tf: 'Daily', intraday: false },
-].map((c) => ({ ...c, tooltip: `Last time price touched a liquidity zone on the ${c.tf} chart, within the last 20 ${c.tf} bars. ▲ green = touched a zone below price (support, where sell stops rest). ▼ red = touched a zone above price (supply / distribution, where buy stops rest). Hover a cell for the exact time and zone price. Blank = no touch in that window.` }));
+].map((c) => ({ ...c, tooltip: `Last time price touched a liquidity zone on the ${c.tf} chart — ${c.intraday ? 'today’s session only' : 'within the last 7 trading days'}. ▲ green = touched a zone below price (support, where sell stops rest). ▼ red = touched a zone above price (supply / distribution, where buy stops rest). Hover a cell for the exact time and zone price. Blank = no touch ${c.intraday ? 'today' : 'in the last 7 trading days'}.` }));
+
+// rel_vol = today's volume so far / the average volume over the same part of
+// the session across the prior 20 days. 1.25 = 25% above normal.
+const HIGH_VOLUME_RATIO = 1.25;
+const HIGH_VOLUME_TOOLTIP = 'Today’s trading volume so far compared with a normal day at the same time of day (average of the last 20 sessions). High = at least 25% more than normal. The number shows how many times normal volume, e.g. 1.6× = 60% above normal. Blank for indexes, which have no volume.';
 
 const DIRECTION_TOOLTIP = 'Only show tickers whose most recent touch was in this direction, on any of the timeframes checked below (or any timeframe if none are checked). ▲ Support = a zone below price. ▼ Supply = a zone above price.';
 const RSI_TOOLTIP = 'Relative Strength Index (14-day) — a 0-100 momentum reading measured against the size of this ticker’s own up days versus down days over its last 14 daily closes, not against other tickers or the market. Below 40 = oversold, 65-80 = strong momentum.';
@@ -84,6 +89,7 @@ const EXPORT_COLUMNS = [
   { key: 'net_chg_pct', header: 'Net Chg %' },
   { key: 'rsi', header: 'RSI' },
   { key: 'range_52w_pct', header: '52W Range %' },
+  { key: 'rel_vol', header: 'Volume vs Normal (x)' },
   ...TIMEFRAME_COLS.flatMap((c) => [
     { key: c.key, header: `${c.label} Touch`, fmt: (v) => (v === 'up' ? 'Support' : v === 'down' ? 'Supply' : '') },
     { key: `${c.key}_at`, header: `${c.label} Last Touch`, fmt: (v) => touchLabel(v) },
@@ -94,6 +100,7 @@ const EXPORT_COLUMNS = [
 const DEFAULT_FILTERS = {
   tickerQ: '',
   directionFilter: 'off',
+  highVolumeOnly: false,
   rsiMin: '',
   rsiMax: '',
   range52wMin: '',
@@ -129,6 +136,18 @@ function SignedNum({ value, fmt }) {
   if (value == null) return <span className="text-[var(--c-text-faint)]">—</span>;
   const color = value > 0 ? 'text-[var(--c-emerald)]' : value < 0 ? 'text-[var(--c-rose)]' : 'text-[var(--c-text-secondary)]';
   return <span className={`font-mono ${color}`}>{value > 0 ? '+' : ''}{fmt(value)}</span>;
+}
+
+function HighVolume({ value }) {
+  if (value == null) return <span className="text-[var(--c-text-faint)]">—</span>;
+  if (value >= HIGH_VOLUME_RATIO) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-xl border border-amber-500/40 bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-[var(--c-amber)]">
+        High <span className="font-mono text-[10px]">{value.toFixed(1)}×</span>
+      </span>
+    );
+  }
+  return <span className="font-mono text-[var(--c-text-muted)]">{value.toFixed(1)}×</span>;
 }
 
 function TouchCell({ row, col, now }) {
@@ -172,6 +191,7 @@ function SortTh({ label, sk, sortKey, sortDir, onSort, className = '', tooltip }
 
 function FiltersPanel({
   directionFilter, setDirectionFilter,
+  highVolumeOnly, setHighVolumeOnly,
   rsiMin, setRsiMin, rsiMax, setRsiMax,
   range52wMin, setRange52wMin,
   timeframeFilter, toggleTimeframe,
@@ -190,7 +210,7 @@ function FiltersPanel({
         </div>
 
         <div className="space-y-4">
-          <div title="Only show tickers that touched a liquidity zone on at least one of the checked timeframes (within that timeframe's last 20 bars).">
+          <div title="Only show tickers that touched a liquidity zone on at least one of the checked timeframes (today for 5/15/30/60, the last 7 trading days for 1D).">
             <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">Touched On</span>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {TIMEFRAME_COLS.map((c) => (
@@ -218,6 +238,25 @@ function FiltersPanel({
                   onClick={() => setDirectionFilter(opt.value)}
                   className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
                     directionFilter === opt.value
+                      ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
+                      : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div title={HIGH_VOLUME_TOOLTIP}>
+            <span className="text-[10px] uppercase tracking-widest text-[var(--c-text-faint)]">High Volume</span>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {[{ label: 'Off', value: false }, { label: 'High Volume only', value: true }].map((opt) => (
+                <button
+                  key={opt.label}
+                  onClick={() => setHighVolumeOnly(opt.value)}
+                  className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all ${
+                    highVolumeOnly === opt.value
                       ? 'border-violet-500/40 bg-violet-500/20 text-[var(--c-violet)]'
                       : 'border-[var(--c-border)] text-[var(--c-text-dimmed)] hover:text-[var(--c-text-primary)]'
                   }`}
@@ -275,6 +314,7 @@ export default function LiquidityScanner() {
 
   const [tickerQ, setTickerQ] = useState(DEFAULT_FILTERS.tickerQ);
   const [directionFilter, setDirectionFilter] = useState(DEFAULT_FILTERS.directionFilter);
+  const [highVolumeOnly, setHighVolumeOnly] = useState(DEFAULT_FILTERS.highVolumeOnly);
   const [rsiMin, setRsiMin] = useState(DEFAULT_FILTERS.rsiMin);
   const [rsiMax, setRsiMax] = useState(DEFAULT_FILTERS.rsiMax);
   const [range52wMin, setRange52wMin] = useState(DEFAULT_FILTERS.range52wMin);
@@ -323,6 +363,7 @@ export default function LiquidityScanner() {
   const clearFilters = () => {
     setTickerQ(DEFAULT_FILTERS.tickerQ);
     setDirectionFilter(DEFAULT_FILTERS.directionFilter);
+    setHighVolumeOnly(DEFAULT_FILTERS.highVolumeOnly);
     setRsiMin(DEFAULT_FILTERS.rsiMin);
     setRsiMax(DEFAULT_FILTERS.rsiMax);
     setRange52wMin(DEFAULT_FILTERS.range52wMin);
@@ -341,6 +382,7 @@ export default function LiquidityScanner() {
 
   const activeFilterCount =
     (directionFilter !== 'off' ? 1 : 0) +
+    (highVolumeOnly ? 1 : 0) +
     (rsiMin !== '' ? 1 : 0) +
     (rsiMax !== '' ? 1 : 0) +
     (range52wMin !== '' ? 1 : 0) +
@@ -356,12 +398,13 @@ export default function LiquidityScanner() {
         const want = directionFilter === 'both' ? ['up', 'down'] : [directionFilter];
         if (!tfKeys.some((key) => want.includes(r[key]))) return false;
       }
+      if (highVolumeOnly && !(r.rel_vol >= HIGH_VOLUME_RATIO)) return false;
       if (rsiMin !== '' && (r.rsi == null || r.rsi < Number(rsiMin))) return false;
       if (rsiMax !== '' && (r.rsi == null || r.rsi > Number(rsiMax))) return false;
       if (range52wMin !== '' && (r.range_52w_pct == null || r.range_52w_pct < Number(range52wMin))) return false;
       return true;
     });
-  }, [rows, tickerQ, directionFilter, rsiMin, rsiMax, range52wMin, timeframeFilter]);
+  }, [rows, tickerQ, directionFilter, highVolumeOnly, rsiMin, rsiMax, range52wMin, timeframeFilter]);
 
   const sorted = useMemo(
     () => [...filtered].sort((a, b) => compareRows(a, b, sortKey, sortDir)),
@@ -393,8 +436,9 @@ export default function LiquidityScanner() {
         }
         steps={[
           { text: 'Type a symbol or company name in the search box to jump straight to a ticker. Click ✕ to clear it.', targetId: 'liq-search' },
-          { text: 'Click Filters to show only tickers that touched a zone on the timeframes you pick, in the direction you pick, or within an RSI or 52-week range.', targetId: 'liq-filters-btn' },
-          { text: 'The 5 / 15 / 30 / 60 / 1D columns show the last time price touched a liquidity zone on that chart. A green ▲ means a support zone below price; a red ▼ means a supply zone above price. The time next to it says how long ago. Blank means no touch in that chart’s last 20 bars.', targetId: 'liq-table' },
+          { text: 'Click Filters to show only tickers that touched a zone on the timeframes you pick, in the direction you pick, with High Volume, or within an RSI or 52-week range.', targetId: 'liq-filters-btn' },
+          { text: 'High Volume compares today’s trading volume so far with a normal day at the same time of day. It lights up when volume is at least 25% above normal — a touch on heavy volume carries more weight.', targetId: 'liq-table' },
+          { text: 'The 5 / 15 / 30 / 60 / 1D columns show the last time price touched a liquidity zone on that chart. A green ▲ means a support zone below price; a red ▼ means a supply zone above price. The time next to it says how long ago. The 5 / 15 / 30 / 60 columns only show touches from today; 1D looks back 7 trading days. Blank means no touch in that window.', targetId: 'liq-table' },
           { text: 'Hover any triangle to see the exact time of the touch and the zone’s price.', targetId: 'liq-table' },
           { text: 'Click a timeframe header to sort by the most recent touch on that chart. Click again to flip the order. Tickers with no touch always stay at the bottom.', targetId: 'liq-table' },
           { text: 'A purple dot beside a ticker means it reports earnings within the next 15 days. Hover over the dot for the date.', targetId: 'liq-table' },
@@ -451,6 +495,7 @@ export default function LiquidityScanner() {
             {filtersOpen && (
               <FiltersPanel
                 directionFilter={directionFilter} setDirectionFilter={setDirectionFilter}
+                highVolumeOnly={highVolumeOnly} setHighVolumeOnly={setHighVolumeOnly}
                 rsiMin={rsiMin} setRsiMin={setRsiMin} rsiMax={rsiMax} setRsiMax={setRsiMax}
                 range52wMin={range52wMin} setRange52wMin={setRange52wMin}
                 timeframeFilter={timeframeFilter} toggleTimeframe={toggleTimeframe}
@@ -505,6 +550,7 @@ export default function LiquidityScanner() {
                 <SortTh label="Net Chg %" sk="net_chg_pct" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" tooltip={NET_CHG_TOOLTIP} />
                 <SortTh label="RSI" sk="rsi" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[48px] px-2 text-center" tooltip={RSI_TOOLTIP} />
                 <SortTh label="52W Range %" sk="range_52w_pct" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[68px] px-2 text-center" tooltip={RANGE_52W_TOOLTIP} />
+                <SortTh label="High Volume" sk="rel_vol" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[84px] px-2 text-center" tooltip={HIGH_VOLUME_TOOLTIP} />
                 {TIMEFRAME_COLS.map((c) => (
                   <SortTh key={c.key} label={c.label} sk={c.key} sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="w-[72px] px-1 text-center" tooltip={c.tooltip} />
                 ))}
@@ -531,6 +577,7 @@ export default function LiquidityScanner() {
                   <td className="px-2 py-2.5 text-center"><SignedNum value={r.net_chg_pct} fmt={(v) => `${Math.abs(v).toFixed(2)}%`} /></td>
                   <td className="px-2 py-2.5 text-center font-mono text-[var(--c-text-secondary)]">{r.rsi != null ? r.rsi.toFixed(1) : '—'}</td>
                   <td className="px-2 py-2.5 text-center font-mono text-[var(--c-text-secondary)]">{r.range_52w_pct != null ? `${r.range_52w_pct.toFixed(1)}%` : '—'}</td>
+                  <td className="px-2 py-2.5 text-center"><HighVolume value={r.rel_vol} /></td>
                   {TIMEFRAME_COLS.map((c) => (
                     <td key={c.key} className="px-1 py-2.5 text-center"><TouchCell row={r} col={c} now={now} /></td>
                   ))}
@@ -538,7 +585,7 @@ export default function LiquidityScanner() {
               ))}
               {sorted.length === 0 && (
                 <tr>
-                  <td colSpan={9 + TIMEFRAME_COLS.length} className="py-8 text-center text-[var(--c-text-muted)]">
+                  <td colSpan={10 + TIMEFRAME_COLS.length} className="py-8 text-center text-[var(--c-text-muted)]">
                     {rows.length === 0 ? 'No scan data yet — the first scan of the day populates this page.' : 'No tickers match the current filters.'}
                   </td>
                 </tr>
